@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <title>{% block title %}Purchase Request Platform{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <nav>
+        <a href="{% url 'dashboard:dashboard' %}">Dashboard</a>
+        {% if user.is_business %}
+            <a href="{% url 'purchase_requests:search_browse' %}">Browse</a>
+            <a href="{% url 'purchase_requests:my_offers' %}">My Offers</a>
+            <a href="{% url 'purchase_requests:my_requests' %}">My Requests</a>
+        {% endif %}
+        <a href="{% url 'marketplace:marketplace' %}">Marketplace</a>
+        <a href="{% url 'profiles:my_profile' %}">My Profile</a>
+        <a href="{% url 'authentication:logout' %}">Logout</a>
+    </nav>
+    {% endif %}
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="message {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
