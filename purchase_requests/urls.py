@@ -8,7 +8,7 @@ urlpatterns = [
     path('', views.search_browse_view, name='search_browse'),
     path('available/', views.available_list_view, name='available_list'),
     path('<int:pk>/', views.purchase_request_detail_view, name='detail'),
-    path('<int:pk>/join/', views.join_purchase_request_view, name='join'),
+    path('<int:pk>/join/', views.join_purchase_request, name='join'),
 
     # Review list
     path('review/', views.review_list_view, name='review_list'),
