@@ -94,7 +94,7 @@
     <!--Left Card (Contains Purchase Request Details)-->
     <div class="card">
       <h1 class="title">{{ pr.title }}</h1>
-      <p class="sub">Buyer: {{ pr.buyer_company_name }}</p>
+      <p class="sub">Buyer: {{ pr.buyer.business_profile.business_name }}</p>
 
       <div class="row">
         <div class="k">Area of delivery</div>
@@ -103,12 +103,12 @@
 
       <div class="row">
         <div class="k">Closing date &amp; time</div>
-        <div class="v">{{ pr.closing_datetime|date:"M d, Y (D) - h:i A" }}</div>
+        <div class="v">{{ pr.closing_deadline|date:"M d, Y (D) - h:i A" }}</div>
       </div>
 
       <div class="row">
         <div class="k">Maximum allocated budget</div>
-        <div class="v">₱ {{ pr.max_budget|floatformat:2|intcomma }}</div>
+        <div class="v">₱ {{ pr.budget|floatformat:2|intcomma }}</div>
       </div>
     </div>
 
