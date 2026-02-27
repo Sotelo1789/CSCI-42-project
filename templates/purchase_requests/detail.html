@@ -1,8 +1,10 @@
+<!--Page Setup (inherit base + enable helpers)-->
 {% extends "base.html" %}
 {% load humanize %}
 
 {% block title %}Purchase Request Details{% endblock %}
 
+<!--Page-only Styling (the looks of the page)-->
 {% block extra_css %}
 <style>
   .wrap{max-width:1100px;margin:0 auto;padding:24px}
@@ -60,8 +62,10 @@
 </style>
 {% endblock %}
 
+<!--Page Content (What the user will see)-->
 {% block content %}
 <div class="wrap">
+  <!--Top Bar (Back Button + Status Badge + Join Button)-->
   <div class="topbar">
     <a class="btn" href="{% url 'purchase_requests:available_list' %}">← Back</a>
 
@@ -85,7 +89,9 @@
     </div>
   </div>
 
+  <!--Main Grid (Detail Card + Quick Action Card)-->
   <div class="grid">
+    <!--Left Card (Contains Purchase Request Details)-->
     <div class="card">
       <h1 class="title">{{ pr.title }}</h1>
       <p class="sub">Buyer: {{ pr.buyer_company_name }}</p>
@@ -106,6 +112,7 @@
       </div>
     </div>
 
+    <!--Right Card (Contains the Quick Action links)-->
     <div class="card">
       <p class="section-title">Quick Actions</p>
       <div style="display:flex;flex-direction:column;gap:10px">
@@ -114,11 +121,13 @@
       </div>
     </div>
 
+    <!--Description Card(Full length card)-->
     <div class="card" style="grid-column:1 / -1">
       <p class="section-title">Description</p>
       <p class="desc">{{ pr.description }}</p>
     </div>
 
+    <!--Attachment Card (Full length card)-->
     <div class="card" style="grid-column:1 / -1">
       <p class="section-title">Attachments</p>
 
