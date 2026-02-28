@@ -127,7 +127,7 @@
       <p class="desc">{{ pr.description }}</p>
     </div>
 
-    <!--Attachment Card (Full length card)-->
+    <!-- Attachments (View-only on Details page) -->
     <div class="card" style="grid-column:1 / -1">
       <p class="section-title">Attachments</p>
 
@@ -135,9 +135,13 @@
         <div class="file">
           <div>
             <div style="font-weight:700">{{ f.filename }}</div>
-            <div style="color:var(--muted);font-size:12px">{{ f.filesize_display }}</div>
+            <div style="color:var(--muted);font-size:12px">
+              {{ f.filesize_display|default:"" }}
+            </div>
           </div>
-          <a class="btn" href="{{ f.file.url }}" target="_blank" rel="noopener">Download</a>
+
+          <!-- No download button here (download is only allowed in Review List) -->
+          <span class="badge" style="opacity:.8">View in Review List</span>
         </div>
       {% empty %}
         <div style="color:var(--muted)">No attachments uploaded.</div>
