@@ -3,6 +3,50 @@
 {% block title %}Available List{% endblock %}
 
 {% block content %}
-<h1>Available List</h1>
-<p><!-- TODO: Implement this page --></p>
+
+{% if prlist %}
+    <h1>Available List</h1>
+    {% for pr in page_prlist %}
+        <div>
+            <p>Title: <a href="{% url 'purchase_requests:detail' pk=pr.pk %}">{{ pr.title }}</a></p>
+            <p>Buyer: {{ pr.buyer.business_profile }}</p>
+            <p>Category: {{ pr.category }}</p>
+            <p>Date Created: {{ pr.created_at }}</p>
+            <p>Deadline: {{ pr.closing_deadline }}</p>
+        </div>
+        <br>
+    {% endfor %}
+    <div>
+        <span>
+            {% if page_prlist.has_previous %}
+                <a href="?page=1&dictate={{ page_item_count }}">&laquo; first</a>
+                <a href="?page={{ page_prlist.previous_page_number }}&dictate={{ page_item_count }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_prlist.number }} of {{ page_prlist.paginator.num_pages }}.
+            </span>
+
+            {% if page_prlist.has_next %}
+                <a href="?page={{ page_prlist.next_page_number }}&dictate={{ page_item_count }}">next</a>
+                <a href="?page={{ page_prlist.paginator.num_pages }}&dictate={{ page_item_count }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+    <p>There 
+    {% if is_one_per_page %}
+        is 1 item 
+    {% else %}
+        are {{ page_item_count }} items
+    {% endif %}
+    per page </p>
+    <form method="get" style="margin-bottom: 1rem;">
+        {{ dictate_form.dictate }}
+        <button type="submit">Change</button>
+    </form>
+
+{% else %}
+    <p>No Purchase Requests Available. Come back at a different time!</p>
+{% endif %}
+
 {% endblock %}
