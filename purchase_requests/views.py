@@ -134,14 +134,32 @@ def my_requests_view(request):
         if page_item_count == None or page_item_count < 1:
             page_item_count = 15
 
+    """
+    If Business user has decided to either change the closing deadline
+    of one of their purchase requests or cancel one of their purchase 
+    requests, then the code below is followed
+    """
+
     if request.method == "POST":
         # print("Post")
+        """
+        Get which purchase request is being affected, and how it is being changed
+        """
         pr = get_object_or_404(PurchaseRequest, pk=request.POST.get("purchase_request"))
         action = request.POST.get("action")
         # print(action)
         if action == "changeDeadline":
+            """
+            Obtain the old and \'new\' closing deadline for that purchase request
+            """
             old_deadline = pr.closing_deadline 
             new_deadline = request.POST.get("closing_deadline")
+
+            """
+            Ensure that new_deadline is of the proper format and datetime datatype (retrieving 
+            from POST creates a string, which is not as easily comparable to the datetime data 
+            type of old_deadline)
+            """
 
             new_deadline = new_deadline[0:10] + " " + new_deadline[11:16] + old_deadline.strftime(":%S%z")
             date_format = "%Y-%m-%d %H:%M:%S%z"
@@ -152,6 +170,12 @@ def my_requests_view(request):
             #print(old_deadline < new_deadline)
             #print(old_deadline >= new_deadline)
 
+            """
+            If the new_deadline is later than the old_deadline and that this purchase request
+            is still available at this time when changes will happen, the closing deadline of
+            this purchase request is extended to the inputed date and time
+            """
+
             if old_deadline < new_deadline and pr.status == "open":
                 pr.closing_deadline = new_deadline
                 pr.save()
@@ -160,10 +184,20 @@ def my_requests_view(request):
             # else:
                 # print("Don\'t change")
         elif action == "cancelRequest":
+            """
+            If the status is still open at the time of changing, set the
+            purchase request's status to cancelled
+            """
+
             if pr.status == "open":
                 pr.status = "cancelled"
                 pr.save()
                 # print("Purchase Request Cancelled")
+
+    """
+    Line below is important for gathering datetime data for changing
+    deadlines of Business user's own available purchase requests 
+    """
 
     deadline_form = UpdatePurchaseRequestDeadline()
 
