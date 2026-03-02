@@ -1,41 +1,247 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {% load static %}
-    <title>{% block title %}Purchase Request Platform{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
-    {% block extra_css %}{% endblock %}
-</head>
-<body>
-    {% if user.is_authenticated %}
-    <nav>
-        <a href="{% url 'dashboard:dashboard' %}">Dashboard</a>
-        {% if user.is_business %}
-            <a href="{% url 'purchase_requests:search_browse' %}">Browse</a>
-            <a href="{% url 'purchase_requests:my_offers' %}">My Offers</a>
-            <a href="{% url 'purchase_requests:my_requests' %}">My Requests</a>
-        {% endif %}
-        <a href="{% url 'marketplace:marketplace' %}">Marketplace</a>
-        <a href="{% url 'profiles:my_profile' %}">My Profile</a>
-        <a href="{% url 'authentication:logout' %}">Logout</a>
-    </nav>
-    {% endif %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    {% if messages %}
-    <div class="messages">
-        {% for message in messages %}
-            <div class="message {{ message.tags }}">{{ message }}</div>
-        {% endfor %}
+  <title>{% block title %}Purchase Request Platform{% endblock %}</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:   #0b1426;
+      --panel:  #0f1a30;
+      --blue:   #1a56db;
+      --accent: #38bdf8;
+      --white:  #f0f4ff;
+      --muted:  #8899bb;
+      --border: rgba(255,255,255,0.08);
+      --danger: #f87171;
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--navy);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .layout { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem 0;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 1.5rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1rem;
+    }
+    .brand-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, var(--blue), var(--accent));
+      border-radius: 12px;
+      display: grid; place-items: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .brand-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.4rem;
+      letter-spacing: 0.02em;
+    }
+    .brand-name span { color: var(--accent); }
+
+    .nav-section { padding: 0 0.75rem; margin-bottom: 0.5rem; }
+    .nav-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 0.75rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0.75rem 0.85rem;
+      border-radius: 12px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: background 0.15s, color 0.15s;
+      margin-bottom: 6px;
+    }
+    .nav-link:hover { background: rgba(255,255,255,0.06); color: var(--white); }
+
+    /* Optional active class (set manually per page if you want) */
+    .nav-link.active { background: rgba(26,86,219,0.22); color: var(--white); }
+    .nav-icon { width: 22px; text-align: center; }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 1rem 1.5rem 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .user-chip {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 0.75rem;
+    }
+    .user-avatar {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--blue), var(--accent));
+      border-radius: 50%;
+      display: grid; place-items: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+    .user-info { overflow: hidden; }
+    .user-name { font-size: 0.92rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-role { font-size: 0.75rem; color: var(--muted); text-transform: capitalize; }
+
+    .logout-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%;
+      padding: 0.65rem 0.85rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+    .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* Main area */
+    .main {
+      margin-left: 240px;
+      flex: 1;
+      padding: 2rem 2.5rem;
+    }
+
+    /* Messages */
+    .messages { margin-bottom: 1rem; }
+    .message {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      margin-bottom: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 1.5rem; }
+    }
+  </style>
+
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+<div class="layout">
+
+  {% if user.is_authenticated %}
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">📋</div>
+      <div class="brand-name">PR<span>OC</span></div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Main</div>
+      <a href="{% url 'dashboard:dashboard' %}" class="nav-link">
+        <span class="nav-icon">🏠</span> Dashboard
+      </a>
+      <a href="{% url 'marketplace:marketplace' %}" class="nav-link">
+        <span class="nav-icon">🛒</span> Marketplace
+      </a>
+    </div>
+
+    {% if user.is_business %}
+    <div class="nav-section">
+      <div class="nav-label">As Seller</div>
+      <a href="{% url 'purchase_requests:search_browse' %}" class="nav-link">
+        <span class="nav-icon">🔍</span> Browse Requests
+      </a>
+      <a href="{% url 'purchase_requests:review_list' %}" class="nav-link">
+        <span class="nav-icon">📋</span> Review List
+      </a>
+      <a href="{% url 'purchase_requests:my_offers' %}" class="nav-link">
+        <span class="nav-icon">📤</span> My Offers
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">As Buyer</div>
+      <a href="{% url 'purchase_requests:my_requests' %}" class="nav-link">
+        <span class="nav-icon">📁</span> My Requests
+      </a>
+      <a href="{% url 'purchase_requests:create' %}" class="nav-link">
+        <span class="nav-icon">➕</span> New Request
+      </a>
     </div>
     {% endif %}
 
-    <main>
-        {% block content %}{% endblock %}
-    </main>
+    <div class="nav-section">
+      <div class="nav-label">Account</div>
+      <a href="{% url 'profiles:my_profile' %}" class="nav-link">
+        <span class="nav-icon">👤</span> My Profile
+      </a>
+    </div>
 
-    <script src="{% static 'js/main.js' %}"></script>
-    {% block extra_js %}{% endblock %}
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar">{{ user.username|first|upper }}</div>
+        <div class="user-info">
+          <div class="user-name">{{ user.username }}</div>
+          <div class="user-role">{{ user.account_type }}</div>
+        </div>
+      </div>
+      <a href="{% url 'authentication:logout' %}" class="logout-btn">⬅ Sign out</a>
+    </div>
+  </aside>
+  {% endif %}
+
+  <main class="main">
+    {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+          <div class="message {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+</div>
+
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>

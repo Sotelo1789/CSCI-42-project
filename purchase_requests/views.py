@@ -4,7 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.http import FileResponse
 from django.utils import timezone
 from .models import PurchaseRequest, Participation, Offer
-from authentication.models import BusinessProfile
 from .forms import CreatePurchaseRequest, SubmitOffer
 
 
@@ -23,13 +22,37 @@ def available_list_view(request):
 @login_required
 def purchase_request_detail_view(request, pk):
     pr = get_object_or_404(PurchaseRequest, pk=pk)
-    return render(request, 'purchase_requests/detail.html', {'pr': pr})
+
+    business = getattr(request.user, "businessprofile", None)
+
+    already_joined = False
+    if business:
+        already_joined = Participation.objects.filter(
+            purchase_request=pr,
+            business=business
+        ).exists()
+
+    is_closed = pr.closing_deadline <= timezone.now()
+    return render(request, 'purchase_requests/detail.html', {
+        "pr": pr,
+        "already_joined":already_joined,
+        "is_closed":is_closed,
+        })
 
 
 @login_required
-def join_purchase_request_view(request, pk):
-    # TODO: Create Participation record (joined, not yet participating)
-    return redirect('purchase_requests:review_list')
+def join_purchase_request(request, pk):
+    pr = get_object_or_404(PurchaseRequest, pk=pk)
+
+    business = getattr(request.user, "businessprofile", None)
+    if business:
+        Participation.objects.get_or_create(
+            business=business,
+            purchase_request=pr
+        )
+
+    return redirect("purchase_requests:detail", pk=pk)
+
 
 
 @login_required
