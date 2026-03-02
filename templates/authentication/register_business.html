@@ -1,8 +1,494 @@
-{% extends "base.html" %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Registration — PRMS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --navy: #0b1426; --navy2: #111d35; --panel: #0f1a30;
+            --blue: #1a56db; --blue2: #2563eb; --accent: #38bdf8;
+            --white: #f0f4ff; --muted: #8899bb; --border: rgba(255,255,255,0.08);
+            --error: #f87171; --success: #34d399;
+        }
+        html, body { min-height: 100%; background: var(--navy); color: var(--white); font-family: 'DM Sans', sans-serif; }
 
-{% block title %}Register Business{% endblock %}
+        .bg { position: fixed; inset: 0; background: linear-gradient(rgba(26,86,219,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(26,86,219,0.06) 1px, transparent 1px); background-size: 48px 48px; animation: gridDrift 20s linear infinite; pointer-events: none; }
+        .bg::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 15% 50%, rgba(26,86,219,0.12) 0%, transparent 60%); }
+        @keyframes gridDrift { from { background-position: 0 0; } to { background-position: 48px 48px; } }
 
-{% block content %}
-<h1>Register Business</h1>
-<p><!-- TODO: Implement this page --></p>
-{% endblock %}
+        .page { position: relative; z-index: 1; display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+
+        /* Left progress sidebar */
+        .sidebar {
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            padding: 2rem 1.5rem;
+            display: flex; flex-direction: column;
+            position: sticky; top: 0; height: 100vh;
+        }
+        .back-link { display: flex; align-items: center; gap: 6px; color: var(--muted); text-decoration: none; font-size: 0.8rem; margin-bottom: 2rem; transition: color 0.2s; }
+        .back-link:hover { color: var(--white); }
+        .brand { display: flex; align-items: center; gap: 9px; margin-bottom: 2.5rem; }
+        .brand-icon { width: 34px; height: 34px; background: linear-gradient(135deg, var(--blue), var(--accent)); border-radius: 8px; display: grid; place-items: center; font-size: 15px; }
+        .brand-name { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem; }
+        .brand-name span { color: var(--accent); }
+
+        .sidebar-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; margin-bottom: 0.4rem; }
+        .sidebar-sub { color: var(--muted); font-size: 0.8rem; line-height: 1.5; margin-bottom: 2rem; }
+
+        .steps { display: flex; flex-direction: column; gap: 0; }
+        .step { display: flex; gap: 12px; align-items: flex-start; padding-bottom: 1.5rem; position: relative; }
+        .step:not(:last-child)::before { content: ''; position: absolute; left: 15px; top: 32px; width: 2px; height: calc(100% - 24px); background: var(--border); }
+        .step.done:not(:last-child)::before { background: var(--blue); }
+        .step-num {
+            width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+            display: grid; place-items: center;
+            font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.8rem;
+            border: 2px solid var(--border); color: var(--muted);
+            background: var(--panel); position: relative; z-index: 1;
+            transition: all 0.3s;
+        }
+        .step.active .step-num { border-color: var(--blue2); color: var(--white); background: rgba(26,86,219,0.2); }
+        .step.done .step-num { border-color: var(--blue); background: var(--blue); color: white; }
+        .step-info { padding-top: 5px; }
+        .step-label { font-size: 0.85rem; font-weight: 500; color: var(--muted); }
+        .step.active .step-label, .step.done .step-label { color: var(--white); }
+        .step-desc { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+        /* Main form area */
+        .main { padding: 2.5rem 3rem; overflow-y: auto; }
+        .form-header { margin-bottom: 2rem; animation: fadeUp 0.5s ease both; }
+        .form-header h1 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.6rem; margin-bottom: 0.3rem; }
+        .form-header p { color: var(--muted); font-size: 0.9rem; }
+
+        /* Alerts */
+        .alerts { margin-bottom: 1.5rem; animation: fadeUp 0.4s ease both; }
+        .alert { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.25); border-radius: 10px; padding: 0.75rem 1rem; font-size: 0.85rem; color: var(--error); display: flex; gap: 8px; margin-bottom: 6px; }
+
+        /* Section */
+        .form-section {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 16px; padding: 1.75rem;
+            margin-bottom: 1.25rem;
+            animation: fadeUp 0.5s ease both;
+        }
+        .form-section:nth-child(2) { animation-delay: 0.05s; }
+        .form-section:nth-child(3) { animation-delay: 0.1s; }
+        .form-section:nth-child(4) { animation-delay: 0.15s; }
+        .form-section:nth-child(5) { animation-delay: 0.2s; }
+
+        .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem; }
+        .section-icon { font-size: 1.2rem; }
+        .section-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; }
+        .section-badge { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; background: rgba(26,86,219,0.2); color: var(--blue2); border: 1px solid rgba(26,86,219,0.3); padding: 2px 8px; border-radius: 20px; }
+
+        /* Field grid */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+        .col-span-2 { grid-column: span 2; }
+
+        .field { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+        .required-star { color: var(--error); margin-left: 2px; }
+
+        .input-wrap { position: relative; }
+        .input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; pointer-events: none; }
+
+        input[type="text"], input[type="email"], input[type="password"], input[type="tel"], select, textarea {
+            width: 100%; padding: 0.7rem 0.875rem 0.7rem 2.5rem;
+            background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+            border-radius: 9px; color: var(--white);
+            font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+            outline: none; transition: border-color 0.2s, background 0.2s;
+        }
+        input:not(.has-icon), select:not(.has-icon), textarea:not(.has-icon) { padding-left: 0.875rem; }
+        input:focus, select:focus, textarea:focus { border-color: var(--blue2); background: rgba(37,99,235,0.07); }
+        input::placeholder, textarea::placeholder { color: rgba(136,153,187,0.4); }
+        select option { background: var(--navy2); }
+        textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+
+        .show-pw { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; font-size: 14px; transition: color 0.2s; }
+        .show-pw:hover { color: var(--white); }
+
+        /* File upload */
+        .file-field { display: flex; flex-direction: column; gap: 6px; }
+        .file-label-text { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+        .file-drop {
+            border: 2px dashed var(--border); border-radius: 10px;
+            padding: 1.25rem; text-align: center; cursor: pointer;
+            transition: all 0.2s; position: relative;
+        }
+        .file-drop:hover { border-color: var(--blue2); background: rgba(26,86,219,0.05); }
+        .file-drop.has-file { border-color: var(--success); border-style: solid; background: rgba(52,211,153,0.05); }
+        .file-drop input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+        .file-icon { font-size: 1.4rem; margin-bottom: 4px; }
+        .file-text { font-size: 0.8rem; color: var(--muted); }
+        .file-text strong { color: var(--accent); }
+        .file-name { font-size: 0.75rem; color: var(--success); margin-top: 4px; display: none; }
+        .file-drop.has-file .file-name { display: block; }
+        .file-drop.has-file .file-text { display: none; }
+        .file-drop.has-file .file-icon { display: none; }
+        .file-required { font-size: 0.7rem; color: var(--muted); margin-top: 3px; }
+
+        /* Docs grid */
+        .docs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+        /* Password strength */
+        .pw-strength { margin-top: 6px; }
+        .strength-bar { height: 3px; border-radius: 2px; background: var(--border); overflow: hidden; }
+        .strength-fill { height: 100%; width: 0; transition: width 0.3s, background 0.3s; border-radius: 2px; }
+        .strength-text { font-size: 0.7rem; color: var(--muted); margin-top: 4px; }
+
+        /* Submit */
+        .form-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 1.5rem; animation: fadeUp 0.5s 0.25s ease both; }
+        .terms { font-size: 0.78rem; color: var(--muted); max-width: 380px; line-height: 1.5; }
+        .btn-submit {
+            padding: 0.85rem 2.5rem;
+            background: linear-gradient(135deg, var(--blue), var(--blue2));
+            border: none; border-radius: 10px;
+            color: #fff; font-family: 'Syne', sans-serif;
+            font-size: 0.95rem; font-weight: 700; letter-spacing: 0.03em;
+            cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 4px 20px rgba(26,86,219,0.4);
+            white-space: nowrap;
+        }
+        .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(26,86,219,0.55); }
+        .btn-submit:active { transform: translateY(0); }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 900px) {
+            .page { grid-template-columns: 1fr; }
+            .sidebar { display: none; }
+            .main { padding: 1.5rem; }
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .col-span-2 { grid-column: span 1; }
+            .docs-grid { grid-template-columns: 1fr; }
+            .form-footer { flex-direction: column; gap: 1rem; }
+            .btn-submit { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="page">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <a href="{% url 'authentication:register' %}" class="back-link">← Change account type</a>
+        <div class="brand">
+            <div class="brand-icon">📋</div>
+            <div class="brand-name">PR<span>MS</span></div>
+        </div>
+        <div class="sidebar-title">Business Registration</div>
+        <div class="sidebar-sub">Complete all sections below. Your account will be reviewed by an administrator before activation.</div>
+
+        <div class="steps">
+            <div class="step done" id="step-1">
+                <div class="step-num">✓</div>
+                <div class="step-info">
+                    <div class="step-label">Account Type</div>
+                    <div class="step-desc">Business selected</div>
+                </div>
+            </div>
+            <div class="step active" id="step-2">
+                <div class="step-num">2</div>
+                <div class="step-info">
+                    <div class="step-label">Account Credentials</div>
+                    <div class="step-desc">Username, email, password</div>
+                </div>
+            </div>
+            <div class="step" id="step-3">
+                <div class="step-num">3</div>
+                <div class="step-info">
+                    <div class="step-label">Business Details</div>
+                    <div class="step-desc">Company info & type</div>
+                </div>
+            </div>
+            <div class="step" id="step-4">
+                <div class="step-num">4</div>
+                <div class="step-info">
+                    <div class="step-label">Representative</div>
+                    <div class="step-desc">Authorized contact person</div>
+                </div>
+            </div>
+            <div class="step" id="step-5">
+                <div class="step-num">5</div>
+                <div class="step-info">
+                    <div class="step-label">Documents</div>
+                    <div class="step-desc">Permits & certificates</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main form -->
+    <main class="main">
+        <div class="form-header">
+            <h1>Business Account Registration</h1>
+            <p>Fields marked <span style="color:var(--error)">*</span> are required. Documents must be in PDF format.</p>
+        </div>
+
+        {% if messages %}
+        <div class="alerts">
+            {% for message in messages %}
+            <div class="alert">⚠ {{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" id="regForm">
+            {% csrf_token %}
+
+            <!-- Section 1: Credentials -->
+            <div class="form-section" id="sec-credentials">
+                <div class="section-header">
+                    <span class="section-icon">🔐</span>
+                    <span class="section-title">Account Credentials</span>
+                </div>
+                <div class="grid-2">
+                    <div class="field">
+                        <label>Username <span class="required-star">*</span></label>
+                        <div class="input-wrap">
+                            <span class="input-icon">👤</span>
+                            <input type="text" name="username" class="has-icon" placeholder="e.g. acme_corp" value="{{ form_data.username|default:'' }}" required>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Email Address <span class="required-star">*</span></label>
+                        <div class="input-wrap">
+                            <span class="input-icon">✉</span>
+                            <input type="email" name="email" class="has-icon" placeholder="business@example.com" value="{{ form_data.email|default:'' }}" required>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Password <span class="required-star">*</span></label>
+                        <div class="input-wrap">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" name="password" id="pw" class="has-icon" placeholder="Min. 8 characters" required oninput="checkStrength(this.value)">
+                            <button type="button" class="show-pw" onclick="togglePw('pw')">👁</button>
+                        </div>
+                        <div class="pw-strength">
+                            <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+                            <div class="strength-text" id="strength-text"></div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Confirm Password <span class="required-star">*</span></label>
+                        <div class="input-wrap">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" name="confirm_password" id="pw2" class="has-icon" placeholder="Re-enter password" required>
+                            <button type="button" class="show-pw" onclick="togglePw('pw2')">👁</button>
+                        </div>
+                    </div>
+                    <div class="field col-span-2">
+                        <label>Contact Number</label>
+                        <div class="input-wrap">
+                            <span class="input-icon">📞</span>
+                            <input type="tel" name="contact_number" class="has-icon" placeholder="+63 9XX XXX XXXX" value="{{ form_data.contact_number|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Business Info -->
+            <div class="form-section" id="sec-business">
+                <div class="section-header">
+                    <span class="section-icon">🏢</span>
+                    <span class="section-title">Business Information</span>
+                </div>
+                <div class="grid-2">
+                    <div class="field">
+                        <label>Business Name <span class="required-star">*</span></label>
+                        <div class="input-wrap">
+                            <span class="input-icon">🏢</span>
+                            <input type="text" name="business_name" class="has-icon" placeholder="Registered company name" value="{{ form_data.business_name|default:'' }}" required>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Tax Identification Number (TIN) <span class="required-star">*</span></label>
+                        <div class="input-wrap">
+                            <span class="input-icon">#</span>
+                            <input type="text" name="tin" class="has-icon" placeholder="000-000-000-000" value="{{ form_data.tin|default:'' }}" required>
+                        </div>
+                    </div>
+                    <div class="field col-span-2">
+                        <label>Business Address <span class="required-star">*</span></label>
+                        <textarea name="business_address" placeholder="Full registered business address" required>{{ form_data.business_address|default:'' }}</textarea>
+                    </div>
+                    <div class="field col-span-2">
+                        <label>Type of Business <span class="required-star">*</span></label>
+                        <select name="business_type" required>
+                            <option value="" disabled {% if not form_data.business_type %}selected{% endif %}>Select business type</option>
+                            <option value="trading"       {% if form_data.business_type == 'trading' %}selected{% endif %}>Trading</option>
+                            <option value="servicing"     {% if form_data.business_type == 'servicing' %}selected{% endif %}>Servicing</option>
+                            <option value="manufacturing" {% if form_data.business_type == 'manufacturing' %}selected{% endif %}>Manufacturing</option>
+                            <option value="other"         {% if form_data.business_type == 'other' %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Representative -->
+            <div class="form-section" id="sec-rep">
+                <div class="section-header">
+                    <span class="section-icon">🤝</span>
+                    <span class="section-title">Authorized Representative</span>
+                </div>
+                <div class="grid-3">
+                    <div class="field">
+                        <label>Full Name <span class="required-star">*</span></label>
+                        <div class="input-wrap">
+                            <span class="input-icon">👤</span>
+                            <input type="text" name="rep_name" class="has-icon" placeholder="Representative's full name" value="{{ form_data.rep_name|default:'' }}" required>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Position / Title <span class="required-star">*</span></label>
+                        <div class="input-wrap">
+                            <span class="input-icon">💼</span>
+                            <input type="text" name="rep_position" class="has-icon" placeholder="e.g. CEO, Procurement Officer" value="{{ form_data.rep_position|default:'' }}" required>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Contact Number <span class="required-star">*</span></label>
+                        <div class="input-wrap">
+                            <span class="input-icon">📞</span>
+                            <input type="tel" name="rep_contact" class="has-icon" placeholder="+63 9XX XXX XXXX" value="{{ form_data.rep_contact|default:'' }}" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Documents -->
+            <div class="form-section" id="sec-docs">
+                <div class="section-header">
+                    <span class="section-icon">📄</span>
+                    <span class="section-title">Supporting Documents</span>
+                    <span class="section-badge">PDF only</span>
+                </div>
+                <div class="docs-grid">
+                    <div class="file-field">
+                        <div class="file-label-text">Mayor's Permit <span class="required-star">*</span></div>
+                        <div class="file-drop" id="drop-mayors">
+                            <input type="file" name="mayors_permit" accept=".pdf,application/pdf" onchange="fileChosen(this,'drop-mayors')">
+                            <div class="file-icon">📋</div>
+                            <div class="file-text"><strong>Click to upload</strong> or drag & drop<br>PDF format</div>
+                            <div class="file-name" id="name-mayors"></div>
+                        </div>
+                    </div>
+                    <div class="file-field">
+                        <div class="file-label-text">SEC Certificate <span class="required-star">*</span></div>
+                        <div class="file-drop" id="drop-sec">
+                            <input type="file" name="sec_certificate" accept=".pdf,application/pdf" onchange="fileChosen(this,'drop-sec')">
+                            <div class="file-icon">🏛</div>
+                            <div class="file-text"><strong>Click to upload</strong> or drag & drop<br>PDF format</div>
+                            <div class="file-name" id="name-sec"></div>
+                        </div>
+                    </div>
+                    <div class="file-field">
+                        <div class="file-label-text">BIR Certificate <span class="required-star">*</span></div>
+                        <div class="file-drop" id="drop-bir">
+                            <input type="file" name="bir_certificate" accept=".pdf,application/pdf" onchange="fileChosen(this,'drop-bir')">
+                            <div class="file-icon">📑</div>
+                            <div class="file-text"><strong>Click to upload</strong> or drag & drop<br>PDF format</div>
+                            <div class="file-name" id="name-bir"></div>
+                        </div>
+                    </div>
+                    <div class="file-field">
+                        <div class="file-label-text">Tax Clearance <span class="required-star">*</span></div>
+                        <div class="file-drop" id="drop-tax">
+                            <input type="file" name="tax_clearance" accept=".pdf,application/pdf" onchange="fileChosen(this,'drop-tax')">
+                            <div class="file-icon">✅</div>
+                            <div class="file-text"><strong>Click to upload</strong> or drag & drop<br>PDF format</div>
+                            <div class="file-name" id="name-tax"></div>
+                        </div>
+                    </div>
+                    <div class="file-field" style="grid-column: span 2;">
+                        <div class="file-label-text">Other Supporting Documents <span style="color:var(--muted);font-style:italic;">(optional)</span></div>
+                        <div class="file-drop" id="drop-other">
+                            <input type="file" name="other_documents" accept=".pdf,application/pdf" onchange="fileChosen(this,'drop-other')">
+                            <div class="file-icon">📎</div>
+                            <div class="file-text"><strong>Click to upload</strong> optional additional documents<br>PDF format</div>
+                            <div class="file-name" id="name-other"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-footer">
+                <p class="terms">By submitting, you confirm that all information and documents are accurate. Your account will be reviewed and activated by an administrator.</p>
+                <button type="submit" class="btn-submit">Submit Registration →</button>
+            </div>
+        </form>
+    </main>
+</div>
+<script>
+function togglePw(id) {
+    const inp = document.getElementById(id);
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+function checkStrength(pw) {
+    const fill = document.getElementById('strength-fill');
+    const text = document.getElementById('strength-text');
+    let score = 0;
+    if (pw.length >= 8)  score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    const levels = [
+        { pct: '0%',   color: 'transparent', label: '' },
+        { pct: '25%',  color: '#f87171', label: 'Weak' },
+        { pct: '50%',  color: '#fbbf24', label: 'Fair' },
+        { pct: '75%',  color: '#60a5fa', label: 'Good' },
+        { pct: '100%', color: '#34d399', label: 'Strong' },
+    ];
+    const l = levels[score];
+    fill.style.width = l.pct;
+    fill.style.background = l.color;
+    text.textContent = l.label;
+    text.style.color = l.color;
+}
+
+function fileChosen(input, dropId) {
+    const drop = document.getElementById(dropId);
+    const nameEl = drop.querySelector('.file-name');
+    if (input.files && input.files[0]) {
+        drop.classList.add('has-file');
+        nameEl.textContent = '✓ ' + input.files[0].name;
+    } else {
+        drop.classList.remove('has-file');
+        nameEl.textContent = '';
+    }
+}
+
+// Scroll-based step highlighting
+const sections = ['sec-credentials','sec-business','sec-rep','sec-docs'];
+const steps = ['step-2','step-3','step-4','step-5'];
+window.addEventListener('scroll', () => {
+    sections.forEach((secId, i) => {
+        const sec = document.getElementById(secId);
+        if (!sec) return;
+        const rect = sec.getBoundingClientRect();
+        const stepEl = document.getElementById(steps[i]);
+        if (!stepEl) return;
+        if (rect.top < window.innerHeight * 0.6 && rect.bottom > 0) {
+            steps.forEach((s,j) => {
+                const el = document.getElementById(s);
+                if (j < i) { el.classList.remove('active'); el.classList.add('done'); el.querySelector('.step-num').textContent = '✓'; }
+                else if (j === i) { el.classList.add('active'); el.classList.remove('done'); }
+                else { el.classList.remove('active','done'); }
+            });
+        }
+    });
+}, { passive: true });
+</script>
+</body>
+</html>
