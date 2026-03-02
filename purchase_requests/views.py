@@ -1,7 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import FileResponse
+from django.utils import timezone
 from .models import PurchaseRequest, Participation, Offer
+from authentication.models import BusinessProfile
+from .forms import CreatePurchaseRequest, SubmitOffer
 
 
 @login_required
@@ -56,8 +60,42 @@ def download_rfq_view(request, pk):
 @login_required
 def submit_offer_view(request, pk):
     pr = get_object_or_404(PurchaseRequest, pk=pk)
-    # TODO: Handle PDF upload and offer creation/replacement
-    return render(request, 'purchase_requests/submit_offer.html', {'pr': pr})
+    
+    if not pr.is_open:
+        messages.error(request, 'This purchase request is no longer open.')
+        return redirect('purchase_requests:detail', pk)
+    
+    existing_offer = Offer.objects.filter(
+        purchase_request = pr,
+        seller = request.user
+    ).first()
+
+    if request.method == 'POST':
+        form = SubmitOffer(request.POST, request.FILES)
+
+        if form.is_valid():
+            offer_file = form.cleaned_data['offer_file']
+            if existing_offer:
+                existing_offer.pdf_file = offer_file
+                existing_offer.submitted_at = timezone.now()
+                existing_offer.save()
+                messages.success(request, 'Your offer has been resubmitted successfully.')
+            else:
+                Offer.objects.create(
+                    purchase_request = pr,
+                    seller = request.user,
+                    offer_file = offer_file
+                )
+                messages.success(request, 'Your offer has been submitted successfully.')
+            return redirect('purchase_requests:detail', pk=pk)
+    else:
+        form = SubmitOffer()
+
+    return render(request, 'purchase_requests/submit_offer.html',
+                  {'pr': pr,
+                  'form':form,
+                  'existing_offer':existing_offer}
+                )
 
 
 @login_required
@@ -74,8 +112,18 @@ def my_requests_view(request):
 
 @login_required
 def create_purchase_request_view(request):
-    # TODO: Create new purchase request
-    return render(request, 'purchase_requests/create.html')
+    if request.method == 'POST':
+        form = CreatePurchaseRequest(request.POST, request.FILES)
+
+        if form.is_valid():
+            pr = form.save(commit=False)
+            pr.buyer = request.user
+            pr.save()
+            messages.success(request, 'Purchase request has been created successfully.')
+            return redirect('purchase_requests:my_requests')
+    else:
+            form = CreatePurchaseRequest()
+    return render(request, 'purchase_requests/create.html', {'form':form})
 
 
 @login_required
