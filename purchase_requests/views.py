@@ -99,7 +99,8 @@ def submit_offer_view(request, pk):
         if form.is_valid():
             offer_file = form.cleaned_data['offer_file']
             if existing_offer:
-                existing_offer.pdf_file = offer_file
+                existing_offer.offer_file.delete()
+                existing_offer.offer_file = offer_file
                 existing_offer.submitted_at = timezone.now()
                 existing_offer.save()
                 messages.success(request, 'Your offer has been resubmitted successfully.')

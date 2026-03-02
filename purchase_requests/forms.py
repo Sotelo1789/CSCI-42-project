@@ -13,7 +13,7 @@ class CreatePurchaseRequest(forms.ModelForm):
             )
         }
     
-    def clean_deadline(self):
+    def clean_closing_deadline(self):
         closing_deadline = self.cleaned_data.get('closing_deadline')
 
         if closing_deadline <= timezone.now():
@@ -21,14 +21,16 @@ class CreatePurchaseRequest(forms.ModelForm):
                 'The closing date and time must be in the future.'
             )
         
-    def clean_rfq(self):
+        return closing_deadline
+        
+    def clean_rfq_file(self):
         rfq = self.cleaned_data.get('rfq_file')
 
         if not rfq:
             raise forms.ValidationError('You must upload an RFQ file.')
         if rfq.size == 0:
             raise forms.ValidationError('Your uplaoded RFQ file is empty.')
-        if not rfq.name.lower().endswith('.pdf'):
+        if rfq.content_type != 'application/pdf':
             raise forms.ValidationError('Your uploaded RFQ file must be a PDF.')
         
         return rfq
@@ -39,14 +41,14 @@ class SubmitOffer(forms.ModelForm):
         model = Offer
         fields = ['offer_file']
 
-    def verify_pdf(self):
+    def clean_offer_file(self):
         pdf = self.cleaned_data.get('offer_file')
 
         if not pdf:
             raise forms.ValidationError('No file uploaded.')
         if pdf.size == 0:
             raise forms.ValidationError('Uploaded file is empty.')
-        if not pdf.name.lower().endswith('.pdf'):
+        if pdf.content_type != 'application/pdf':
             raise forms.ValidationError('File must be a PDF.')
         
         return pdf
