@@ -3,6 +3,19 @@
 {% block title %}Submit Offer{% endblock %}
 
 {% block content %}
-<h1>Submit Offer</h1>
-<p><!-- TODO: Implement this page --></p>
+<h1>Submit Offer for {{ pr.title }}</h1>
+
+{% if existing_offer %}
+    <p>You have already submitted an offer for {{ pr.title }}. Submitting a new one will replace it.</p>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Submit</button>
+</form>
+
+{% for message in messages %}
+    <p>{{ message }}</p>
+{% endfor %}
 {% endblock %}

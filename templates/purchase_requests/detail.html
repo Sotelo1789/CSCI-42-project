@@ -1,8 +1,152 @@
+<!--Page Setup (inherit base + enable helpers)-->
 {% extends "base.html" %}
+{% load humanize %}
 
-{% block title %}Detail{% endblock %}
+{% block title %}Purchase Request Details{% endblock %}
 
+<!--Page-only Styling (the looks of the page)-->
+{% block extra_css %}
+<style>
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+
+    .topbar{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:18px}
+
+    .btn{
+        display:inline-flex;align-items:center;justify-content:center;gap:8px;
+        padding:10px 14px;border-radius:12px;border:1px solid var(--border);
+        background:transparent;color:var(--white);cursor:pointer;text-decoration:none;
+        font-family: inherit;
+    }
+    .btn:hover{background:rgba(255,255,255,0.05)}
+    .btn-primary{background:var(--blue2);border-color:transparent;color:var(--white)}
+    .btn-primary:hover{filter:brightness(1.05)}
+    .btn-disabled{opacity:.55;cursor:not-allowed}
+
+    .grid{display:grid;grid-template-columns:1.25fr .75fr;gap:16px}
+
+    .card{
+        background:var(--panel);
+        border:1px solid var(--border);
+        border-radius:16px;
+        padding:16px;
+    }
+
+    .title{font-size:22px;font-weight:800;margin:0 0 6px;font-family:'Syne',sans-serif}
+    .sub{color:var(--muted);margin:0 0 14px}
+
+    .row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--border)}
+    .row:first-of-type{border-top:none;padding-top:0}
+
+    .k{color:var(--muted)}
+    .v{font-weight:600;text-align:right}
+
+    .badge{
+        display:inline-flex;align-items:center;
+        padding:6px 10px;border-radius:999px;
+        border:1px solid var(--border);
+        font-size:12px;color:var(--white);
+    }
+    .badge-open{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.35)}
+    .badge-closed{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.35)}
+
+    .section-title{font-weight:800;margin:0 0 10px;font-family:'Syne',sans-serif}
+    .desc{color:var(--white);line-height:1.5;margin:0;white-space:pre-wrap}
+
+    .file{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--border)}
+    .file:first-of-type{border-top:none}
+
+    @media (max-width: 900px){
+        .grid{grid-template-columns:1fr}
+        .v{text-align:left}
+    }
+</style>
+{% endblock %}
+
+<!--Page Content (What the user will see)-->
 {% block content %}
-<h1>Detail</h1>
-<p><!-- TODO: Implement this page --></p>
+<div class="wrap">
+  <!--Top Bar (Back Button + Status Badge + Join Button)-->
+  <div class="topbar">
+    <a class="btn" href="{% url 'purchase_requests:available_list' %}">← Back</a>
+
+    <div style="display:flex;gap:10px;align-items:center">
+      {% if is_closed %}
+        <span class="badge badge-closed">Closed</span>
+      {% else %}
+        <span class="badge badge-open">Open</span>
+      {% endif %}
+
+      {% if already_joined %}
+        <button class="btn btn-disabled" disabled>Joined</button>
+      {% elif is_closed %}
+        <button class="btn btn-disabled" disabled>Join Purchase Request</button>
+      {% else %}
+        <form method="post" action="{% url 'purchase_requests:join' pr.id %}">
+          {% csrf_token %}
+          <button class="btn btn-primary" type="submit">Join Purchase Request</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <!--Main Grid (Detail Card + Quick Action Card)-->
+  <div class="grid">
+    <!--Left Card (Contains Purchase Request Details)-->
+    <div class="card">
+      <h1 class="title">{{ pr.title }}</h1>
+      <p class="sub">Buyer: {{ pr.buyer.business_profile.business_name }}</p>
+
+      <div class="row">
+        <div class="k">Area of delivery</div>
+        <div class="v">{{ pr.area_of_delivery }}</div>
+      </div>
+
+      <div class="row">
+        <div class="k">Closing date &amp; time</div>
+        <div class="v">{{ pr.closing_deadline|date:"M d, Y (D) - h:i A" }}</div>
+      </div>
+
+      <div class="row">
+        <div class="k">Maximum allocated budget</div>
+        <div class="v">₱ {{ pr.budget|floatformat:2|intcomma }}</div>
+      </div>
+    </div>
+
+    <!--Right Card (Contains the Quick Action links)-->
+    <div class="card">
+      <p class="section-title">Quick Actions</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <a class="btn" href="{% url 'purchase_requests:review_list' %}">Go to Review Purchase Requests</a>
+        <a class="btn" href="{% url 'purchase_requests:available_list' %}">Browse Available Purchase Requests</a>
+      </div>
+    </div>
+
+    <!--Description Card(Full length card)-->
+    <div class="card" style="grid-column:1 / -1">
+      <p class="section-title">Description</p>
+      <p class="desc">{{ pr.description }}</p>
+    </div>
+
+    <!-- Attachments (View-only on Details page) -->
+    <div class="card" style="grid-column:1 / -1">
+      <p class="section-title">Attachments</p>
+
+      {% for f in pr.attachments.all %}
+        <div class="file">
+          <div>
+            <div style="font-weight:700">{{ f.filename }}</div>
+            <div style="color:var(--muted);font-size:12px">
+              {{ f.filesize_display|default:"" }}
+            </div>
+          </div>
+
+          <!-- No download button here (download is only allowed in Review List) -->
+          <span class="badge" style="opacity:.8">View in Review List</span>
+        </div>
+      {% empty %}
+        <div style="color:var(--muted)">No attachments uploaded.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
 {% endblock %}
