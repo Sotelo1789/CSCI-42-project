@@ -1,8 +1,498 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}Available List{% endblock %}
 
+{% block extra_css %}
+<style>
+  
+  /* =========================================
+    MAIN PAGE CONTAINER
+    Centers the content and limits width
+    ========================================= */
+  .wrap{max-width:1100px;margin:0 auto;padding:24px}
+
+  /* =========================================
+     TOP BAR
+     Holds the page title on the left
+     and the filter/form controls on the right
+     ========================================= */
+  .topbar{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:18px;
+    flex-wrap:wrap;
+  }
+
+  /* =========================================
+     PAGE TITLE BLOCK
+     Styles the main heading and subtitle
+     ========================================= */
+  .title-block h1{
+    font-size:28px;
+    font-weight:800;
+    margin:0 0 4px;
+    font-family:'Syne',sans-serif;
+    color:var(--white);
+  }
+
+  .title-block p{
+    margin:0;
+    color:var(--muted);
+  }
+
+  /* =========================================
+     GENERAL BUTTON STYLE
+     Used for links/buttons like View Details,
+     pagination buttons, and submit button
+     ========================================= */
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:10px 14px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--white);
+    cursor:pointer;
+    text-decoration:none;
+    font-family:inherit;
+  }
+
+  .btn:hover{background:rgba(255,255,255,0.05)}
+
+  /* =========================================
+     PRIMARY BUTTON
+     Used for the Change button
+     ========================================= */
+  .btn-primary{
+    background:var(--blue2);
+    border-color:transparent;
+    color:var(--white);
+  }
+
+  .btn-primary:hover{filter:brightness(1.05)}
+
+  /* =========================================
+     VIEW BUTTON
+     Used to view details button
+     ========================================= */
+  .btn-view{
+    background:#2563eb;
+    border-color:transparent;
+    color:white;
+  }
+
+  .btn-view{
+    background:#1d4ed8;
+  }
+
+  /* =========================================
+     CHANGE BUTTON
+     Used to change pages button
+     ========================================= */
+  .btn-change{
+    background:#f59e0b;
+    border-color:transparent;
+    color:white;
+  }
+
+  .btn-change:hover{
+    background:#d97706;
+  }
+
+  /* =========================================
+     CONTROLS SECTION
+     Used for filter dropdown and button
+     ========================================= */
+  .controls{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .controls select{
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:var(--panel);
+    color:var(--white);
+    font-family:inherit;
+  }
+
+  /* =========================================
+     PURCHASE REQUEST LIST CONTAINER
+     Holds all PR cards vertically
+     ========================================= */
+  .list{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+
+  /* =========================================
+     PURCHASE REQUEST CARD
+     This is the main box/card that contains
+     each purchase request
+     ========================================= */
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:18px;
+  }
+
+  /* =========================================
+     CARD HEADER
+     Top part of the card:
+     - PR title / buyer info on the left
+     - View Details button on the right
+     ========================================= */
+  .card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:16px;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+  }
+
+  /* =========================================
+     PURCHASE REQUEST TITLE
+     Styles the PR title inside each card
+     ========================================= */
+  .pr-title{
+    margin:0 0 6px;
+    font-size:22px;
+    font-weight:800;
+    font-family:'Syne',sans-serif;
+  }
+
+  .pr-title a{
+    color:var(--white);
+    text-decoration:none;
+  }
+
+  .pr-title a:hover{
+    text-decoration:underline;
+  }
+
+  /* =========================================
+     SUBTEXT
+     Used for buyer name text below the title
+     ========================================= */
+  .sub{
+    color:var(--muted);
+    margin:0;
+  }
+
+  /* =========================================
+     META INFORMATION GRID
+     Holds Category, Date Created,
+     Closing Deadline, and Budget
+     ========================================= */
+  .meta{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(220px, 1fr));
+    gap:0 18px;
+  }
+
+  /* =========================================
+     META ROW
+     Each individual info row inside the card
+     Example:
+     - Category
+     - Date Created
+     - Closing Deadline
+     - Budget
+     ========================================= */
+  .row{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    padding:10px 0;
+    border-top:1px solid var(--border);
+  }
+
+  /* Key label and value */
+  .k{color:var(--muted)}
+  .v{font-weight:600;text-align:right;color:var(--white)}
+
+  /* =========================================
+     ACTIONS SECTION
+     Reserved for card action buttons
+     (currently not actively used here)
+     ========================================= */
+  .actions{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:14px;
+  }
+
+  /* =========================================
+     PAGINATION WRAPPER
+     Holds the page buttons and page info text
+     ========================================= */
+  .pagination-wrap{
+    margin-top:20px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    align-items:center;
+  }
+
+  /* =========================================
+     PAGINATION BUTTON ROW
+     Contains First, Previous, Next, Last buttons
+     ========================================= */
+  .pagination{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:center;
+  }
+
+/* =========================================
+   PAGINATION BUTTONS
+   ========================================= */
+
+/* First / Last (neutral navigation) */
+.btn-page{
+  background:#334155;
+  border-color:transparent;
+  color:white;
+}
+
+.btn-page:hover{
+  background:#475569;
+}
+
+/* Previous / Next (highlight navigation) */
+.btn-page-active{
+  background:#3b82f6;
+  border-color:transparent;
+  color:white;
+}
+
+.btn-page-active:hover{
+  background:#2563eb;
+}
+  /* =========================================
+     CURRENT PAGE LABEL
+     Example: Page 1 of 3
+     ========================================= */
+  .page-label{
+    padding:10px 14px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:var(--panel);
+    color:var(--white);
+  }
+
+  .page-info{
+    color:var(--muted);
+    margin:0;
+  }
+
+  /* =========================================
+     EMPTY STATE BOX
+     Shown when there are no purchase requests
+     ========================================= */
+  .empty{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:28px;
+    text-align:center;
+    color:var(--muted);
+  }
+
+  /* =========================================
+     RESPONSIVE DESIGN
+     Adjusts layout for smaller screens
+     ========================================= */
+  @media (max-width: 900px){
+    .meta{grid-template-columns:1fr}
+    .v{text-align:left}
+    .actions{justify-content:flex-start}
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<h1>Available List</h1>
-<p><!-- TODO: Implement this page --></p>
+<div class="wrap">
+
+  <!-- =========================================
+       CHECK IF PURCHASE REQUESTS EXIST
+       Show the available list if prlist has data
+       Otherwise show the empty state
+       ========================================= -->
+  {% if prlist %}
+
+    <!-- =========================================
+         TOP SECTION OF PAGE
+         Contains page heading and filter controls
+         ========================================= -->
+    <div class="topbar">
+      <div class="title-block">
+        <h1>Available Purchase Requests</h1>
+        <p>Browse open procurement opportunities and review request details.</p>
+      </div>
+
+      <!-- =========================================
+           FILTER / ITEM COUNT FORM
+           Allows user to change items shown per page
+           ========================================= -->
+      <form method="get" class="controls">
+        {{ dictate_form.dictate }}
+        <button type="submit" class="btn btn-change">Change</button>
+      </form>
+    </div>
+
+    <!-- =========================================
+         PURCHASE REQUEST CARD LIST
+         Loops through page_prlist and displays
+         one card for each purchase request
+         ========================================= -->
+    <div class="list">
+      {% for pr in page_prlist %}
+
+        <!-- =========================================
+             SINGLE PURCHASE REQUEST CARD
+             Main card container for one PR
+             ========================================= -->
+        <div class="card">
+
+          <!-- =========================================
+               CARD HEADER SECTION
+               Contains title, buyer, and details button
+               ========================================= -->
+          <div class="card-head">
+            <div>
+
+              <!-- =========================================
+                   PURCHASE REQUEST TITLE + LINK
+                   ========================================= -->
+              <h2 class="pr-title">
+                <a href="{% url 'purchase_requests:detail' pk=pr.pk %}">
+                  {{ pr.title }}
+                </a>
+              </h2>
+
+              <!-- =========================================
+                   BUYER NAME DISPLAY
+                   Shows business name if available
+                   ========================================= -->
+              <p class="sub">
+                Buyer:
+                {% if pr.buyer.business_profile.business_name %}
+                  {{ pr.buyer.business_profile.business_name }}
+                {% else %}
+                  {{ pr.buyer.business_profile }}
+                {% endif %}
+              </p>
+            </div>
+
+            <!-- =========================================
+                 VIEW DETAILS BUTTON
+                 Links to purchase request detail page
+                 ========================================= -->
+            <a class="btn btn-view" href="{% url 'purchase_requests:detail' pk=pr.pk %}">
+              View Details
+            </a>
+          </div>
+
+          <!-- =========================================
+               META INFORMATION SECTION
+               Displays category, date created,
+               closing deadline, and budget
+               ========================================= -->
+          <div class="meta">
+
+            {# Category row #}
+            <div class="row">
+              <div class="k">Category</div>
+              <div class="v">{{ pr.category }}</div>
+            </div>
+
+            {# Date created row #}
+            <div class="row">
+              <div class="k">Date created</div>
+              <div class="v">{{ pr.created_at|date:"M d, Y (D) - h:i A" }}</div>
+            </div>
+
+            {# Closing deadline row #}
+            <div class="row">
+              <div class="k">Closing deadline</div>
+              <div class="v">{{ pr.closing_deadline|date:"M d, Y (D) - h:i A" }}</div>
+            </div>
+
+            {# Budget row - only shown if budget exists #}
+            {% if pr.budget %}
+            <div class="row">
+              <div class="k">Budget</div>
+              <div class="v">₱ {{ pr.budget|floatformat:2|intcomma }}</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- =========================================
+         PAGINATION SECTION
+         Shows navigation between pages
+         ========================================= -->
+    <div class="pagination-wrap">
+      <div class="pagination">
+
+        {# Previous page buttons #}
+        {% if page_prlist.has_previous %}
+          <a class="btn btn-page" href="?page=1&dictate={{ page_item_count }}">&laquo; First</a>
+          <a class="btn btn-page-active" href="?page={{ page_prlist.previous_page_number }}&dictate={{ page_item_count }}">Previous</a>
+        {% endif %}
+
+        {# Current page label #}
+        <span class="page-label">
+          Page {{ page_prlist.number }} of {{ page_prlist.paginator.num_pages }}
+        </span>
+
+        {# Next page buttons #}
+        {% if page_prlist.has_next %}
+          <a class="btn btn-page-active" href="?page={{ page_prlist.next_page_number }}&dictate={{ page_item_count }}">Next</a>
+          <a class="btn btn-page" href="?page={{ page_prlist.paginator.num_pages }}&dictate={{ page_item_count }}">Last &raquo;</a>
+        {% endif %}
+      </div>
+
+      <!-- =========================================
+           ITEMS PER PAGE INFO
+           ========================================= -->
+      <p class="page-info">
+        There
+        {% if is_one_per_page %}
+          is 1 item
+        {% else %}
+          are {{ page_item_count }} items
+        {% endif %}
+        per page.
+      </p>
+    </div>
+
+  {% else %}
+
+    <!-- =========================================
+         EMPTY STATE MESSAGE
+         Shown when there are no purchase requests
+         ========================================= -->
+    <div class="empty">
+      <p>No Purchase Requests Available. Come back at a different time!</p>
+    </div>
+  {% endif %}
+</div>
 {% endblock %}

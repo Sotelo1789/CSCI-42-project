@@ -31,7 +31,7 @@ class PurchaseRequest(models.Model):
     area_of_delivery = models.CharField(max_length=255)
     budget = models.DecimalField(max_digits=15, decimal_places=2)
     closing_deadline = models.DateTimeField()
-    rfq_file = models.FileField(upload_to='uploads/rfq/', null=True, blank=True)
+    rfq_file = models.FileField("RFQ File", upload_to='uploads/rfq/', null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
 
     created_at = models.DateTimeField(auto_now_add=True)

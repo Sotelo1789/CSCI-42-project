@@ -1,8 +1,422 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}My Requests{% endblock %}
 
+{% block extra_css %}
+<style>
+
+/* =========================================
+   MAIN PAGE CONTAINER
+   Centers page content
+========================================= */
+  .wrap{max-width:1100px;margin:0 auto;padding:24px}
+
+  .topbar{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:18px;
+    flex-wrap:wrap;
+  }
+
+/* =========================================
+   PAGE HEADER (TITLE + FILTER)
+========================================= */
+  .title-block h1{
+    font-size:28px;
+    font-weight:800;
+    margin:0 0 4px;
+    font-family:'Syne',sans-serif;
+    color:var(--white);
+  }
+
+  .title-block p{
+    margin:0;
+    color:var(--muted);
+  }
+
+/* =========================================
+   BASE BUTTON STYLE
+========================================= */
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:10px 14px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--white);
+    cursor:pointer;
+    text-decoration:none;
+    font-family:inherit;
+  }
+
+  .btn:hover{background:rgba(255,255,255,0.05)}
+
+/* =========================================
+   PRIMARY BUTTON (BLUE)
+   Used for View Offers
+========================================= */
+  .btn-primary{
+    background:#2563eb;
+    border-color:transparent;
+  }
+
+  .btn-primary:hover{
+    background:#1d4ed8;
+  }
+
+/* =========================================
+   SECONDARY BUTTON (GRAY)
+   Used for Change Deadline
+========================================= */
+  .btn-secondary{
+    background:#64748b;
+    border-color:transparent;
+  }
+
+  .btn-secondary:hover{
+    background:#475569;
+  }
+
+/* =========================================
+   DANGER BUTTON (RED)
+   Used for Cancel Request
+========================================= */
+  .btn-danger{
+    background:#ef4444;
+    border-color:transparent;
+  }
+
+  .btn-danger:hover{
+    background:#dc2626;
+  }
+
+/* =========================================
+   FILTER CONTROLS
+========================================= */
+  .controls{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .controls input,
+  .controls select{
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:var(--panel);
+    color:var(--white);
+    font-family:inherit;
+  }
+
+/* =========================================
+   LIST OF PURCHASE REQUEST CARDS
+========================================= */
+  .list{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+
+/* =========================================
+   PURCHASE REQUEST CARD
+========================================= */
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:18px;
+  }
+
+/* =========================================
+   CARD HEADER
+   Title + View Offers button
+========================================= */
+  .card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:16px;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+  }
+
+  .pr-title{
+    margin:0 0 6px;
+    font-size:22px;
+    font-weight:800;
+    font-family:'Syne',sans-serif;
+    color:var(--white);
+  }
+
+  .sub{
+    color:var(--muted);
+    margin:0;
+  }
+
+/* =========================================
+   REQUEST DETAILS GRID
+========================================= */
+  .meta{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(220px, 1fr));
+    gap:0 18px;
+  }
+
+  .row{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    padding:10px 0;
+    border-top:1px solid var(--border);
+  }
+
+  .k{color:var(--muted)}
+  .v{font-weight:600;text-align:right;color:var(--white)}
+
+/* =========================================
+   ACTION AREA (FORMS)
+========================================= */
+  .forms-area{
+    margin-top:16px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+  }
+
+  .forms-area input{
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:var(--panel);
+    color:var(--white);
+    font-family:inherit;
+  }
+
+/* =========================================
+   PAGINATION AREA
+========================================= */
+  .pagination-wrap{
+    margin-top:20px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    align-items:center;
+  }
+
+  .pagination{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .page-label{
+    padding:10px 14px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:var(--panel);
+    color:var(--white);
+  }
+
+  .page-info{
+    color:var(--muted);
+    margin:0;
+  }
+
+/* =========================================
+   PAGINATION BUTTONS
+========================================= */
+
+/* First / Last navigation */
+.btn-page{
+  background:#334155;
+  border-color:transparent;
+  color:white;
+}
+
+.btn-page:hover{
+  background:#475569;
+}
+
+/* Previous / Next navigation */
+.btn-page-active{
+  background:#3b82f6;
+  border-color:transparent;
+  color:white;
+}
+
+.btn-page-active:hover{
+  background:#2563eb;
+}
+
+/* =========================================
+   EMPTY STATE
+========================================= */
+  .empty{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:28px;
+    text-align:center;
+    color:var(--muted);
+  }
+
+/* =========================================
+   MOBILE RESPONSIVE
+========================================= */
+  @media (max-width: 900px){
+    .meta{grid-template-columns:1fr}
+    .v{text-align:left}
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<h1>My Requests</h1>
-<p><!-- TODO: Implement this page --></p>
+<div class="wrap">
+<!-- =========================================
+     CHECK IF PURCHASE REQUESTS EXIST
+========================================= -->
+
+  {% if prlist %}
+
+<!-- =========================================
+     PAGE HEADER
+========================================= -->
+    <div class="topbar">
+      <div class="title-block">
+        <h1>My Purchase Requests</h1>
+        <p>Manage your posted purchase requests and update their deadlines.</p>
+      </div>
+
+      <form method="get" class="controls">
+        {{ dictate_form.dictate }}
+        <button type="submit" class="btn btn-primary">Change</button>
+      </form>
+    </div>
+
+<!-- =========================================
+     PURCHASE REQUEST LIST
+========================================= -->
+    <div class="list">
+      {% for pr in page_prlist %}
+
+<!-- =========================================
+     SINGLE PURCHASE REQUEST CARD
+========================================= -->
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h2 class="pr-title">{{ pr.title }}</h2>
+              <p class="sub">Category: {{ pr.category }}</p>
+            </div>
+
+            <a class="btn btn-primary" href="{% url 'purchase_requests:view_offers' pk=pr.pk %}">
+              View Offers
+            </a>
+          </div>
+
+<!-- =========================================
+     REQUEST DETAILS
+========================================= -->
+          <div class="meta">
+            <div class="row">
+              <div class="k">Date created</div>
+              <div class="v">{{ pr.created_at|date:"M d, Y (D) - h:i A" }}</div>
+            </div>
+
+            <div class="row">
+              <div class="k">Closing deadline</div>
+              <div class="v">{{ pr.closing_deadline|date:"M d, Y (D) - h:i A" }}</div>
+            </div>
+
+            {% if pr.budget %}
+            <div class="row">
+              <div class="k">Budget</div>
+              <div class="v">₱ {{ pr.budget|floatformat:2|intcomma }}</div>
+            </div>
+            {% endif %}
+
+            <div class="row">
+              <div class="k">Request ID</div>
+              <div class="v">{{ pr.pk }}</div>
+            </div>
+          </div>
+
+<!-- =========================================
+     REQUEST ACTIONS
+========================================= -->
+          <div class="forms-area">
+
+          <!-- Change Deadline -->
+            <form method="post" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+              {% csrf_token %}
+              {{ deadline_form.non_field_errors }}
+              {{ deadline_form.closing_deadline }}
+              <input type="hidden" name="purchase_request" value="{{ pr.pk }}">
+              <input type="hidden" name="action" value="changeDeadline">
+              <button type="submit" class="btn btn-secondary">Change to Later Deadline</button>
+            </form>
+
+            <form method="post" style="display:flex;">
+              {% csrf_token %}
+              <input type="hidden" name="purchase_request" value="{{ pr.pk }}">
+              <input type="hidden" name="action" value="cancelRequest">
+              <button type="submit" class="btn btn-danger">Cancel Purchase Request</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+<!-- =========================================
+     PAGINATION
+========================================= -->
+    <div class="pagination-wrap">
+      <div class="pagination">
+        {% if page_prlist.has_previous %}
+          <a class="btn btn-page" href="?page=1&dictate={{ page_item_count }}">&laquo; First</a>
+          <a class="btn btn-page-active" href="?page={{ page_prlist.previous_page_number }}&dictate={{ page_item_count }}">Previous</a>
+        {% endif %}
+
+        <span class="page-label">
+          Page {{ page_prlist.number }} of {{ page_prlist.paginator.num_pages }}
+        </span>
+
+        {% if page_prlist.has_next %}
+          <a class="btn btn-page-active" href="?page={{ page_prlist.next_page_number }}&dictate={{ page_item_count }}">Next</a>
+          <a class="btn btn-page" href="?page={{ page_prlist.paginator.num_pages }}&dictate={{ page_item_count }}">Last &raquo;</a>
+        {% endif %}
+      </div>
+
+      <p class="page-info">
+        There
+        {% if is_one_per_page %}
+          is 1 item
+        {% else %}
+          are {{ page_item_count }} items
+        {% endif %}
+        per page.
+      </p>
+    </div>
+
+  {% else %}
+
+<!-- =========================================
+     EMPTY STATE MESSAGE
+========================================= -->
+    <div class="empty">
+      <p>No Purchase Requests Available. Make Some Purchase Requests!</p>
+    </div>
+  {% endif %}
+</div>
 {% endblock %}
