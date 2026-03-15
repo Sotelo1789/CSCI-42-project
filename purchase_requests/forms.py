@@ -74,3 +74,15 @@ class UpdatePurchaseRequestDeadline(forms.ModelForm):
     class Meta:
         model = PurchaseRequest
         fields = ["closing_deadline"]
+
+
+class SearchFilterForm(forms.Form):
+    CATEGORY_CHOICES = [('', 'All Categories')] + PurchaseRequest.CATEGORY_CHOICES
+
+    keyword    = forms.CharField(required=False, label='Search')
+    category   = forms.ChoiceField(required=False, choices=CATEGORY_CHOICES, label='Category')
+    budget_min = forms.DecimalField(required=False, label='Budget min', min_value=0)
+    budget_max = forms.DecimalField(required=False, label='Budget max', min_value=0)
+    area       = forms.CharField(required=False, label='Area of delivery')
+    deadline   = forms.DateField(required=False, label='Deadline on or before',
+                                 widget=forms.DateInput(attrs={'type': 'date'}))

@@ -1,3 +1,5 @@
+from django.db import models as django_models
+from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -24,54 +26,69 @@ def search_browse_view(request):
 
 
 @login_required
+
+@login_required
 def available_list_view(request):
-    """Verify that user is business"""
     isBusiness(request)
 
-    """Default number of items per page"""
-    page_item_count = 15 
+    from .forms import SearchFilterForm
 
-    """Get data from page limiter"""
-    dictate_form = AmountInPage(request.GET or None) 
+    page_item_count = 15
+    dictate_form = AmountInPage(request.GET or None)
+    if dictate_form.is_valid():
+        page_item_count = dictate_form.cleaned_data['dictate'] or 15
 
-    """
-    If there is data, either change number of items per page or stick to default if nothing is in
-    """
-    if dictate_form.is_valid(): 
-        page_item_count = dictate_form.cleaned_data['dictate']
-        if page_item_count == None:
-            page_item_count = 15
-
-    """
-    Get available purchase requests not of the user, and split them by the page
-    """
-    prlist = PurchaseRequest.objects.exclude(buyer=request.user).filter(status="open").order_by("pk")
-    """Ensure all purchase requests are truly open (may need better implementation to cover all possible bases, but for now it works)"""
+    # Close any overdue requests first (Justin's existing logic)
+    prlist = PurchaseRequest.objects.exclude(buyer=request.user).filter(status="open")
     for pr in prlist:
         if pr.closing_deadline <= timezone.now():
             pr.status = "closed"
             pr.save()
+
+    # Start with Justin's base queryset
     prlist = PurchaseRequest.objects.exclude(buyer=request.user).filter(status="open").order_by("pk")
+
+    # Apply your filters on top
+    filter_form = SearchFilterForm(request.GET or None)
+    if filter_form.is_valid():
+        kw = filter_form.cleaned_data.get('keyword')
+        cat = filter_form.cleaned_data.get('category')
+        bmin = filter_form.cleaned_data.get('budget_min')
+        bmax = filter_form.cleaned_data.get('budget_max')
+        area = filter_form.cleaned_data.get('area')
+        deadline = filter_form.cleaned_data.get('deadline')
+
+        if kw:
+            from django.db.models import Q
+            prlist = prlist.filter(
+                Q(title__icontains=kw) | Q(description__icontains=kw)
+            )
+        if cat:
+            prlist = prlist.filter(category=cat)
+        if bmin is not None:
+            prlist = prlist.filter(budget__gte=bmin)
+        if bmax is not None:
+            prlist = prlist.filter(budget__lte=bmax)
+        if area:
+            prlist = prlist.filter(area_of_delivery__icontains=area)
+        if deadline:
+            prlist = prlist.filter(closing_deadline__date__lte=deadline)
 
     paginator = Paginator(prlist, page_item_count)
     page_number = request.GET.get("page")
     page_prlist = paginator.get_page(page_number)
-    """For more accurate grammar later in the template"""
     is_one_per_page = (page_item_count == 1)
 
-    """
-    Fill up the context for the template
-    """
     ctx = {
-        "prlist" : prlist,
-        "page_prlist" : page_prlist,
-        "dictate_form" : dictate_form,
-        "page_item_count" : page_item_count,
-        "is_one_per_page" : is_one_per_page
+        "prlist": prlist,
+        "page_prlist": page_prlist,
+        "dictate_form": dictate_form,
+        "filter_form": filter_form,          # new
+        "page_item_count": page_item_count,
+        "is_one_per_page": is_one_per_page,
+        "request_get": request.GET.urlencode(),  # needed for pagination links
     }
-
     return render(request, 'purchase_requests/available_list.html', ctx)
-
 
 @login_required
 def purchase_request_detail_view(request, pk):
