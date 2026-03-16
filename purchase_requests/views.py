@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -6,7 +7,7 @@ from django.utils import timezone
 from django.core.paginator import Paginator
 from .models import PurchaseRequest, Participation, Offer
 from authentication.models import BusinessProfile
-from .forms import CreatePurchaseRequest, SubmitOffer, AmountInPage, UpdatePurchaseRequestDeadline
+from .forms import CreatePurchaseRequest, SubmitOffer, AmountInPage, UpdatePurchaseRequestDeadline, SearchFilterForm
 from datetime import datetime
 
 """
@@ -16,6 +17,7 @@ Checks if user is a consumer. If yes, redirect to dashboard
 def isBusiness(request):
     if hasattr(request.user,"consumer_profile"):
         return redirect("dashboard")
+
 
 @login_required
 def search_browse_view(request):
@@ -38,20 +40,43 @@ def available_list_view(request):
     If there is data, either change number of items per page or stick to default if nothing is in
     """
     if dictate_form.is_valid(): 
-        page_item_count = dictate_form.cleaned_data['dictate']
-        if page_item_count == None:
-            page_item_count = 15
+        page_item_count = dictate_form.cleaned_data['dictate'] or 15
 
     """
-    Get available purchase requests not of the user, and split them by the page
+    Close any overdue purchase requests not of the user
     """
-    prlist = PurchaseRequest.objects.exclude(buyer=request.user).filter(status="open").order_by("pk")
+    prlist = PurchaseRequest.objects.exclude(buyer=request.user).filter(status="open")
     """Ensure all purchase requests are truly open (may need better implementation to cover all possible bases, but for now it works)"""
     for pr in prlist:
         if pr.closing_deadline <= timezone.now():
             pr.status = "closed"
             pr.save()
     prlist = PurchaseRequest.objects.exclude(buyer=request.user).filter(status="open").order_by("pk")
+
+    """Applying filters"""
+    filter_form = SearchFilterForm(request.GET or None)
+    if filter_form.is_valid():
+        kw = filter_form.cleaned_data.get('keyword')
+        cat = filter_form.cleaned_data.get('category')
+        bmin = filter_form.cleaned_data.get('budget_min')
+        bmax = filter_form.cleaned_data.get('budget_max')
+        area = filter_form.cleaned_data.get('area')
+        deadline = filter_form.cleaned_data.get('deadline')
+
+        if kw:
+            prlist = prlist.filter(
+                Q(title__icontains=kw) | Q(description__icontains=kw)
+            )
+        if cat:
+            prlist = prlist.filter(category=cat)
+        if bmin is not None:
+            prlist = prlist.filter(budget__gte=bmin)
+        if bmax is not None:
+            prlist = prlist.filter(budget__lte=bmax)
+        if area:
+            prlist = prlist.filter(area_of_delivery__icontains=area)
+        if deadline:
+            prlist = prlist.filter(closing_deadline__date__lte=deadline)
 
     paginator = Paginator(prlist, page_item_count)
     page_number = request.GET.get("page")
@@ -66,8 +91,10 @@ def available_list_view(request):
         "prlist" : prlist,
         "page_prlist" : page_prlist,
         "dictate_form" : dictate_form,
+        "filter_form" : filter_form,    # new
         "page_item_count" : page_item_count,
-        "is_one_per_page" : is_one_per_page
+        "is_one_per_page" : is_one_per_page,
+        "request_get" : request.GET.urlencode(), # for pagination links
     }
 
     return render(request, 'purchase_requests/available_list.html', ctx)
@@ -142,6 +169,12 @@ def participate_view(request, pk):
     """Get the selected purchase request"""
     participation = get_object_or_404(Participation, pk=pk)
 
+    if participation.purchase_request.closing_deadline <= timezone.now():
+        pr = participation.purchase_request
+        pr.status = "closed"
+        pr.save()
+        return redirect('purchase_requests:review_list')
+
     """Officially mark business user as a participating seller"""
     if participation.seller == request.user:
         participation.is_participating = True
@@ -159,8 +192,8 @@ def remove_from_review_view(request, pk):
     participation = get_object_or_404(Participation, pk=pk)
     pr = participation.purchase_request
 
-    """Verify that business user is a potential seller, and that the purchase request is still open now"""
-    if participation.seller == request.user and pr.status == "open":
+    """Verify that business user is a potential seller"""
+    if participation.seller == request.user:
         """Then delete the connection between the potentially selling business user and the purchase request"""
         participation.delete()
 
@@ -169,16 +202,59 @@ def remove_from_review_view(request, pk):
 
 @login_required
 def download_rfq_view(request, pk):
-    """Get the purchase request, and then download the RFQ file of that purchase request"""
+    """Get the purchase request"""
     pr = get_object_or_404(PurchaseRequest, pk=pk)
-    return FileResponse(pr.rfq_file.open('rb'), as_attachment=True)
+    print("Attempt")
+
+    """If purchase request is still open, then download the RFQ file of that purchase request"""
+    if pr.closing_deadline > timezone.now():
+        print("Downloading")
+        return FileResponse(pr.rfq_file.open('rb'), as_attachment=True)
+    
+    print("Nope")
+    return redirect('purchase_requests:review_list')
 
 
 @login_required
 def submit_offer_view(request, pk):
     pr = get_object_or_404(PurchaseRequest, pk=pk)
-    # TODO: Handle PDF upload and offer creation/replacement
-    return render(request, 'purchase_requests/submit_offer.html', {'pr': pr})
+
+    if not pr.is_open:
+        messages.error(request, 'This purchase request is no longer open.')
+        return redirect('purchase_requests:detail', pk)
+
+    existing_offer = Offer.objects.filter(
+        purchase_request = pr,
+        seller = request.user
+    ).first()
+
+    if request.method == 'POST':
+        form = SubmitOffer(request.POST, request.FILES)
+
+        if form.is_valid():
+            offer_file = form.cleaned_data['offer_file']
+            if existing_offer:
+                existing_offer.offer_file.delete()
+                existing_offer.offer_file = offer_file
+                existing_offer.submitted_at = timezone.now()
+                existing_offer.save()
+                messages.success(request, 'Your offer has been resubmitted successfully.')
+            else:
+                Offer.objects.create(
+                    purchase_request = pr,
+                    seller = request.user,
+                    offer_file = offer_file
+                )
+                messages.success(request, 'Your offer has been submitted successfully.')
+            return redirect('purchase_requests:detail', pk=pk)
+    else:
+        form = SubmitOffer()
+
+    return render(request, 'purchase_requests/submit_offer.html',
+                  {'pr': pr,
+                  'form':form,
+                  'existing_offer':existing_offer}
+                )
 
 
 @login_required

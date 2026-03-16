@@ -1,21 +1,376 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}Submit Offer{% endblock %}
 
+{% block extra_css %}
+<style>
+
+  /* =========================================
+     MAIN PAGE CONTAINER
+     Centers page content and limits width
+     ========================================= */
+  .wrap{max-width:1100px;margin:0 auto;padding:24px}
+
+  /* =========================================
+     TOP BAR
+     Contains page title and navigation button
+     ========================================= */
+  .topbar{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:18px;
+    flex-wrap:wrap;
+  }
+
+  /* =========================================
+     PAGE TITLE BLOCK
+     ========================================= */
+  .title-block h1{
+    font-size:28px;
+    font-weight:800;
+    margin:0 0 4px;
+    font-family:'Syne',sans-serif;
+    color:var(--white);
+  }
+
+  .title-block p{
+    margin:0;
+    color:var(--muted);
+  }
+
+  /* =========================================
+     BUTTON STYLE
+     Used for navigation and submit buttons
+     ========================================= */
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:10px 14px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--white);
+    cursor:pointer;
+    text-decoration:none;
+    font-family:inherit;
+  }
+
+  .btn:hover{background:rgba(255,255,255,0.05)}
+
+  /* =========================================
+     PRIMARY BUTTON
+     Used for Submit Offer
+     ========================================= */
+  .btn-primary{
+    background:var(--blue2);
+    border-color:transparent;
+    color:var(--white);
+  }
+
+  .btn-primary:hover{filter:brightness(1.05)}
+
+  /* =========================================
+     SUCCESS BUTTON
+     Used to Submit Offer
+     ========================================= */
+  .btn-success{
+    background:#22c55e;
+    border-color:transparent;
+    color:white;
+  }
+
+  .btn-success:hover{
+    background:#16a34a;
+  }
+
+  /* =========================================
+     Go to Review List BUTTON
+     Used to return to review list button
+     ========================================= */
+  .btn-danger{
+    background:#334155;
+    border-color:transparent;
+    color:white;
+
+    .btn-danger:hover{
+      background:#475569;
+    }
+  }
+  /* =========================================
+     TWO COLUMN GRID
+     Left: PR Details
+     Right: Offer Submission Form
+     ========================================= */
+  .grid{
+    display:grid;
+    grid-template-columns:1.1fr .9fr;
+    gap:16px;
+  }
+
+  /* =========================================
+     CARD CONTAINER
+     Used for request details and form
+     ========================================= */
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:18px;
+  }
+
+  /* =========================================
+     CARD TITLE
+     ========================================= */
+  .section-title{
+    font-size:20px;
+    font-weight:800;
+    margin:0 0 12px;
+    font-family:'Syne',sans-serif;
+    color:var(--white);
+  }
+
+  .sub{
+    color:var(--muted);
+    margin:0 0 14px;
+  }
+
+  /* =========================================
+     REQUEST DETAIL ROW
+     Displays key-value information
+     ========================================= */
+  .row{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    padding:10px 0;
+    border-top:1px solid var(--border);
+  }
+
+  .row:first-child{border-top:none;padding-top:0}
+
+  .k{color:var(--muted)}
+  .v{font-weight:600;text-align:right;color:var(--white)}
+
+  /* =========================================
+     FORM GRID
+     Controls spacing between fields
+     ========================================= */
+  .form-grid{
+    display:grid;
+    gap:14px;
+  }
+
+  /* =========================================
+     FORM FIELD CONTAINER
+     ========================================= */
+  .field label{
+    display:block;
+    margin-bottom:8px;
+    color:var(--white);
+    font-weight:600;
+  }
+
+  .field input,
+  .field select,
+  .field textarea{
+    width:100%;
+    padding:12px 14px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:rgba(255,255,255,0.02);
+    color:var(--white);
+    font-family:inherit;
+    outline:none;
+  }
+
+  /* =========================================
+     TEXTAREA STYLE
+     ========================================= */
+  .field textarea{
+    min-height:120px;
+    resize:vertical;
+  }
+
+  .field input[type="file"]{
+    padding:10px;
+    background:transparent;
+  }
+
+  /* =========================================
+     HELPER TEXT
+     ========================================= */
+  .hint{
+    color:var(--muted);
+    font-size:13px;
+    margin-top:6px;
+  }
+
+  /* =========================================
+     FORM ACTION BUTTONS
+     ========================================= */
+  .actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:6px;
+  }
+
+  /* =========================================
+     FORM ERROR MESSAGES
+     ========================================= */
+  .errorlist{
+    margin:6px 0 0;
+    padding-left:18px;
+    color:#fca5a5;
+    font-size:13px;
+  }
+
+  /* =========================================
+     EMPTY MESSAGE BOX
+     ========================================= */
+  .empty-box{
+    border:1px dashed var(--border);
+    border-radius:12px;
+    padding:14px;
+    color:var(--muted);
+    background:rgba(255,255,255,0.02);
+  }
+
+  /* =========================================
+     RESPONSIVE ADJUSTMENT
+     ========================================= */
+  @media (max-width: 900px){
+    .grid{grid-template-columns:1fr}
+    .v{text-align:left}
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<h1>Submit Offer for {{ pr.title }}</h1>
+<div class="wrap">
 
-{% if existing_offer %}
-    <p>You have already submitted an offer for {{ pr.title }}. Submitting a new one will replace it.</p>
-{% endif %}
+  <!-- =========================================
+       PAGE HEADER
+       Displays title and navigation link
+       ========================================= -->
+  <div class="topbar">
+    <div class="title-block">
+      <h1>Submit Offer</h1>
+      <p>Prepare and upload your offer for this purchase request.</p>
+    </div>
 
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Submit</button>
-</form>
+    <a class="btn" href="{% url 'purchase_requests:detail' pk=pr.pk %}">← Back to Request</a>
+  </div>
 
-{% for message in messages %}
-    <p>{{ message }}</p>
-{% endfor %}
+  <!-- =========================================
+       MAIN GRID LAYOUT
+       Left: Purchase Request Information
+       Right: Offer Submission Form
+       ========================================= -->
+  <div class="grid">
+
+    <!-- =========================================
+         PURCHASE REQUEST DETAILS CARD
+         Shows information about the request
+         ========================================= -->
+    <div class="card">
+      <h2 class="section-title">{{ pr.title }}</h2>
+      <p class="sub">Review the request details before submitting your offer.</p>
+
+      <div class="row">
+        <div class="k">Category</div>
+        <div class="v">{{ pr.category }}</div>
+      </div>
+
+      <div class="row">
+        <div class="k">Area of delivery</div>
+        <div class="v">{{ pr.area_of_delivery }}</div>
+      </div>
+
+      <div class="row">
+        <div class="k">Closing deadline</div>
+        <div class="v">{{ pr.closing_deadline|date:"M d, Y (D) - h:i A" }}</div>
+      </div>
+
+      {% if pr.budget %}
+      <div class="row">
+        <div class="k">Budget</div>
+        <div class="v">₱ {{ pr.budget|floatformat:2|intcomma }}</div>
+      </div>
+      {% endif %}
+
+      <div class="row">
+        <div class="k">Description</div>
+        <div class="v" style="max-width:60%;white-space:pre-wrap;">{{ pr.description }}</div>
+      </div>
+    </div>
+
+    <!-- =========================================
+         OFFER SUBMISSION CARD
+         Contains the supplier submission form
+         ========================================= -->
+    <div class="card">
+      <h2 class="section-title">Offer Submission</h2>
+      <p class="sub">Upload your proposal and complete the required fields.</p>
+
+      <!-- =========================================
+           OFFER SUBMISSION FORM
+           ========================================= -->
+      <form method="post" enctype="multipart/form-data" class="form-grid">
+        {% csrf_token %}
+
+        <!-- =========================================
+             DJANGO FORM LOOP
+             Automatically renders form fields
+             ========================================= -->
+        {% if form %}
+          {% for field in form %}
+            <div class="field">
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}
+                <div class="hint">{{ field.help_text }}</div>
+              {% endif %}
+              {{ field.errors }}
+            </div>
+          {% endfor %}
+        {% else %}
+
+        <!-- =========================================
+             FALLBACK STATIC FORM
+             Used if Django form object is missing
+             ========================================= -->
+          <div class="field">
+            <label for="offer_price">Offer Price</label>
+            <input type="number" step="0.01" name="offer_price" id="offer_price" placeholder="Enter your offered amount">
+          </div>
+
+          <div class="field">
+            <label for="remarks">Remarks</label>
+            <textarea name="remarks" id="remarks" placeholder="Add notes, scope, inclusions, or lead time"></textarea>
+          </div>
+
+          <div class="field">
+            <label for="offer_file">Upload Offer File</label>
+            <input type="file" name="offer_file" id="offer_file" accept=".pdf,.doc,.docx">
+            <div class="hint">Recommended format: PDF</div>
+          </div>
+        {% endif %}
+
+        <!-- =========================================
+             FORM ACTION BUTTONS
+             ========================================= -->
+        <div class="actions">
+          <button type="submit" class="btn btn-success">Submit Offer</button>
+          <a class="btn btn-danger" href="{% url 'purchase_requests:review_list' %}">Go to Review List</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 {% endblock %}
