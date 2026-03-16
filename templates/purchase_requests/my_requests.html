@@ -3,6 +3,62 @@
 {% block title %}My Requests{% endblock %}
 
 {% block content %}
-<h1>My Requests</h1>
-<p><!-- TODO: Implement this page --></p>
+{% if prlist %}
+    <h1>My Available Requests</h1>
+    {% for pr in page_prlist %}
+        <div>
+            <p>Title: {{ pr.title }}</p>
+            <p>Category: {{ pr.category }}</p>
+            <p>Date Created: {{ pr.created_at }}</p>
+            <p>Deadline: {{ pr.closing_deadline }}</p>
+            <form method="post" style="display:inline;">
+       	        {% csrf_token %}
+                    {{ deadline_form.non_field_errors }}
+            	    {{ deadline_form.closing_deadline }}
+                    <input type="hidden" name="purchase_request" value="{{ pr.pk }}">
+		            <input type="hidden" name="action" value="changeDeadline">
+            	    <button type="submit">Change to Later Deadline</button>
+            </form>
+            <form method="post">
+                {% csrf_token %}
+                    <input type="hidden" name="purchase_request" value="{{ pr.pk }}">
+		            <input type="hidden" name="action" value="cancelRequest">
+            	    <button type="submit">Cancel Purchase Request</button>
+            </form>
+        </div>
+        <br>
+    {% endfor %}
+    <div>
+        <span>
+            {% if page_prlist.has_previous %}
+                <a href="?page=1&dictate={{ page_item_count }}">&laquo; first</a>
+                <a href="?page={{ page_prlist.previous_page_number }}&dictate={{ page_item_count }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_prlist.number }} of {{ page_prlist.paginator.num_pages }}.
+            </span>
+
+            {% if page_prlist.has_next %}
+                <a href="?page={{ page_prlist.next_page_number }}&dictate={{ page_item_count }}">next</a>
+                <a href="?page={{ page_prlist.paginator.num_pages }}&dictate={{ page_item_count }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+    <p>There 
+    {% if is_one_per_page %}
+        is 1 item 
+    {% else %}
+        are {{ page_item_count }} items
+    {% endif %}
+    per page </p>
+    <form method="get" style="margin-bottom: 1rem;">
+        {{ dictate_form.dictate }}
+        <button type="submit">Change</button>
+    </form>
+
+{% else %}
+    <p>No Purchase Requests Available. Make Some Purchase Requests!</p>
+{% endif %}
+
 {% endblock %}

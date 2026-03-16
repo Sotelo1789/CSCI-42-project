@@ -1,8 +1,467 @@
 {% extends "base.html" %}
+{% load humanize %}
 
-{% block title %}Available List{% endblock %}
+{% block title %}Available Purchase Requests{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ── Page layout ── */
+    .page-wrap {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    /* ── Page header ── */
+    .page-header {
+        margin-bottom: 1.75rem;
+    }
+    .page-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin-bottom: 0.25rem;
+    }
+    .page-sub { color: var(--muted); font-size: 0.9rem; }
+
+    /* ── Filter panel ── */
+    .filter-panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .filter-row {
+        display: grid;
+        grid-template-columns: 2fr 1.5fr 1fr 1fr 1.5fr 1.5fr;
+        gap: 0.75rem;
+        align-items: end;
+        margin-bottom: 0.75rem;
+    }
+    .filter-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    .filter-field { display: flex; flex-direction: column; gap: 5px; }
+    .filter-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+    }
+
+    .filter-panel input[type="text"],
+    .filter-panel input[type="number"],
+    .filter-panel input[type="date"],
+    .filter-panel select {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--white);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.875rem;
+        outline: none;
+        transition: border-color 0.2s, background 0.2s;
+        -webkit-appearance: none;
+    }
+    .filter-panel input:focus,
+    .filter-panel select:focus {
+        border-color: var(--blue);
+        background: rgba(26,86,219,0.08);
+    }
+    .filter-panel input::placeholder { color: rgba(136,153,187,0.45); }
+    .filter-panel select option { background: #0f1a30; }
+
+    /* active filter indicator */
+    .filter-active-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        background: rgba(26,86,219,0.18);
+        border: 1px solid rgba(26,86,219,0.35);
+        color: var(--accent);
+        font-size: 0.72rem; font-weight: 600;
+        padding: 3px 10px; border-radius: 20px;
+        letter-spacing: 0.05em;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 0.6rem 1.25rem;
+        border-radius: 9px; border: 1px solid var(--border);
+        font-family: 'DM Sans', sans-serif; font-size: 0.875rem;
+        font-weight: 600; cursor: pointer; text-decoration: none;
+        transition: all 0.15s; white-space: nowrap;
+        background: transparent; color: var(--white);
+    }
+    .btn:hover { background: rgba(255,255,255,0.06); }
+    .btn-primary {
+        background: linear-gradient(135deg, var(--blue), #2563eb);
+        border-color: transparent; color: #fff;
+        box-shadow: 0 3px 14px rgba(26,86,219,0.35);
+    }
+    .btn-primary:hover { filter: brightness(1.1); box-shadow: 0 5px 20px rgba(26,86,219,0.5); }
+    .btn-ghost { color: var(--muted); }
+    .btn-ghost:hover { color: var(--white); }
+
+    /* ── Results bar ── */
+    .results-bar {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+    .results-count {
+        font-size: 0.85rem; color: var(--muted);
+    }
+    .results-count strong { color: var(--white); }
+
+    .per-page-form {
+        display: flex; align-items: center; gap: 8px;
+    }
+    .per-page-form label { font-size: 0.8rem; color: var(--muted); }
+    .per-page-form input {
+        width: 60px; padding: 0.4rem 0.6rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border); border-radius: 8px;
+        color: var(--white); font-size: 0.85rem;
+        font-family: 'DM Sans', sans-serif; outline: none;
+        text-align: center;
+    }
+    .per-page-form input:focus { border-color: var(--blue); }
+
+    /* ── PR Cards ── */
+    .pr-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .pr-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 1.25rem 1.5rem;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 1rem;
+        align-items: start;
+        transition: border-color 0.2s, transform 0.15s, box-shadow 0.15s;
+        animation: fadeUp 0.4s ease both;
+    }
+    .pr-card:hover {
+        border-color: rgba(26,86,219,0.4);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+    }
+    .pr-card:nth-child(2) { animation-delay: 0.05s; }
+    .pr-card:nth-child(3) { animation-delay: 0.1s; }
+    .pr-card:nth-child(4) { animation-delay: 0.15s; }
+    .pr-card:nth-child(5) { animation-delay: 0.2s; }
+
+    .pr-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.05rem; font-weight: 700;
+        color: var(--white); text-decoration: none;
+        transition: color 0.15s;
+        display: block; margin-bottom: 0.2rem;
+    }
+    .pr-title:hover { color: var(--accent); }
+    .pr-buyer { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.85rem; }
+
+    .pr-meta {
+        display: flex; flex-wrap: wrap; gap: 1rem;
+    }
+    .pr-meta-item {
+        display: flex; flex-direction: column; gap: 2px;
+    }
+    .pr-meta-label {
+        font-size: 0.68rem; font-weight: 600;
+        letter-spacing: 0.07em; text-transform: uppercase;
+        color: var(--muted);
+    }
+    .pr-meta-value { font-size: 0.875rem; color: var(--white); font-weight: 500; }
+
+    /* category pill */
+    .cat-pill {
+        display: inline-flex; align-items: center;
+        padding: 2px 10px; border-radius: 20px;
+        font-size: 0.72rem; font-weight: 600;
+        letter-spacing: 0.04em;
+        background: rgba(56,189,248,0.1);
+        border: 1px solid rgba(56,189,248,0.2);
+        color: var(--accent);
+    }
+
+    /* budget highlight */
+    .budget-val {
+        font-family: 'Syne', sans-serif;
+        font-size: 1rem; font-weight: 700;
+        color: #34d399;
+    }
+
+    /* deadline warning */
+    .deadline-soon { color: #fbbf24; }
+    .deadline-ok   { color: var(--white); }
+
+    /* card right col */
+    .pr-card-action {
+        display: flex; flex-direction: column;
+        align-items: flex-end; gap: 0.5rem;
+        min-width: 120px;
+    }
+    .view-btn {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 0.55rem 1rem;
+        background: rgba(26,86,219,0.15);
+        border: 1px solid rgba(26,86,219,0.3);
+        border-radius: 8px; color: var(--accent);
+        text-decoration: none; font-size: 0.82rem;
+        font-weight: 600; transition: all 0.15s;
+        white-space: nowrap;
+    }
+    .view-btn:hover {
+        background: rgba(26,86,219,0.3);
+        border-color: var(--accent);
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+        text-align: center; padding: 4rem 2rem;
+        background: var(--panel); border: 1px dashed var(--border);
+        border-radius: 16px; color: var(--muted);
+        animation: fadeUp 0.4s ease both;
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--white); margin-bottom: 0.4rem; }
+    .empty-sub { font-size: 0.875rem; }
+
+    /* ── Pagination ── */
+    .pagination {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-top: 1.5rem; padding-top: 1rem;
+        border-top: 1px solid var(--border);
+    }
+    .page-links { display: flex; gap: 0.4rem; }
+    .page-link {
+        padding: 0.45rem 0.85rem;
+        border-radius: 8px; border: 1px solid var(--border);
+        color: var(--muted); text-decoration: none;
+        font-size: 0.825rem; font-weight: 500;
+        transition: all 0.15s;
+    }
+    .page-link:hover { background: rgba(255,255,255,0.06); color: var(--white); }
+    .page-link.current {
+        background: rgba(26,86,219,0.2);
+        border-color: rgba(26,86,219,0.4);
+        color: var(--white);
+    }
+    .page-info { font-size: 0.82rem; color: var(--muted); }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 860px) {
+        .filter-row { grid-template-columns: 1fr 1fr; }
+        .pr-card { grid-template-columns: 1fr; }
+        .pr-card-action { flex-direction: row; align-items: center; }
+    }
+    @media (max-width: 560px) {
+        .filter-row { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<h1>Available List</h1>
-<p><!-- TODO: Implement this page --></p>
+<div class="page-wrap">
+
+    <!-- Header -->
+    <div class="page-header">
+        <div class="page-title">Available Purchase Requests</div>
+        <div class="page-sub">Browse open procurement opportunities and review request details.</div>
+    </div>
+
+    <!-- Filter panel -->
+    <div class="filter-panel">
+        <form method="get" id="filterForm">
+            <div class="filter-row">
+                <div class="filter-field">
+                    <label class="filter-label">🔍 Keyword</label>
+                    <input type="text" name="keyword"
+                           placeholder="Search title or description..."
+                           value="{{ filter_form.keyword.value|default:'' }}">
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">📂 Category</label>
+                    <select name="category">
+                        <option value="">All Categories</option>
+                        <option value="goods"         {% if filter_form.category.value == 'goods' %}selected{% endif %}>Goods</option>
+                        <option value="services"      {% if filter_form.category.value == 'services' %}selected{% endif %}>Services</option>
+                        <option value="equipment"     {% if filter_form.category.value == 'equipment' %}selected{% endif %}>Equipment</option>
+                        <option value="construction"  {% if filter_form.category.value == 'construction' %}selected{% endif %}>Construction</option>
+                        <option value="it"            {% if filter_form.category.value == 'it' %}selected{% endif %}>IT &amp; Technology</option>
+                        <option value="other"         {% if filter_form.category.value == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">💰 Budget min</label>
+                    <input type="number" name="budget_min" min="0" step="1000"
+                           placeholder="e.g. 10000"
+                           value="{{ filter_form.budget_min.value|default:'' }}">
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">💰 Budget max</label>
+                    <input type="number" name="budget_max" min="0" step="1000"
+                           placeholder="e.g. 500000"
+                           value="{{ filter_form.budget_max.value|default:'' }}">
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">📍 Area of delivery</label>
+                    <input type="text" name="area"
+                           placeholder="e.g. Makati City"
+                           value="{{ filter_form.area.value|default:'' }}">
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">📅 Deadline on or before</label>
+                    <input type="date" name="deadline"
+                           value="{{ filter_form.deadline.value|default:'' }}">
+                </div>
+            </div>
+            <!-- hidden page size so filter doesn't reset it -->
+            <input type="hidden" name="dictate" value="{{ page_item_count }}">
+            <div class="filter-actions">
+                {% if filter_form.keyword.value or filter_form.category.value or filter_form.budget_min.value or filter_form.budget_max.value or filter_form.area.value or filter_form.deadline.value %}
+                    <span class="filter-active-badge">● Filters active</span>
+                {% endif %}
+                <a href="{% url 'purchase_requests:available_list' %}" class="btn btn-ghost">✕ Clear</a>
+                <button type="submit" class="btn btn-primary">Search →</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results bar -->
+    <div class="results-bar">
+        <div class="results-count">
+            Showing <strong>{{ page_prlist.start_index }}–{{ page_prlist.end_index }}</strong>
+            of <strong>{{ prlist|length }}</strong> request{{ prlist|length|pluralize }}
+        </div>
+        <form method="get" class="per-page-form">
+            <!-- carry filter params forward -->
+            <input type="hidden" name="keyword"    value="{{ filter_form.keyword.value|default:'' }}">
+            <input type="hidden" name="category"   value="{{ filter_form.category.value|default:'' }}">
+            <input type="hidden" name="budget_min" value="{{ filter_form.budget_min.value|default:'' }}">
+            <input type="hidden" name="budget_max" value="{{ filter_form.budget_max.value|default:'' }}">
+            <input type="hidden" name="area"       value="{{ filter_form.area.value|default:'' }}">
+            <input type="hidden" name="deadline"   value="{{ filter_form.deadline.value|default:'' }}">
+            <label>Per page:</label>
+            <input type="number" name="dictate" min="1" max="100"
+                   value="{{ page_item_count }}"
+                   onchange="this.form.submit()">
+        </form>
+    </div>
+
+    <!-- List -->
+    {% if page_prlist %}
+    <div class="pr-list">
+        {% for pr in page_prlist %}
+        <div class="pr-card">
+            <div class="pr-body">
+                <a href="{% url 'purchase_requests:detail' pk=pr.pk %}" class="pr-title">
+                    {{ pr.title }}
+                </a>
+                <div class="pr-buyer">
+                    Buyer: {{ pr.buyer.business_profile.business_name|default:pr.buyer.username }}
+                </div>
+                <div class="pr-meta">
+                    <div class="pr-meta-item">
+                        <span class="pr-meta-label">Category</span>
+                        <span class="cat-pill">{{ pr.get_category_display }}</span>
+                    </div>
+                    <div class="pr-meta-item">
+                        <span class="pr-meta-label">Budget</span>
+                        <span class="budget-val">₱{{ pr.budget|floatformat:2|intcomma }}</span>
+                    </div>
+                    <div class="pr-meta-item">
+                        <span class="pr-meta-label">Area of Delivery</span>
+                        <span class="pr-meta-value">{{ pr.area_of_delivery }}</span>
+                    </div>
+                    <div class="pr-meta-item">
+                        <span class="pr-meta-label">Date Created</span>
+                        <span class="pr-meta-value">{{ pr.created_at|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="pr-meta-item">
+                        <span class="pr-meta-label">Closing Deadline</span>
+                        <span class="pr-meta-value {% if pr.closing_deadline|timeuntil < '3 days' %}deadline-soon{% else %}deadline-ok{% endif %}">
+                            {{ pr.closing_deadline|date:"M d, Y (D) — h:i A" }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="pr-card-action">
+                <a href="{% url 'purchase_requests:detail' pk=pr.pk %}" class="view-btn">
+                    View Details →
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+        <!-- Pagination -->
+        {% if page_prlist.paginator.num_pages > 1 %}
+        <div class="pagination">
+            <div class="page-links">
+                {% if page_prlist.has_previous %}
+                    <a class="page-link" href="?page=1&{{ request_get }}">« First</a>
+                    <a class="page-link" href="?page={{ page_prlist.previous_page_number }}&{{ request_get }}">‹ Prev</a>
+                {% endif %}
+                <span class="page-link current">{{ page_prlist.number }}</span>
+                {% if page_prlist.has_next %}
+                    <a class="page-link" href="?page={{ page_prlist.next_page_number }}&{{ request_get }}">Next ›</a>
+                    <a class="page-link" href="?page={{ page_prlist.paginator.num_pages }}&{{ request_get }}">Last »</a>
+                {% endif %}
+            </div>
+            <div class="page-info">
+                Page {{ page_prlist.number }} of {{ page_prlist.paginator.num_pages }}
+                &nbsp;·&nbsp;
+                {{ prlist|length }} result{{ prlist|length|pluralize }}
+            </div>
+        </div>
+        <div>
+            <p>There 
+            {% if is_one_per_page %}
+                is 1 item 
+            {% else %}
+                are {{ page_item_count }} items
+            {% endif %}
+            per page </p>
+            <form method="get" style="margin-bottom: 1rem;">
+                {{ dictate_form.dictate }}
+                <button type="submit">Change</button>
+            </form>
+        </div>
+        {% endif %}
+
+    {% else %}
+    <!-- Empty state -->
+    <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <div class="empty-title">
+            {% if filter_form.keyword.value or filter_form.category.value or filter_form.area.value %}
+                No results match your filters
+            {% else %}
+                No purchase requests available
+            {% endif %}
+        </div>
+        <div class="empty-sub">
+            {% if filter_form.keyword.value or filter_form.category.value or filter_form.area.value %}
+                Try adjusting your search or <a href="{% url 'purchase_requests:available_list' %}" style="color:var(--accent)">clear all filters</a>.
+            {% else %}
+                Check back later — new requests are posted regularly.
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
 {% endblock %}

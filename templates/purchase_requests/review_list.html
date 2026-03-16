@@ -3,6 +3,23 @@
 {% block title %}Review List{% endblock %}
 
 {% block content %}
-<h1>Review List</h1>
-<p><!-- TODO: Implement this page --></p>
+{% if all_participations %}
+    <h1>Review List</h1>
+    {% for participation in all_participations %}
+        <div>
+            <p>Title: <a href="{% url 'purchase_requests:detail' pk=participation.purchase_request.pk %}">{{ participation.purchase_request.title }}</a></p>
+            <p>Deadline: {{ participation.purchase_request.closing_deadline }}</p>
+            {% if participation.is_participating %}
+                <button><a href="{% url 'purchase_requests:submit_offer' pk=participation.purchase_request.pk %}">Proceed to Submit Offer</a></button>
+            {% else %}
+                <button><a href="{% url 'purchase_requests:participate' pk=participation.pk %}">Participate</a></button>
+                <button><a href="{% url 'purchase_requests:remove' pk=participation.pk %}">Unjoin</a></button>
+            {% endif %}
+            <button><a href="{% url 'purchase_requests:download_rfq' pk=participation.purchase_request.pk %}">Download RFQ</a></button>
+        </div>
+    {% endfor %}
+{% else %}
+    <p>No purchase requests left to consider. Join other purchase requests</p>
+{% endif %}
+
 {% endblock %}
