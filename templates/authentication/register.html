@@ -1,0 +1,160 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account — PRMS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --navy: #0b1426; --navy2: #111d35; --blue: #1a56db; --blue2: #2563eb;
+            --accent: #38bdf8; --white: #f0f4ff; --muted: #8899bb; --border: rgba(255,255,255,0.08);
+        }
+        html, body { min-height: 100%; background: var(--navy); color: var(--white); font-family: 'DM Sans', sans-serif; }
+
+        .bg {
+            position: fixed; inset: 0;
+            background: linear-gradient(rgba(26,86,219,0.07) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(26,86,219,0.07) 1px, transparent 1px);
+            background-size: 48px 48px;
+            animation: gridDrift 20s linear infinite;
+        }
+        .bg::after {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(ellipse 70% 60% at 50% 40%, rgba(26,86,219,0.15) 0%, transparent 65%);
+        }
+        @keyframes gridDrift { from { background-position: 0 0; } to { background-position: 48px 48px; } }
+
+        .page {
+            position: relative; z-index: 1;
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 2rem;
+        }
+
+        .back-link {
+            position: absolute; top: 2rem; left: 2rem;
+            display: flex; align-items: center; gap: 6px;
+            color: var(--muted); text-decoration: none; font-size: 0.875rem;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--white); }
+
+        header { text-align: center; margin-bottom: 3rem; animation: fadeUp 0.6s ease both; }
+        .brand { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 1.5rem; }
+        .brand-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--blue), var(--accent)); border-radius: 9px; display: grid; place-items: center; font-size: 18px; }
+        .brand-name { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; }
+        .brand-name span { color: var(--accent); }
+
+        h1 { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .subtitle { color: var(--muted); font-size: 0.95rem; }
+
+        .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; width: 100%; max-width: 680px; animation: fadeUp 0.6s 0.1s ease both; }
+
+        .type-card {
+            background: rgba(255,255,255,0.04);
+            border: 2px solid var(--border);
+            border-radius: 18px;
+            padding: 2rem 1.75rem;
+            text-decoration: none;
+            color: var(--white);
+            transition: all 0.25s;
+            display: flex; flex-direction: column; gap: 1rem;
+            position: relative; overflow: hidden;
+        }
+        .type-card::before {
+            content: ''; position: absolute; inset: 0;
+            opacity: 0; transition: opacity 0.25s;
+        }
+        .type-card.business::before { background: linear-gradient(135deg, rgba(26,86,219,0.12), transparent); }
+        .type-card.consumer::before { background: linear-gradient(135deg, rgba(56,189,248,0.12), transparent); }
+        .type-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.2); box-shadow: 0 16px 40px rgba(0,0,0,0.4); }
+        .type-card:hover::before { opacity: 1; }
+        .type-card.business:hover { border-color: var(--blue2); }
+        .type-card.consumer:hover { border-color: var(--accent); }
+
+        .card-icon { font-size: 2.5rem; }
+        .card-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.2rem; }
+        .card-desc { color: var(--muted); font-size: 0.875rem; line-height: 1.6; }
+
+        .card-reqs { margin-top: 0.5rem; }
+        .card-reqs li {
+            font-size: 0.78rem; color: var(--muted);
+            list-style: none; padding: 0.2rem 0;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .card-reqs li::before { content: '✓'; color: var(--accent); font-weight: 700; font-size: 0.7rem; }
+
+        .card-badge {
+            display: inline-flex; align-items: center;
+            padding: 3px 10px; border-radius: 20px;
+            font-size: 0.7rem; font-weight: 600; letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .badge-blue { background: rgba(26,86,219,0.2); color: var(--blue2); border: 1px solid rgba(26,86,219,0.3); }
+        .badge-cyan { background: rgba(56,189,248,0.15); color: var(--accent); border: 1px solid rgba(56,189,248,0.25); }
+
+        .arrow { margin-top: auto; font-size: 1.2rem; align-self: flex-end; opacity: 0.4; transition: opacity 0.2s, transform 0.2s; }
+        .type-card:hover .arrow { opacity: 1; transform: translateX(4px); }
+
+        .login-row { margin-top: 2rem; color: var(--muted); font-size: 0.875rem; animation: fadeUp 0.6s 0.2s ease both; }
+        .login-row a { color: var(--accent); text-decoration: none; font-weight: 500; }
+        .login-row a:hover { opacity: 0.7; }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 580px) { .cards { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="page">
+    <a href="{% url 'authentication:login' %}" class="back-link">← Back to login</a>
+
+    <header>
+        <div class="brand">
+            <div class="brand-icon">📋</div>
+            <div class="brand-name">PR<span>MS</span></div>
+        </div>
+        <h1>Create an Account</h1>
+        <p class="subtitle">Choose the account type that fits your role.</p>
+    </header>
+
+    <div class="cards">
+        <a href="{% url 'authentication:register_business' %}" class="type-card business">
+            <div class="card-badge badge-blue">Business</div>
+            <div class="card-icon">🏢</div>
+            <div class="card-title">Business Account</div>
+            <div class="card-desc">For companies that want to post purchase requests or submit offers to other businesses.</div>
+            <ul class="card-reqs">
+                <li>Post & manage Purchase Requests</li>
+                <li>Submit Offers (PDF)</li>
+                <li>Download RFQ documents</li>
+                <li>Business docs required</li>
+            </ul>
+            <div class="arrow">→</div>
+        </a>
+
+        <a href="{% url 'authentication:register_consumer' %}" class="type-card consumer">
+            <div class="card-badge badge-cyan">Consumer</div>
+            <div class="card-icon">👤</div>
+            <div class="card-title">Consumer Account</div>
+            <div class="card-desc">For individuals who want to post requests and interact with businesses on the Marketplace.</div>
+            <ul class="card-reqs">
+                <li>Access the Marketplace</li>
+                <li>Post & browse listings</li>
+                <li>Interact with businesses</li>
+                <li>Gov't ID required</li>
+            </ul>
+            <div class="arrow">→</div>
+        </a>
+    </div>
+
+    <p class="login-row">Already have an account? <a href="{% url 'authentication:login' %}">Sign in</a></p>
+</div>
+</body>
+</html>

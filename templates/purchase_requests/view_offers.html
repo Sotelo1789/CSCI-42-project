@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block title %}View Offers{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== PAGE WRAPPER ===== */
+  .wrap{
+    max-width:1100px;
+    margin:0 auto;
+    padding:24px;
+  }
+
+  /* ===== TOP HEADER ===== */
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:16px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+  }
+
+  .title-block h1{
+    margin:0 0 6px;
+    font-size:28px;
+    font-weight:800;
+    color:var(--white);
+  }
+
+  .title-block p{
+    margin:0;
+    color:var(--muted);
+    font-size:14px;
+  }
+
+  /* ===== GENERAL BUTTON STYLE ===== */
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:10px 14px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    text-decoration:none;
+    font-size:14px;
+    cursor:pointer;
+    transition:.2s ease;
+    color:var(--white);
+    background:transparent;
+  }
+
+  .btn:hover{
+    transform:translateY(-1px);
+  }
+
+  /* ===== BUTTON COLORS ===== */
+  .btn-back{
+    background:rgba(255,255,255,.04);
+    border-color:rgba(255,255,255,.12);
+    color:var(--white);
+  }
+
+  .btn-back:hover{
+    background:rgba(255,255,255,.08);
+  }
+
+  .btn-view{
+    background:rgba(59,130,246,.15);
+    border-color:rgba(59,130,246,.35);
+    color:#93c5fd;
+  }
+
+  .btn-view:hover{
+    background:rgba(59,130,246,.24);
+  }
+
+  .btn-download{
+    background:rgba(34,197,94,.15);
+    border-color:rgba(34,197,94,.35);
+    color:#86efac;
+  }
+
+  .btn-download:hover{
+    background:rgba(34,197,94,.24);
+  }
+
+  .btn-accept{
+    background:rgba(234,179,8,.15);
+    border-color:rgba(234,179,8,.35);
+    color:#fde68a;
+  }
+
+  .btn-accept:hover{
+    background:rgba(234,179,8,.24);
+  }
+
+  /* ===== CARD / PANEL ===== */
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:20px;
+    box-shadow:0 10px 24px rgba(0,0,0,.18);
+    overflow:hidden;
+  }
+
+  .panel-head{
+    padding:18px 20px;
+    border-bottom:1px solid var(--border);
+  }
+
+  .panel-head h2{
+    margin:0 0 4px;
+    color:var(--white);
+    font-size:18px;
+  }
+
+  .panel-head p{
+    margin:0;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  /* ===== TABLE ===== */
+  .table-wrap{
+    overflow-x:auto;
+    width:100%;
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:700px;
+  }
+
+  thead th{
+    text-align:left;
+    padding:14px 18px;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--muted);
+    border-bottom:1px solid var(--border);
+    background:rgba(255,255,255,.02);
+  }
+
+  tbody td{
+    padding:16px 18px;
+    border-bottom:1px solid rgba(255,255,255,.06);
+    color:var(--white);
+    font-size:14px;
+    vertical-align:middle;
+  }
+
+  tbody tr:hover{
+    background:rgba(255,255,255,.02);
+  }
+
+  .supplier-name{
+    font-weight:700;
+    color:var(--white);
+  }
+
+  .file-name{
+    color:var(--muted);
+    font-size:13px;
+    word-break:break-word;
+  }
+
+  .actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+
+  .status-winner{
+    color:#4ade80;
+    font-weight:700;
+  }
+
+  .status-rejected{
+    color:#f87171;
+    font-weight:700;
+  }
+
+  .empty{
+    padding:40px 20px;
+    text-align:center;
+    color:var(--muted);
+  }
+
+  .empty h3{
+    margin:0 0 8px;
+    font-size:18px;
+    color:var(--white);
+  }
+
+  .deadline-note{
+    margin-top:10px;
+    font-size:13px;
+    color:var(--muted);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+
+  <!-- ===== PAGE HEADER ===== -->
+  <div class="topbar">
+    <div class="title-block">
+      <h1>View Offers</h1>
+      <p>Review the uploaded PDF offers submitted by suppliers.</p>
+    </div>
+
+    <!-- BACK BUTTON -->
+    <a href="{% url 'purchase_requests:my_requests' %}" class="btn btn-back">
+      ← Back to My Requests
+    </a>
+  </div>
+
+  <!-- ===== MAIN PANEL ===== -->
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Submitted Offers</h2>
+      <p>Each supplier submission contains their uploaded PDF offer document.</p>
+
+      {% if purchase_request.status != "completed" %}
+        {% if purchase_request.closing_deadline <= now or purchase_request.status == "closed" %}
+        
+          {% if offer.status == "submitted" %}
+            <a href="{% url 'purchase_requests:accept_offer' purchase_request.pk offer.pk %}" class="btn btn-accept">
+              Select Winner
+            </a>
+          {% elif offer.status == "accepted" %}
+            <span class="status-winner">Winner</span>
+          {% elif offer.status == "rejected" %}
+            <span class="status-rejected">Rejected</span>
+          {% endif %}
+
+        {% else %}
+          <span style="color:var(--muted);">Available after deadline</span>
+        {% endif %}
+      {% else %}
+        {% if offer.status == "accepted" %}
+          <span class="status-winner">Winner</span>
+        {% elif offer.status == "rejected" %}
+          <span class="status-rejected">Rejected</span>
+        {% endif %}
+      {% endif %}
+
+    {% if offers %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Supplier Name</th>
+              <th>AUTHORIZED REPRESENTATIVE</th>
+              <th>CONTACT INFO</th>
+              <th>Uploaded File</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <!-- ===== LOOP THROUGH ALL OFFERS ===== -->
+            {% for offer in offers %}
+            <tr>
+              <!-- SUPPLIER / BUSINESS NAME -->
+              <td>
+                <div class="supplier-name">
+                  {{ offer.seller.business_profile.business_name }}
+                </div>
+              </td>
+              
+              <!-- SUPPLIER / AUTHORIZED REPRESENTATIVE-->
+              <td>
+                {{ offer.seller.business_profile.rep_name }}
+              </td>
+
+              <!-- SUPPLIER / CONTACT INFORMATION-->
+              <td>
+                {{ offer.seller.business_profile.rep_contact }}
+              </td>
+
+              <!-- PDF FILE NAME -->
+              <td>
+                {% if offer.offer_file %}
+                  <div class="file-name">
+                    {{ offer.offer_file.name|cut:"uploads/offers/" }}
+                  </div>
+                {% else %}
+                  <span style="color:#fca5a5;">No file uploaded</span>
+                {% endif %}
+              </td>
+
+              <!-- ACTION BUTTONS -->
+              <td>
+                <div class="actions">
+                  {% if offer.offer_file %}
+                    <!-- VIEW PDF IN BROWSER -->
+                    <a href="{{ offer.offer_file.url }}" target="_blank" class="btn btn-view">
+                      View PDF
+                    </a>
+
+                    <!-- DOWNLOAD PDF -->
+                    <a href="{{ offer.offer_file.url }}" download class="btn btn-download">
+                      Download
+                    </a>
+
+                    {% if purchase_request.closing_deadline <= now or purchase_request.status == "closed" %}
+                      {% if offer.status == 'submitted' %}
+                        <a href="{% url 'purchase_requests:accept_offer' purchase_request.pk offer.pk %}" class="btn btn-accept">
+                          Select Winner
+                        </a>
+                      {% elif offer.status == 'accepted' %}
+                        <span class="status-winner">Winner</span>
+                      {% elif offer.status == 'rejected' %}
+                        <span class="status-rejected">Rejected</span>
+                      {% endif %}
+                    {% else %}
+                      <span style="color:var(--muted);">Available after deadline</span>
+                    {% endif %}
+                  {% else %}
+                    <span style="color:var(--muted);">No available actions</span>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <!-- ===== EMPTY STATE ===== -->
+      <div class="empty">
+        <h3>No offers submitted yet</h3>
+        <p>There are currently no uploaded supplier PDF offers for this request.</p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

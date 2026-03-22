@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Create Purchase Request{% endblock %}
+
+{% block extra_css %}
+<style>
+
+  /* =========================================
+     MAIN PAGE CONTAINER
+     Centers page content and limits width
+     ========================================= */
+  .wrap{max-width:1100px;margin:0 auto;padding:24px}
+
+  /* =========================================
+     TOP BAR
+     Contains page heading and filter controls
+     ========================================= */
+  .topbar{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:18px;
+    flex-wrap:wrap;
+  }
+
+  /* =========================================
+     TITLE BLOCK
+     Styles the page title and subtitle
+     ========================================= */
+  .title-block h1{
+    font-size:28px;
+    font-weight:800;
+    margin:0 0 4px;
+    font-family:'Syne',sans-serif;
+    color:var(--white);
+  }
+
+  .title-block p{
+    margin:0;
+    color:var(--muted);
+  }
+
+  /* =========================================
+     GENERAL BUTTON STYLE
+     Used for action links and buttons
+     ========================================= */
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:10px 14px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--white);
+    cursor:pointer;
+    text-decoration:none;
+    font-family:inherit;
+  }
+
+  .btn:hover{background:rgba(255,255,255,0.05)}
+
+  /* =========================================
+     PRIMARY BUTTON
+     Used for the Change button
+     ========================================= */
+  .btn-primary{
+    background:var(--blue2);
+    border-color:transparent;
+    color:var(--white);
+  }
+
+  .btn-primary:hover{filter:brightness(1.05)}
+
+  /* =========================================
+     CREATE PURCHASE REQUEST BUTTON
+     ========================================= */
+  .btn-create-pr{
+    background:#16a34a;
+    border-color:transparent;
+    color:white;
+  }
+
+  .btn-create-pr:hover{
+    background:#15803d;
+  }
+
+  /* =========================================
+     CANCEL BUTTON
+     ========================================= */
+  .btn-danger{
+    background:#dc2626;
+    border-color:transparent;
+    color:white;
+  }
+
+  .btn-danger:hover{
+    background:#b91c1c;
+  }
+  /* =========================================
+     TWO COLUMN GRID LAYOUT
+     Left: form
+     Right: posting guide
+     ========================================= */
+  .grid{
+    display:grid;
+    grid-template-columns:1fr .8fr;
+    gap:16px;
+  }
+
+  /* =========================================
+     DARK THEMED DROPDOWN
+     changing the color of the dropdown to make text readable
+     ========================================= */
+  select option{
+    color: #111827;
+    background: white;
+  }
+  /* =========================================
+     CARD CONTAINER
+     Used for form card and guide card
+     ========================================= */
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:18px;
+  }
+
+  /* =========================================
+     SECTION TITLE
+     ========================================= */
+  .section-title{
+    font-size:20px;
+    font-weight:800;
+    margin:0 0 12px;
+    font-family:'Syne',sans-serif;
+    color:var(--white);
+  }
+
+  .sub{
+    color:var(--muted);
+    margin:0 0 14px;
+  }
+
+  /* =========================================
+     FORM GRID
+     Controls spacing between fields
+     ========================================= */
+  .form-grid{
+    display:grid;
+    gap:14px;
+  }
+
+  /* =========================================
+     FORM FIELD CONTAINER
+     ========================================= */
+  .field label{
+    display:block;
+    margin-bottom:8px;
+    color:var(--white);
+    font-weight:600;
+  }
+
+  .field input,
+  .field select,
+  .field textarea{
+    width:100%;
+    padding:12px 14px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:rgba(255,255,255,0.02);
+    color:var(--white);
+    font-family:inherit;
+    outline:none;
+  }
+
+  /* =========================================
+     TEXTAREA STYLING
+     ========================================= */
+  .field textarea{
+    min-height:140px;
+    resize:vertical;
+  }
+
+  .field input[type="file"]{
+    padding:10px;
+    background:transparent;
+  }
+
+  /* =========================================
+     HELPER TEXT
+     ========================================= */
+  .hint{
+    color:var(--muted);
+    font-size:13px;
+    margin-top:6px;
+  }
+
+  /* =========================================
+     FORM ACTION BUTTONS
+     ========================================= */
+  .actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:6px;
+  }
+
+  /* =========================================
+     ERROR MESSAGES
+     ========================================= */
+  .errorlist{
+    margin:6px 0 0;
+    padding-left:18px;
+    color:#fca5a5;
+    font-size:13px;
+  }
+
+  /* =========================================
+     GUIDE INFORMATION LIST
+     ========================================= */
+  .info-list{
+    display:grid;
+    gap:12px;
+  }
+
+  .info-item{
+    border-top:1px solid var(--border);
+    padding-top:12px;
+  }
+
+  .info-item:first-child{
+    border-top:none;
+    padding-top:0;
+  }
+
+  .info-item strong{
+    display:block;
+    color:var(--white);
+    margin-bottom:4px;
+  }
+
+  .info-item span{
+    color:var(--muted);
+    line-height:1.5;
+  }
+
+  /* =========================================
+     RESPONSIVE ADJUSTMENT
+     ========================================= */
+  @media (max-width: 900px){
+    .grid{grid-template-columns:1fr}
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+
+  <!-- =========================================
+       PAGE HEADER
+       Contains page title and back button
+       ========================================= -->
+  <div class="topbar">
+    <div class="title-block">
+      <h1>Create Purchase Request</h1>
+      <p>Post a new purchase request and invite suppliers to submit offers.</p>
+    </div>
+
+    <a class="btn" href="{% url 'purchase_requests:my_requests' %}">← Back to My Requests</a>
+  </div>
+
+  <!-- =========================================
+       MAIN GRID LAYOUT
+       Left: Create Request Form
+       Right: Posting Guide
+       ========================================= -->
+  <div class="grid">
+
+    <!-- =========================================
+         PURCHASE REQUEST FORM CARD
+         ========================================= -->
+    <div class="card">
+      <h2 class="section-title">Request Details</h2>
+      <p class="sub">Complete the form below to publish a new purchase request.</p>
+
+      <!-- =========================================
+           CREATE PURCHASE REQUEST FORM
+           ========================================= -->
+      <form method="post" enctype="multipart/form-data" class="form-grid">
+        {% csrf_token %}
+
+        <!-- =========================================
+             DJANGO FORM RENDERING
+             If form object exists, render dynamically
+             ========================================= -->
+        {% if form %}
+          {% for field in form %}
+            <div class="field">
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}
+                <div class="hint">{{ field.help_text }}</div>
+              {% endif %}
+              {{ field.errors }}
+            </div>
+          {% endfor %}
+        {% else %}
+
+        <!-- =========================================
+             FALLBACK STATIC FORM
+             Used if Django form object is not provided
+             ========================================= -->
+          <div class="field">
+            <label for="title">Title</label>
+            <input type="text" name="title" id="title" placeholder="Enter request title">
+          </div>
+
+          <div class="field">
+            <label for="category">Category</label>
+            <input type="text" name="category" id="category" placeholder="Enter category">
+          </div>
+
+          <div class="field">
+            <label for="area_of_delivery">Area of Delivery</label>
+            <input type="text" name="area_of_delivery" id="area_of_delivery" placeholder="Enter delivery location">
+          </div>
+
+          <div class="field">
+            <label for="budget">Maximum Allocated Budget</label>
+            <input type="number" step="0.01" name="budget" id="budget" placeholder="Enter budget amount">
+          </div>
+
+          <div class="field">
+            <label for="closing_deadline">Closing Deadline</label>
+            <input type="datetime-local" name="closing_deadline" id="closing_deadline">
+          </div>
+
+          <div class="field">
+            <label for="description">Description</label>
+            <textarea name="description" id="description" placeholder="Describe the specifications, quantity, terms, and other important details"></textarea>
+          </div>
+
+          <div class="field">
+            <label for="attachments">Attachments</label>
+            <input type="file" name="attachments" id="attachments" multiple>
+            <div class="hint">Upload supporting documents such as RFQ, technical specs, or drawings.</div>
+          </div>
+        {% endif %}
+
+        <!-- =========================================
+             FORM ACTION BUTTONS
+             ========================================= -->
+
+        <div class="actions">
+          <button type="submit" class="btn btn-create-pr">Create Purchase Request</button>
+          <a class="btn btn-danger" href="{% url 'purchase_requests:my_requests' %}">Cancel</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- =========================================
+         POSTING GUIDE CARD
+         Provides helpful instructions
+         ========================================= -->
+    <div class="card">
+      <h2 class="section-title">Posting Guide</h2>
+      <p class="sub">Helpful reminders before publishing your request.</p>
+
+      <!-- =========================================
+           GUIDE INFORMATION LIST
+           ========================================= -->
+      <div class="info-list">
+        <div class="info-item">
+          <strong>Use a clear title</strong>
+          <span>Make the request easy to understand at a glance.</span>
+        </div>
+
+        <div class="info-item">
+          <strong>Set a realistic deadline</strong>
+          <span>Give suppliers enough time to prepare their offers. We suggest a 3-5 calendar day submission time.</span>
+        </div>
+
+        <div class="info-item">
+          <strong>Add complete specifications</strong>
+          <span>Include quantity, scope, preferred brands, and delivery requirements.</span>
+        </div>
+
+        <div class="info-item">
+          <strong>Attach supporting files</strong>
+          <span>Upload reference documents to reduce clarification requests.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

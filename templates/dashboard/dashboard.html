@@ -1,0 +1,389 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — PRMS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --navy:   #0b1426;
+            --navy2:  #111d35;
+            --panel:  #0f1a30;
+            --blue:   #1a56db;
+            --blue2:  #2563eb;
+            --accent: #38bdf8;
+            --white:  #f0f4ff;
+            --muted:  #8899bb;
+            --border: rgba(255,255,255,0.08);
+            --success:#34d399;
+            --warn:   #fbbf24;
+        }
+
+        html, body {
+            min-height: 100%;
+            background: var(--navy);
+            color: var(--white);
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        /* ── Sidebar ── */
+        .layout { display: flex; min-height: 100vh; }
+
+        .sidebar {
+            width: 240px;
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            padding: 1.5rem 0;
+            position: fixed; top: 0; left: 0; bottom: 0;
+            z-index: 10;
+        }
+
+        .brand {
+            display: flex; align-items: center; gap: 10px;
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1rem;
+        }
+        .brand-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--blue), var(--accent));
+            border-radius: 8px;
+            display: grid; place-items: center;
+            font-size: 16px; flex-shrink: 0;
+        }
+        .brand-name {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800; font-size: 1.1rem;
+            color: var(--white);
+        }
+        .brand-name span { color: var(--accent); }
+
+        .nav-section {
+            padding: 0 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .nav-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            padding: 0 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .nav-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 0.6rem 0.75rem;
+            border-radius: 8px;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: background 0.15s, color 0.15s;
+            margin-bottom: 2px;
+        }
+        .nav-link:hover { background: rgba(255,255,255,0.05); color: var(--white); }
+        .nav-link.active { background: rgba(26,86,219,0.2); color: var(--white); }
+        .nav-link.active .nav-icon { color: var(--accent); }
+        .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 1rem 1.5rem 0;
+            border-top: 1px solid var(--border);
+        }
+        .user-chip {
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 0.75rem;
+        }
+        .user-avatar {
+            width: 34px; height: 34px;
+            background: linear-gradient(135deg, var(--blue), var(--accent));
+            border-radius: 50%; display: grid; place-items: center;
+            font-family: 'Syne', sans-serif; font-weight: 700;
+            font-size: 0.85rem; flex-shrink: 0;
+        }
+        .user-info { overflow: hidden; }
+        .user-name { font-size: 0.875rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-role { font-size: 0.7rem; color: var(--muted); text-transform: capitalize; }
+
+        .logout-btn {
+            display: flex; align-items: center; gap: 8px;
+            width: 100%; padding: 0.5rem 0.75rem;
+            background: none; border: 1px solid var(--border);
+            border-radius: 8px; color: var(--muted);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.8rem; cursor: pointer;
+            transition: all 0.15s; text-decoration: none;
+        }
+        .logout-btn:hover { border-color: var(--error, #f87171); color: #f87171; }
+
+        /* ── Main content ── */
+        .main {
+            margin-left: 240px;
+            flex: 1;
+            padding: 2rem 2.5rem;
+            animation: fadeUp 0.5s ease both;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        .greeting {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1.75rem;
+            margin-bottom: 0.25rem;
+        }
+        .greeting span { color: var(--accent); }
+        .subheading { color: var(--muted); font-size: 0.9rem; }
+
+        /* ── Stat cards ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        .stat-icon {
+            font-size: 1.5rem; margin-bottom: 0.75rem;
+        }
+        .stat-value {
+            font-family: 'Syne', sans-serif;
+            font-size: 2rem; font-weight: 800;
+            color: var(--white);
+            line-height: 1;
+            margin-bottom: 0.25rem;
+        }
+        .stat-label {
+            font-size: 0.8rem; color: var(--muted);
+        }
+
+        /* ── Quick actions ── */
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700; font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--white);
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .action-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-decoration: none;
+            color: var(--white);
+            transition: all 0.2s;
+            display: flex; flex-direction: column; gap: 0.5rem;
+        }
+        .action-card:hover {
+            border-color: var(--blue2);
+            background: rgba(26,86,219,0.1);
+            transform: translateY(-1px);
+        }
+        .action-icon { font-size: 1.5rem; }
+        .action-title { font-size: 0.875rem; font-weight: 600; }
+        .action-desc { font-size: 0.75rem; color: var(--muted); }
+
+        /* ── Empty state ── */
+        .empty {
+            text-align: center;
+            padding: 3rem;
+            color: var(--muted);
+            background: var(--panel);
+            border: 1px dashed var(--border);
+            border-radius: 14px;
+        }
+        .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .empty-text { font-size: 0.9rem; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">📋</div>
+            <div class="brand-name">PR<span>MS</span></div>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-label">Main</div>
+            <a href="{% url 'dashboard:dashboard' %}" class="nav-link active">
+                <span class="nav-icon">🏠</span> Dashboard
+            </a>
+            <a href="{% url 'marketplace:marketplace' %}" class="nav-link">
+                <span class="nav-icon">🛒</span> Marketplace
+            </a>
+        </div>
+
+        {% if user.is_business %}
+        <div class="nav-section">
+            <div class="nav-label">As Seller</div>
+            <a href="{% url 'purchase_requests:search_browse' %}" class="nav-link">
+                <span class="nav-icon">🔍</span> Browse Requests
+            </a>
+            <a href="{% url 'purchase_requests:review_list' %}" class="nav-link">
+                <span class="nav-icon">📋</span> Review List
+            </a>
+            <a href="{% url 'purchase_requests:my_offers' %}" class="nav-link">
+                <span class="nav-icon">📤</span> My Offers
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-label">As Buyer</div>
+            <a href="{% url 'purchase_requests:my_requests' %}" class="nav-link">
+                <span class="nav-icon">📁</span> My Requests
+            </a>
+            <a href="{% url 'purchase_requests:create' %}" class="nav-link">
+                <span class="nav-icon">➕</span> New Request
+            </a>
+        </div>
+        {% endif %}
+
+        <div class="nav-section">
+            <div class="nav-label">Account</div>
+            <a href="{% url 'profiles:my_profile' %}" class="nav-link">
+                <span class="nav-icon">👤</span> My Profile
+            </a>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="user-chip">
+                <div class="user-avatar">{{ user.username|first|upper }}</div>
+                <div class="user-info">
+                    <div class="user-name">{{ user.username }}</div>
+                    <div class="user-role">{{ user.account_type }}</div>
+                </div>
+            </div>
+            <a href="{% url 'authentication:logout' %}" class="logout-btn">⬅ Sign out</a>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+        <div class="page-header">
+            <div class="greeting">Good day, <span>{{ user.username }}</span> 👋</div>
+            <div class="subheading">Here's an overview of your account activity.</div>
+        </div>
+
+        {% if user.is_business %}
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📁</div>
+                <div class="stat-value">{{ open_requests_count|default:"0" }}</div>
+                <div class="stat-label">Open Purchase Requests</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🤝</div>
+                <div class="stat-value">{{ participations_count|default:"0" }}</div>
+                <div class="stat-label">Requests Joined</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📤</div>
+                <div class="stat-value">{{ submitted_offers_count|default:"0" }}</div>
+                <div class="stat-label">Offers Submitted</div>
+            </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="section-title">Quick Actions</div>
+        <div class="actions-grid">
+            <a href="{% url 'purchase_requests:search_browse' %}" class="action-card">
+                <div class="action-icon">🔍</div>
+                <div class="action-title">Browse Requests</div>
+                <div class="action-desc">Find purchase requests to bid on</div>
+            </a>
+            <a href="{% url 'purchase_requests:review_list' %}" class="action-card">
+                <div class="action-icon">📋</div>
+                <div class="action-title">Review List</div>
+                <div class="action-desc">Requests you've joined</div>
+            </a>
+            <a href="{% url 'purchase_requests:my_offers' %}" class="action-card">
+                <div class="action-icon">📤</div>
+                <div class="action-title">My Offers</div>
+                <div class="action-desc">Track your submitted offers</div>
+            </a>
+            <a href="{% url 'purchase_requests:create' %}" class="action-card">
+                <div class="action-icon">➕</div>
+                <div class="action-title">New Request</div>
+                <div class="action-desc">Post a purchase request</div>
+            </a>
+        </div>
+
+        {% else %}
+        <!-- Consumer view -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">🛒</div>
+                <div class="stat-value">0</div>
+                <div class="stat-label">Marketplace Listings</div>
+            </div>
+        </div>
+
+        <div class="section-title">Quick Actions</div>
+        <div class="actions-grid">
+            <a href="{% url 'marketplace:marketplace' %}" class="action-card">
+                <div class="action-icon">🛒</div>
+                <div class="action-title">Marketplace</div>
+                <div class="action-desc">Browse and post listings</div>
+            </a>
+            <a href="{% url 'profiles:my_profile' %}" class="action-card">
+                <div class="action-icon">👤</div>
+                <div class="action-title">My Profile</div>
+                <div class="action-desc">View and edit your profile</div>
+            </a>
+        </div>
+        {% endif %}
+
+        {% if not user.is_business and not user.is_consumer %}
+        <div class="empty">
+            <div class="empty-icon">🔧</div>
+            <div class="empty-text">Your account is being set up. Check back soon.</div>
+        </div>
+        {% endif %}
+
+    </main>
+</div>
+</body>
+</html>
