@@ -9,18 +9,55 @@
 <style>
     .wrap{max-width:1100px;margin:0 auto;padding:24px}
 
-    .topbar{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .topbar{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap}
 
     .btn{
         display:inline-flex;align-items:center;justify-content:center;gap:8px;
         padding:10px 14px;border-radius:12px;border:1px solid var(--border);
         background:transparent;color:var(--white);cursor:pointer;text-decoration:none;
-        font-family: inherit;
+        font-family:inherit;transition:all .2s ease;
     }
-    .btn:hover{background:rgba(255,255,255,0.05)}
-    .btn-primary{background:var(--blue2);border-color:transparent;color:var(--white)}
-    .btn-primary:hover{filter:brightness(1.05)}
-    .btn-disabled{opacity:.55;cursor:not-allowed}
+    .btn:hover{
+        transform:translateY(-1px);
+    }
+
+    /* Primary button for main actions */
+    .btn-primary{
+        background:var(--blue2);
+        border-color:transparent;
+        color:var(--white);
+    }
+    .btn-primary:hover{
+        background:var(--blue);
+    }
+
+    /* Secondary button for back / neutral actions */
+    .btn-secondary{
+        background:rgba(255,255,255,0.05);
+        border-color:var(--border);
+        color:var(--white);
+    }
+    .btn-secondary:hover{
+        background:rgba(255,255,255,0.10);
+    }
+
+    /* Warning button for highlighted secondary actions */
+    .btn-warning{
+        background:#eab308;
+        border-color:#eab308;
+        color:#111827;
+        font-weight:700;
+    }
+    .btn-warning:hover{
+        background:#ca8a04;
+    }
+
+    /* Disabled button style */
+    .btn-disabled{
+        opacity:.55;
+        cursor:not-allowed;
+        transform:none !important;
+    }
 
     .grid{display:grid;grid-template-columns:1.25fr .75fr;gap:16px}
 
@@ -68,12 +105,12 @@
   <!--Top Bar (Back Button + Status Badge + Join Button)-->
   <div class="topbar">
     {% if next_page %}
-      <a class="btn" href="{{ next_page }}">← Back</a>
+      <a class="btn btn-secondary" href="{{ next_page }}">← Back</a>
     {% else %}
-      <a class="btn" href="{% url 'purchase_requests:available_list' %}">← Back</a>
+      <a class="btn btn-secondary" href="{% url 'purchase_requests:available_list' %}">← Back</a>
     {% endif %}
     
-    <div style="display:flex;gap:10px;align-items:center">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       {% if is_closed %}
         <span class="badge badge-closed">Closed</span>
       {% else %}
@@ -81,9 +118,9 @@
       {% endif %}
 
       {% if already_joined %}
-        <button class="btn btn-disabled" disabled>Joined</button>
+        <button class="btn btn-secondary btn-disabled" disabled>Joined</button>
       {% elif is_closed %}
-        <button class="btn btn-disabled" disabled>Join Purchase Request</button>
+        <button class="btn btn-secondary btn-disabled" disabled>Join Purchase Request</button>
       {% else %}
         <form method="post" action="{% url 'purchase_requests:join' pr.id %}">
           {% csrf_token %}
@@ -120,18 +157,22 @@
     <div class="card">
       <p class="section-title">Quick Actions</p>
       <div style="display:flex;flex-direction:column;gap:10px">
-        <a class="btn" href="{% url 'purchase_requests:review_list' %}">Go to Review Purchase Requests</a>
-        <a class="btn" href="{% url 'purchase_requests:available_list' %}">Browse Available Purchase Requests</a>
+        <a class="btn btn-warning" href="{% url 'purchase_requests:review_list' %}">
+          Go to Review Purchase Requests
+        </a>
+        <a class="btn btn-secondary" href="{% url 'purchase_requests:available_list' %}">
+          Browse Available Purchase Requests
+        </a>
       </div>
     </div>
 
-    <!--Description Card(Full length card)-->
+    <!--Description Card (Full length card)-->
     <div class="card" style="grid-column:1 / -1">
       <p class="section-title">Description</p>
       <p class="desc">{{ pr.description }}</p>
     </div>
 
-    <!-- Attachments (View-only on Details page) -->
+    <!--Attachments (View-only on Details page)-->
     <div class="card" style="grid-column:1 / -1">
       <p class="section-title">Attachments</p>
 
@@ -144,7 +185,7 @@
             </div>
           </div>
 
-          <!-- No download button here (download is only allowed in Review List) -->
+          <!--No download button here (download is only allowed in Review List)-->
           <span class="badge" style="opacity:.8">View in Review List</span>
         </div>
       {% empty %}
