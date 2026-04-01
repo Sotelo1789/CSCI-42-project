@@ -1,8 +1,241 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}My Offers{% endblock %}
 
+{% block extra_css %}
+<style>
+  .wrap{
+    max-width:1200px;
+    margin:0 auto;
+    padding:24px;
+  }
+
+  .page-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+    gap:12px;
+  }
+
+  .page-title{
+    margin:0;
+    font-size:2rem;
+    font-weight:800;
+    color:var(--white);
+  }
+
+  .card-panel{
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--border);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 10px 30px rgba(0,0,0,.20);
+  }
+
+  .table-wrap{
+    width:100%;
+    overflow-x:auto;
+  }
+
+  .offer-table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:1000px;
+  }
+
+  .offer-table thead{
+    background:rgba(255,255,255,0.05);
+  }
+
+  .offer-table th,
+  .offer-table td{
+    padding:16px 14px;
+    text-align:left;
+    vertical-align:middle;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    color:var(--white);
+  }
+
+  .offer-table th{
+    font-size:.95rem;
+    font-weight:700;
+    color:#dbe8ff;
+    white-space:nowrap;
+  }
+
+  .offer-table tbody tr:hover{
+    background:rgba(255,255,255,0.03);
+  }
+
+  .pr-title{
+    font-weight:700;
+    color:var(--white);
+  }
+
+  .muted{
+    color:var(--muted);
+    font-size:.92rem;
+  }
+
+  .status-badge{
+    display:inline-block;
+    padding:7px 12px;
+    border-radius:999px;
+    font-size:.85rem;
+    font-weight:700;
+    white-space:nowrap;
+  }
+
+  .status-winner{
+    background:rgba(34,197,94,.15);
+    color:#86efac;
+    border:1px solid rgba(34,197,94,.35);
+  }
+
+  .status-lost{
+    background:rgba(239,68,68,.12);
+    color:#fca5a5;
+    border:1px solid rgba(239,68,68,.35);
+  }
+
+  .status-pending{
+    background:rgba(234,179,8,.12);
+    color:#fde68a;
+    border:1px solid rgba(234,179,8,.35);
+  }
+
+  .actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+
+  .btn{
+    display:inline-block;
+    padding:9px 14px;
+    border-radius:10px;
+    text-decoration:none;
+    font-weight:700;
+    font-size:.9rem;
+    transition:.2s ease;
+    border:1px solid transparent;
+    white-space:nowrap;
+  }
+
+  .btn-view{
+    background:var(--blue);
+    color:white;
+  }
+
+  .btn-view:hover{
+    background:var(--blue2);
+    transform:translateY(-1px);
+  }
+
+  .btn-download{
+    background:#16a34a;
+    color:white;
+  }
+
+  .btn-download:hover{
+    background:#15803d;
+    transform:translateY(-1px);
+  }
+
+  .empty-state{
+    padding:32px 20px;
+    text-align:center;
+    color:var(--muted);
+  }
+
+  .empty-state h3{
+    color:var(--white);
+    margin-bottom:8px;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<h1>My Offers</h1>
-<p><!-- TODO: Implement this page --></p>
+<div class="wrap">
+  <div class="page-header">
+    <h1 class="page-title">My Offers</h1>
+  </div>
+
+  <div class="card-panel">
+    {% if my_offers %}
+      <div class="table-wrap">
+        <table class="offer-table">
+          <thead>
+            <tr>
+              <th>Purchase Request</th>
+              <th>Buyer</th>
+              <th>Deadline</th>
+              <th>Submitted On</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for offer in my_offers %}
+            <tr>
+              <td>
+                <div class="pr-title">{{ offer.purchase_request.title }}</div>
+              </td>
+
+              <td>
+                {% if offer.purchase_request.buyer.business_name %}
+                  {{ offer.purchase_request.buyer.business_name }}
+                {% else %}
+                  {{ offer.purchase_request.buyer.username }}
+                {% endif %}
+              </td>
+
+              <td>{{ offer.purchase_request.closing_deadline|date:"M. j, Y, g:i a." }}</td>
+
+              <td>
+                {% if offer.submitted_at %}
+                  {{ offer.submitted_at|date:"M. j, Y, g:i a." }}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+
+              <td>
+                {% if offer.result_status == 'Winner' %}
+                  <span class="status-badge status-winner">Winner</span>
+                {% elif offer.result_status == 'Lost' %}
+                  <span class="status-badge status-lost">Lost</span>
+                {% else %}
+                  <span class="status-badge status-pending">Pending</span>
+                {% endif %}
+              </td>
+
+              <td>
+                <div class="actions">
+                  <a href="{% url 'purchase_requests:detail' pk=offer.purchase_request.pk %}?next={{ request.path }}">
+                    View Details
+                  </a>
+
+                  {% if offer.offer_file %}
+                    <a href="{{ offer.offer_file.url }}" download class="btn btn-download">
+                      Download My Offer
+                    </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <h3>No submitted offers yet</h3>
+        <p>You have not submitted any offers to purchase requests.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

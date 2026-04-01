@@ -67,8 +67,12 @@
 <div class="wrap">
   <!--Top Bar (Back Button + Status Badge + Join Button)-->
   <div class="topbar">
-    <a class="btn" href="{% url 'purchase_requests:available_list' %}">← Back</a>
-
+    {% if next_page %}
+      <a class="btn" href="{{ next_page }}">← Back</a>
+    {% else %}
+      <a class="btn" href="{% url 'purchase_requests:available_list' %}">← Back</a>
+    {% endif %}
+    
     <div style="display:flex;gap:10px;align-items:center">
       {% if is_closed %}
         <span class="badge badge-closed">Closed</span>

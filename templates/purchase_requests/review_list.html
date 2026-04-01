@@ -189,7 +189,7 @@
             <!-- ===== Title ===== -->
             <td>
               <a class="title-link"
-                 href="{% url 'purchase_requests:detail' pk=participation.purchase_request.pk %}">
+                 href="{% url 'purchase_requests:detail' pk=participation.purchase_request.pk %}?next={{ request.path }}">
                 {{ participation.purchase_request.title }}
               </a>
             </td>

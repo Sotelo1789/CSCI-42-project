@@ -105,6 +105,8 @@ def purchase_request_detail_view(request, pk):
     # extra TODO in future iteration: Might want to figure out how to not let users see their own purchase requests this way 
     pr = get_object_or_404(PurchaseRequest, pk=pk)
 
+    next_page = request.GET.get('next')
+
     business = getattr(request.user, "business_profile", None) # Needs underscore to work
 
     already_joined = False
@@ -119,6 +121,7 @@ def purchase_request_detail_view(request, pk):
         "pr": pr,
         "already_joined":already_joined,
         "is_closed":is_closed,
+        'next_page': next_page,
         })
 
 
@@ -256,46 +259,36 @@ def submit_offer_view(request, pk):
                   'existing_offer':existing_offer}
                 )
 
-
 @login_required
 def my_offers_view(request):
+    my_offers = Offer.objects.filter(
+        seller=request.user
+    ).select_related(
+        'purchase_request',
+        'purchase_request__buyer'
+    ).order_by('-submitted_at')
 
-    if not pr.is_open:
-        messages.error(request, 'This purchase request is no longer open.')
-        return redirect('purchase_requests:detail', pk)
+    for offer in my_offers:
+        pr = offer.purchase_request
 
-    existing_offer = Offer.objects.filter(
-        purchase_request = pr,
-        seller = request.user
-    ).first()
+        # Check if THIS offer is the winner
+        if offer.status == 'accepted':
+            offer.result_status = 'Winner'
 
-    if request.method == 'POST':
-        form = SubmitOffer(request.POST, request.FILES)
+        # Check if SOMEONE ELSE already won
+        elif Offer.objects.filter(
+            purchase_request=pr,
+            status='accepted'
+        ).exists():
+            offer.result_status = 'Lost'
 
-        if form.is_valid():
-            offer_file = form.cleaned_data['offer_file']
-            if existing_offer:
-                existing_offer.offer_file.delete()
-                existing_offer.offer_file = offer_file
-                existing_offer.submitted_at = timezone.now()
-                existing_offer.save()
-                messages.success(request, 'Your offer has been resubmitted successfully.')
-            else:
-                Offer.objects.create(
-                    purchase_request = pr,
-                    seller = request.user,
-                    offer_file = offer_file
-                )
-                messages.success(request, 'Your offer has been submitted successfully.')
-            return redirect('purchase_requests:detail', pk=pk)
-    else:
-        form = SubmitOffer()
+        # No winner yet
+        else:
+            offer.result_status = 'Pending'
 
-    return render(request, 'purchase_requests/submit_offer.html',
-                  {'pr': pr,
-                  'form':form,
-                  'existing_offer':existing_offer}
-                )
+    return render(request, 'purchase_requests/my_offers.html', {
+        'my_offers': my_offers
+    })
 
 
 @login_required
