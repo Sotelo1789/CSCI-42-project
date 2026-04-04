@@ -26,8 +26,6 @@ def search_browse_view(request):
 
 
 @login_required
-
-@login_required
 def available_list_view(request):
     isBusiness(request)
 
