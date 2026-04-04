@@ -2,63 +2,423 @@
 
 {% block title %}My Requests{% endblock %}
 
+{% block extra_css %}
+<style>
+    .page-wrap {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    /* ── Page header ── */
+    .page-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin-bottom: 1.75rem;
+        gap: 1rem;
+    }
+    .page-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin-bottom: 0.25rem;
+    }
+    .page-sub { color: var(--muted); font-size: 0.9rem; }
+
+    /* ── Buttons ── */
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0.65rem 1.3rem;
+        border-radius: 12px;
+        border: none;
+        background: linear-gradient(135deg, var(--blue), #2563eb);
+        color: #fff;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.88rem;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    .btn-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 0.45rem 0.9rem;
+        border-radius: 9px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+        transition: all 0.15s;
+    }
+    .btn-sm:hover { background: rgba(255,255,255,0.07); color: var(--white); border-color: rgba(255,255,255,0.2); }
+    .btn-sm.accent  { color: var(--accent); border-color: rgba(56,189,248,0.3); }
+    .btn-sm.accent:hover  { background: rgba(56,189,248,0.1); border-color: var(--accent); }
+    .btn-sm.danger  { color: var(--danger); border-color: rgba(248,113,113,0.3); }
+    .btn-sm.danger:hover  { background: rgba(248,113,113,0.1); border-color: var(--danger); }
+    .btn-sm.blue  { color: #93c5fd; border-color: rgba(147,197,253,0.3); }
+    .btn-sm.blue:hover  { background: rgba(147,197,253,0.1); border-color: #93c5fd; }
+    .btn-submit-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 0.45rem 0.9rem;
+        border-radius: 9px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        background: linear-gradient(135deg, var(--blue), #2563eb);
+        color: #fff;
+        transition: opacity 0.15s;
+    }
+    .btn-submit-sm:hover { opacity: 0.85; }
+
+    /* ── Request card ── */
+    .request-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+        transition: border-color 0.15s;
+    }
+    .request-card:hover { border-color: rgba(255,255,255,0.15); }
+
+    .card-body {
+        padding: 1.4rem 1.5rem 1.1rem;
+    }
+
+    /* top row */
+    .card-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.6rem;
+    }
+    .card-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--white);
+    }
+    .card-title a {
+        color: inherit;
+        text-decoration: none;
+    }
+    .card-title a:hover { color: var(--accent); }
+
+    .card-badges { display: flex; gap: 0.4rem; flex-wrap: wrap; flex-shrink: 0; }
+    .badge {
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+    .badge-open    { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.25); }
+    .badge-cat     { background: rgba(56,189,248,0.1);  color: var(--accent); border: 1px solid rgba(56,189,248,0.2); }
+
+    /* meta row */
+    .card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.25rem;
+        margin-bottom: 1rem;
+    }
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.82rem;
+        color: var(--muted);
+    }
+    .meta-item .val { color: var(--white); font-weight: 600; }
+    .meta-icon { font-size: 0.85rem; }
+
+    .deadline-soon .val { color: #fbbf24; }
+    .deadline-urgent .val { color: var(--danger); }
+
+    /* actions row */
+    .card-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        padding-top: 0.85rem;
+        border-top: 1px solid var(--border);
+    }
+    .actions-right { margin-left: auto; }
+
+    /* ── Extend deadline inline panel ── */
+    .deadline-panel {
+        background: rgba(26,86,219,0.07);
+        border-top: 1px solid rgba(26,86,219,0.2);
+        padding: 1rem 1.5rem;
+    }
+    .deadline-panel summary { display: none; } /* toggled via JS */
+    .deadline-panel-inner {
+        display: flex;
+        align-items: flex-end;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+    .deadline-panel label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--muted);
+        display: block;
+        margin-bottom: 5px;
+    }
+    .deadline-panel input[type="datetime-local"] {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        color: var(--white);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.88rem;
+        padding: 0.55rem 0.85rem;
+        outline: none;
+        transition: border-color 0.15s;
+    }
+    .deadline-panel input[type="datetime-local"]:focus { border-color: var(--blue); }
+    .deadline-hint {
+        font-size: 0.75rem;
+        color: var(--muted);
+        margin-top: 4px;
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    .empty-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+    /* ── Pagination ── */
+    .pagination-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+    }
+    .pagination-info { font-size: 0.82rem; color: var(--muted); }
+    .pagination-links { display: flex; gap: 0.4rem; align-items: center; }
+    .page-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 34px;
+        height: 34px;
+        padding: 0 0.5rem;
+        border-radius: 9px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        background: transparent;
+        transition: all 0.15s;
+    }
+    .page-link:hover { background: rgba(255,255,255,0.07); color: var(--white); }
+    .page-link.current { background: rgba(26,86,219,0.25); border-color: rgba(26,86,219,0.5); color: var(--white); }
+
+    .per-page-form {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.82rem;
+        color: var(--muted);
+    }
+    .per-page-form input {
+        width: 60px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--white);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.82rem;
+        padding: 0.35rem 0.6rem;
+        outline: none;
+        text-align: center;
+    }
+    .per-page-form button {
+        padding: 0.35rem 0.75rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .per-page-form button:hover { background: rgba(255,255,255,0.07); color: var(--white); }
+</style>
+{% endblock %}
+
 {% block content %}
-{% if prlist %}
-    <h1>My Available Requests</h1>
-    {% for pr in page_prlist %}
+<div class="page-wrap">
+
+    <!-- Page header -->
+    <div class="page-header">
         <div>
-            <p>Title: {{ pr.title }}</p>
-            <p>Category: {{ pr.category }}</p>
-            <p>Date Created: {{ pr.created_at }}</p>
-            <p>Deadline: {{ pr.closing_deadline }}</p>
-            <form method="post" style="display:inline;">
-       	        {% csrf_token %}
-                    {{ deadline_form.non_field_errors }}
-            	    {{ deadline_form.closing_deadline }}
+            <div class="page-title">My Requests</div>
+            <div class="page-sub">Manage your open purchase requests — extend deadlines, view offers, or cancel.</div>
+        </div>
+        <a href="{% url 'purchase_requests:create' %}" class="btn-primary">＋ New Request</a>
+    </div>
+
+    {% if prlist %}
+
+        {% for pr in page_prlist %}
+        <div class="request-card">
+            <div class="card-body">
+
+                <!-- Title + badges -->
+                <div class="card-top">
+                    <div class="card-title">
+                        <a href="{% url 'purchase_requests:detail' pk=pr.pk %}">{{ pr.title }}</a>
+                    </div>
+                    <div class="card-badges">
+                        <span class="badge badge-open">Open</span>
+                        <span class="badge badge-cat">{{ pr.get_category_display }}</span>
+                    </div>
+                </div>
+
+                <!-- Meta -->
+                <div class="card-meta">
+                    <div class="meta-item">
+                        <span class="meta-icon">💰</span>
+                        <span>Budget:&nbsp;<span class="val">₱{{ pr.budget|floatformat:2 }}</span></span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">📍</span>
+                        <span>Delivery:&nbsp;<span class="val">{{ pr.area_of_delivery }}</span></span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>Created:&nbsp;<span class="val">{{ pr.created_at|date:"M d, Y" }}</span></span>
+                    </div>
+                    <div class="meta-item {% if pr.closing_deadline|timeuntil == '0\xa0minutes' %}deadline-urgent{% endif %}">
+                        <span class="meta-icon">⏰</span>
+                        <span>Deadline:&nbsp;<span class="val">{{ pr.closing_deadline|date:"M d, Y · g:i A" }}</span></span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="card-actions">
+                    <a href="{% url 'purchase_requests:view_offers' pk=pr.pk %}" class="btn-sm blue">📥 View Offers</a>
+                    <a href="{% url 'purchase_requests:download_rfq' pk=pr.pk %}" class="btn-sm accent">⬇ Download RFQ</a>
+                    <button type="button"
+                            class="btn-sm blue extend-btn"
+                            data-target="deadline-panel-{{ pr.pk }}">
+                        🗓 Extend Deadline
+                    </button>
+                    <div class="actions-right">
+                        <form method="post" onsubmit="return confirm('Cancel this purchase request?')">
+                            {% csrf_token %}
+                            <input type="hidden" name="purchase_request" value="{{ pr.pk }}">
+                            <input type="hidden" name="action" value="cancelRequest">
+                            <button type="submit" class="btn-sm danger">✕ Cancel Request</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Extend deadline panel (hidden by default) -->
+            <div class="deadline-panel" id="deadline-panel-{{ pr.pk }}" style="display:none;">
+                <form method="post">
+                    {% csrf_token %}
                     <input type="hidden" name="purchase_request" value="{{ pr.pk }}">
-		            <input type="hidden" name="action" value="changeDeadline">
-            	    <button type="submit">Change to Later Deadline</button>
-            </form>
-            <form method="post">
-                {% csrf_token %}
-                    <input type="hidden" name="purchase_request" value="{{ pr.pk }}">
-		            <input type="hidden" name="action" value="cancelRequest">
-            	    <button type="submit">Cancel Purchase Request</button>
+                    <input type="hidden" name="action" value="changeDeadline">
+                    <div class="deadline-panel-inner">
+                        <div>
+                            <label for="dl-{{ pr.pk }}">New Closing Deadline</label>
+                            <input type="datetime-local" id="dl-{{ pr.pk }}" name="closing_deadline">
+                            <div class="deadline-hint">Must be later than current deadline ({{ pr.closing_deadline|date:"M d, Y · g:i A" }})</div>
+                        </div>
+                        <button type="submit" class="btn-submit-sm">Save →</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Pagination -->
+        <div class="pagination-bar">
+            <div class="pagination-info">
+                Showing {{ page_prlist.start_index }}–{{ page_prlist.end_index }} of {{ prlist.count }} request{{ prlist.count|pluralize }}
+            </div>
+
+            <div class="pagination-links">
+                {% if page_prlist.has_previous %}
+                    <a class="page-link" href="?page=1&dictate={{ page_item_count }}" title="First">«</a>
+                    <a class="page-link" href="?page={{ page_prlist.previous_page_number }}&dictate={{ page_item_count }}">‹</a>
+                {% endif %}
+
+                <span class="page-link current">{{ page_prlist.number }} / {{ page_prlist.paginator.num_pages }}</span>
+
+                {% if page_prlist.has_next %}
+                    <a class="page-link" href="?page={{ page_prlist.next_page_number }}&dictate={{ page_item_count }}">›</a>
+                    <a class="page-link" href="?page={{ page_prlist.paginator.num_pages }}&dictate={{ page_item_count }}" title="Last">»</a>
+                {% endif %}
+            </div>
+
+            <form method="get" class="per-page-form">
+                <label>Per page:</label>
+                <input type="number" name="dictate" value="{{ page_item_count }}" min="1" max="100">
+                <button type="submit">Apply</button>
             </form>
         </div>
-        <br>
-    {% endfor %}
-    <div>
-        <span>
-            {% if page_prlist.has_previous %}
-                <a href="?page=1&dictate={{ page_item_count }}">&laquo; first</a>
-                <a href="?page={{ page_prlist.previous_page_number }}&dictate={{ page_item_count }}">previous</a>
-            {% endif %}
 
-            <span class="current">
-                Page {{ page_prlist.number }} of {{ page_prlist.paginator.num_pages }}.
-            </span>
-
-            {% if page_prlist.has_next %}
-                <a href="?page={{ page_prlist.next_page_number }}&dictate={{ page_item_count }}">next</a>
-                <a href="?page={{ page_prlist.paginator.num_pages }}&dictate={{ page_item_count }}">last &raquo;</a>
-            {% endif %}
-        </span>
-    </div>
-    <p>There 
-    {% if is_one_per_page %}
-        is 1 item 
     {% else %}
-        are {{ page_item_count }} items
+        <!-- Empty state -->
+        <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <div class="empty-title">No open requests yet</div>
+            <div class="empty-sub">Post your first purchase request and start receiving offers from sellers.</div>
+            <a href="{% url 'purchase_requests:create' %}" class="btn-primary">＋ Create Purchase Request</a>
+        </div>
     {% endif %}
-    per page </p>
-    <form method="get" style="margin-bottom: 1rem;">
-        {{ dictate_form.dictate }}
-        <button type="submit">Change</button>
-    </form>
 
-{% else %}
-    <p>No Purchase Requests Available. Make Some Purchase Requests!</p>
-{% endif %}
+</div>
 
+<script>
+    document.querySelectorAll('.extend-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const panel = document.getElementById(btn.dataset.target);
+            const isOpen = panel.style.display !== 'none';
+            panel.style.display = isOpen ? 'none' : 'block';
+            btn.textContent = isOpen ? '🗓 Extend Deadline' : '✕ Close';
+        });
+    });
+</script>
 {% endblock %}

@@ -1,21 +1,240 @@
 {% extends "base.html" %}
 
-{% block title %}Submit Offer{% endblock %}
+{% block title %}Submit Offer — {{ pr.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-wrap { max-width: 680px; margin: 0 auto; }
+
+    /* ── Header ── */
+    .page-header { margin-bottom: 1.75rem; }
+    .back-link {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 0.82rem; font-weight: 600; color: var(--muted);
+        text-decoration: none; margin-bottom: 1rem;
+        transition: color 0.15s;
+    }
+    .back-link:hover { color: var(--white); }
+    .page-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.75rem; font-weight: 800;
+        margin-bottom: 0.25rem;
+    }
+    .page-sub { color: var(--muted); font-size: 0.9rem; }
+
+    /* ── PR summary card ── */
+    .pr-summary {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.1rem 1.4rem;
+        margin-bottom: 1.5rem;
+        display: flex; flex-wrap: wrap; gap: 1rem;
+        align-items: center;
+    }
+    .pr-summary-main { flex: 1; min-width: 0; }
+    .pr-summary-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 0.95rem; font-weight: 700;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        margin-bottom: 0.35rem;
+    }
+    .pr-summary-meta {
+        display: flex; flex-wrap: wrap; gap: 1rem;
+        font-size: 0.78rem; color: var(--muted);
+    }
+    .pr-summary-meta .val { color: var(--white); font-weight: 600; }
+    .badge {
+        font-size: 0.68rem; font-weight: 700;
+        padding: 0.2rem 0.65rem; border-radius: 6px;
+        letter-spacing: 0.05em; text-transform: uppercase;
+        white-space: nowrap; flex-shrink: 0;
+    }
+    .badge-cat { background: rgba(56,189,248,0.1); color: var(--accent); border: 1px solid rgba(56,189,248,0.2); }
+
+    /* ── Warning banner ── */
+    .resubmit-banner {
+        display: flex; align-items: center; gap: 0.75rem;
+        background: rgba(251,191,36,0.08);
+        border: 1px solid rgba(251,191,36,0.3);
+        border-radius: 12px;
+        padding: 0.85rem 1.1rem;
+        margin-bottom: 1.5rem;
+        font-size: 0.85rem;
+        color: #fbbf24;
+    }
+    .resubmit-banner-icon { font-size: 1.1rem; flex-shrink: 0; }
+
+    /* ── Form card ── */
+    .form-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 1.75rem;
+    }
+    .section-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 0.68rem; font-weight: 700;
+        letter-spacing: 0.12em; text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.6rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    /* ── File zone ── */
+    .file-zone {
+        border: 2px dashed var(--border);
+        border-radius: 14px;
+        padding: 2.25rem 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.2s, background 0.2s;
+        position: relative;
+        margin-bottom: 0.5rem;
+    }
+    .file-zone:hover, .file-zone.drag-over {
+        border-color: var(--blue);
+        background: rgba(26,86,219,0.07);
+    }
+    .file-zone input[type="file"] {
+        position: absolute; inset: 0;
+        opacity: 0; cursor: pointer;
+        width: 100%; height: 100%;
+    }
+    .file-icon { font-size: 2.25rem; margin-bottom: 0.6rem; }
+    .file-label { font-size: 0.95rem; font-weight: 600; color: var(--white); margin-bottom: 0.3rem; }
+    .file-hint  { font-size: 0.78rem; color: var(--muted); }
+    .file-name {
+        display: none;
+        margin-top: 0.85rem;
+        background: rgba(26,86,219,0.15);
+        border: 1px solid rgba(26,86,219,0.35);
+        border-radius: 8px;
+        padding: 0.4rem 0.85rem;
+        font-size: 0.82rem; color: var(--accent); font-weight: 600;
+        word-break: break-all;
+    }
+
+    .field-error { font-size: 0.78rem; color: var(--danger); margin-top: 4px; }
+
+    /* ── Actions ── */
+    .form-actions {
+        display: flex; align-items: center;
+        justify-content: flex-end; gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+    .btn-ghost {
+        padding: 0.7rem 1.4rem; border-radius: 12px;
+        border: 1px solid var(--border); background: transparent;
+        color: var(--muted); font-family: 'DM Sans', sans-serif;
+        font-size: 0.92rem; font-weight: 600;
+        cursor: pointer; text-decoration: none;
+        transition: all 0.15s;
+    }
+    .btn-ghost:hover { border-color: rgba(255,255,255,0.2); color: var(--white); }
+    .btn-primary {
+        padding: 0.7rem 1.8rem; border-radius: 12px;
+        border: none;
+        background: linear-gradient(135deg, var(--blue), #2563eb);
+        color: #fff; font-family: 'DM Sans', sans-serif;
+        font-size: 0.92rem; font-weight: 700;
+        cursor: pointer; letter-spacing: 0.02em;
+        transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+</style>
+{% endblock %}
 
 {% block content %}
-<h1>Submit Offer for {{ pr.title }}</h1>
+<div class="page-wrap">
 
-{% if existing_offer %}
-    <p>You have already submitted an offer for {{ pr.title }}. Submitting a new one will replace it.</p>
-{% endif %}
+    <!-- Back link -->
+    <a href="{% url 'purchase_requests:detail' pk=pr.pk %}" class="back-link">← Back to Request</a>
 
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Submit</button>
-</form>
+    <!-- Header -->
+    <div class="page-header">
+        <div class="page-title">Submit Offer</div>
+        <div class="page-sub">Upload your quotation PDF for the request below.</div>
+    </div>
 
-{% for message in messages %}
-    <p>{{ message }}</p>
-{% endfor %}
+    <!-- PR summary -->
+    <div class="pr-summary">
+        <div class="pr-summary-main">
+            <div class="pr-summary-title">{{ pr.title }}</div>
+            <div class="pr-summary-meta">
+                <span>Budget:&nbsp;<span class="val">₱{{ pr.budget|floatformat:2 }}</span></span>
+                <span>Deadline:&nbsp;<span class="val">{{ pr.closing_deadline|date:"M d, Y · g:i A" }}</span></span>
+                <span>Buyer:&nbsp;<span class="val">{{ pr.buyer.username }}</span></span>
+            </div>
+        </div>
+        <span class="badge badge-cat">{{ pr.get_category_display }}</span>
+    </div>
+
+    <!-- Resubmit warning -->
+    {% if existing_offer %}
+    <div class="resubmit-banner">
+        <span class="resubmit-banner-icon">⚠</span>
+        <span>You already submitted an offer on <strong>{{ existing_offer.submitted_at|date:"M d, Y" }}</strong>. Uploading a new file will replace your previous submission.</span>
+    </div>
+    {% endif %}
+
+    <!-- Upload form -->
+    <div class="form-card">
+        <div class="section-title">📄 Your Offer Document</div>
+
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            <div class="file-zone" id="offerZone">
+                <input type="file"
+                       id="{{ form.offer_file.id_for_label }}"
+                       name="{{ form.offer_file.html_name }}"
+                       accept="application/pdf">
+                <div class="file-icon">📎</div>
+                <div class="file-label">Click or drag & drop your offer PDF here</div>
+                <div class="file-hint">PDF only · Must not be empty</div>
+                <div class="file-name" id="offerFileName"></div>
+            </div>
+
+            {% if form.offer_file.errors %}
+                <div class="field-error">{{ form.offer_file.errors }}</div>
+            {% endif %}
+
+            <div class="form-actions">
+                <a href="{% url 'purchase_requests:detail' pk=pr.pk %}" class="btn-ghost">Cancel</a>
+                <button type="submit" class="btn-primary">
+                    {% if existing_offer %}Replace Offer →{% else %}Submit Offer →{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<script>
+    const input = document.getElementById('{{ form.offer_file.id_for_label }}');
+    const zone  = document.getElementById('offerZone');
+    const fname = document.getElementById('offerFileName');
+
+    input.addEventListener('change', () => {
+        if (input.files.length) {
+            fname.textContent = '📎 ' + input.files[0].name;
+            fname.style.display = 'inline-block';
+        }
+    });
+
+    zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        if (e.dataTransfer.files.length) {
+            input.files = e.dataTransfer.files;
+            fname.textContent = '📎 ' + e.dataTransfer.files[0].name;
+            fname.style.display = 'inline-block';
+        }
+    });
+</script>
 {% endblock %}

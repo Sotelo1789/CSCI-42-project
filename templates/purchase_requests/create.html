@@ -1,13 +1,348 @@
 {% extends "base.html" %}
 
-{% block title %}Create{% endblock %}
+{% block title %}New Purchase Request{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-wrap {
+        max-width: 760px;
+        margin: 0 auto;
+    }
+
+    /* ── Page header ── */
+    .page-header { margin-bottom: 2rem; }
+    .page-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin-bottom: 0.25rem;
+    }
+    .page-sub { color: var(--muted); font-size: 0.9rem; }
+
+    /* ── Form card ── */
+    .form-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    .section-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.6rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Field groups ── */
+    .field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        margin-bottom: 1.75rem;
+    }
+    .field-group:last-child { margin-bottom: 0; }
+
+    .field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    /* ── Individual field ── */
+    .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .field label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--muted);
+        letter-spacing: 0.03em;
+    }
+    .field label .req {
+        color: var(--accent);
+        margin-left: 2px;
+    }
+    .field input,
+    .field select,
+    .field textarea {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        color: var(--white);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.95rem;
+        padding: 0.7rem 1rem;
+        transition: border-color 0.15s, background 0.15s;
+        outline: none;
+        width: 100%;
+    }
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+        border-color: var(--blue);
+        background: rgba(26,86,219,0.08);
+    }
+    .field input::placeholder,
+    .field textarea::placeholder { color: var(--muted); opacity: 0.6; }
+    .field textarea { resize: vertical; min-height: 110px; }
+    .field select option { background: #0f1a30; color: var(--white); }
+
+    /* ── File upload zone ── */
+    .file-zone {
+        border: 2px dashed var(--border);
+        border-radius: 14px;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.2s, background 0.2s;
+        position: relative;
+    }
+    .file-zone:hover,
+    .file-zone.drag-over {
+        border-color: var(--blue);
+        background: rgba(26,86,219,0.07);
+    }
+    .file-zone input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+    }
+    .file-icon { font-size: 2rem; margin-bottom: 0.6rem; }
+    .file-label {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--white);
+        margin-bottom: 0.3rem;
+    }
+    .file-hint { font-size: 0.78rem; color: var(--muted); }
+    .file-name {
+        display: none;
+        margin-top: 0.75rem;
+        background: rgba(26,86,219,0.15);
+        border: 1px solid rgba(26,86,219,0.35);
+        border-radius: 8px;
+        padding: 0.4rem 0.85rem;
+        font-size: 0.82rem;
+        color: var(--accent);
+        font-weight: 600;
+        word-break: break-all;
+    }
+
+    /* ── Errors ── */
+    .field-error {
+        font-size: 0.78rem;
+        color: var(--danger);
+        margin-top: 2px;
+    }
+    .errorlist {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    .errorlist li {
+        font-size: 0.78rem;
+        color: var(--danger);
+    }
+
+    /* ── Form actions ── */
+    .form-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        margin-top: 1.75rem;
+    }
+    .btn-ghost {
+        padding: 0.7rem 1.4rem;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.92rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.15s;
+    }
+    .btn-ghost:hover { border-color: rgba(255,255,255,0.2); color: var(--white); }
+    .btn-primary {
+        padding: 0.7rem 1.8rem;
+        border-radius: 12px;
+        border: none;
+        background: linear-gradient(135deg, var(--blue), #2563eb);
+        color: #fff;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.92rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: opacity 0.15s, transform 0.1s;
+        letter-spacing: 0.02em;
+    }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+
+    @media (max-width: 600px) {
+        .field-row { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<h1>Create Purchase Request</h1>
+<div class="page-wrap">
 
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Create</button>
-</form>
+    <!-- Header -->
+    <div class="page-header">
+        <div class="page-title">New Purchase Request</div>
+        <div class="page-sub">Fill in the details below to post a new procurement opportunity.</div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <!-- Section 1: Request Details -->
+        <div class="form-card">
+            <div class="section-title">📋 Request Details</div>
+            <div class="field-group">
+
+                <div class="field">
+                    <label for="{{ form.title.id_for_label }}">Title <span class="req">*</span></label>
+                    <input type="text"
+                           id="{{ form.title.id_for_label }}"
+                           name="{{ form.title.html_name }}"
+                           value="{{ form.title.value|default:'' }}"
+                           placeholder="e.g. Office Supplies Q3 2026">
+                    {% if form.title.errors %}<div class="field-error">{{ form.title.errors }}</div>{% endif %}
+                </div>
+
+                <div class="field">
+                    <label for="{{ form.description.id_for_label }}">Description <span class="req">*</span></label>
+                    <textarea id="{{ form.description.id_for_label }}"
+                              name="{{ form.description.html_name }}"
+                              placeholder="Describe what you need, specifications, quantity, etc.">{{ form.description.value|default:'' }}</textarea>
+                    {% if form.description.errors %}<div class="field-error">{{ form.description.errors }}</div>{% endif %}
+                </div>
+
+                <div class="field">
+                    <label for="{{ form.category.id_for_label }}">Category <span class="req">*</span></label>
+                    <select id="{{ form.category.id_for_label }}" name="{{ form.category.html_name }}">
+                        {% for val, label in form.category.field.choices %}
+                            <option value="{{ val }}" {% if form.category.value == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.category.errors %}<div class="field-error">{{ form.category.errors }}</div>{% endif %}
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Section 2: Logistics -->
+        <div class="form-card">
+            <div class="section-title">📦 Logistics & Budget</div>
+            <div class="field-group">
+
+                <div class="field">
+                    <label for="{{ form.area_of_delivery.id_for_label }}">Area of Delivery <span class="req">*</span></label>
+                    <input type="text"
+                           id="{{ form.area_of_delivery.id_for_label }}"
+                           name="{{ form.area_of_delivery.html_name }}"
+                           value="{{ form.area_of_delivery.value|default:'' }}"
+                           placeholder="e.g. Makati City, Metro Manila">
+                    {% if form.area_of_delivery.errors %}<div class="field-error">{{ form.area_of_delivery.errors }}</div>{% endif %}
+                </div>
+
+                <div class="field-row">
+                    <div class="field">
+                        <label for="{{ form.budget.id_for_label }}">Budget (₱) <span class="req">*</span></label>
+                        <input type="number"
+                               id="{{ form.budget.id_for_label }}"
+                               name="{{ form.budget.html_name }}"
+                               value="{{ form.budget.value|default:'' }}"
+                               min="0" step="0.01"
+                               placeholder="e.g. 50000.00">
+                        {% if form.budget.errors %}<div class="field-error">{{ form.budget.errors }}</div>{% endif %}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.closing_deadline.id_for_label }}">Closing Deadline <span class="req">*</span></label>
+                        <input type="datetime-local"
+                               id="{{ form.closing_deadline.id_for_label }}"
+                               name="{{ form.closing_deadline.html_name }}"
+                               value="{{ form.closing_deadline.value|default:'' }}">
+                        {% if form.closing_deadline.errors %}<div class="field-error">{{ form.closing_deadline.errors }}</div>{% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Section 3: Documents -->
+        <div class="form-card">
+            <div class="section-title">📄 RFQ Document</div>
+            <div class="field-group">
+
+                <div class="field">
+                    <label>Request for Quotation (RFQ) File <span class="req">*</span></label>
+                    <div class="file-zone" id="rfqZone">
+                        <input type="file"
+                               id="{{ form.rfq_file.id_for_label }}"
+                               name="{{ form.rfq_file.html_name }}"
+                               accept="application/pdf"
+                               id="rfqInput">
+                        <div class="file-icon">📁</div>
+                        <div class="file-label">Click or drag & drop your RFQ file here</div>
+                        <div class="file-hint">PDF only · Max size depends on server config</div>
+                        <div class="file-name" id="rfqFileName"></div>
+                    </div>
+                    {% if form.rfq_file.errors %}<div class="field-error">{{ form.rfq_file.errors }}</div>{% endif %}
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+            <a href="{% url 'purchase_requests:my_requests' %}" class="btn-ghost">Cancel</a>
+            <button type="submit" class="btn-primary">Submit Request →</button>
+        </div>
+
+    </form>
+</div>
+
+<script>
+    // File name display
+    const input = document.getElementById('{{ form.rfq_file.id_for_label }}');
+    const zone  = document.getElementById('rfqZone');
+    const fname = document.getElementById('rfqFileName');
+
+    input.addEventListener('change', () => {
+        if (input.files.length) {
+            fname.textContent = '📎 ' + input.files[0].name;
+            fname.style.display = 'inline-block';
+        }
+    });
+
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        if (e.dataTransfer.files.length) {
+            input.files = e.dataTransfer.files;
+            fname.textContent = '📎 ' + e.dataTransfer.files[0].name;
+            fname.style.display = 'inline-block';
+        }
+    });
+</script>
 {% endblock %}

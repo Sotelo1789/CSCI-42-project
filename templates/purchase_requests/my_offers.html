@@ -2,7 +2,172 @@
 
 {% block title %}My Offers{% endblock %}
 
+{% block extra_css %}
+<style>
+    .page-wrap { max-width: 900px; margin: 0 auto; }
+
+    .page-header { margin-bottom: 1.75rem; }
+    .page-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin-bottom: 0.25rem;
+    }
+    .page-sub { color: var(--muted); font-size: 0.9rem; }
+
+    /* ── Offer card ── */
+    .offer-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 1.3rem 1.5rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        transition: border-color 0.15s;
+    }
+    .offer-card:hover { border-color: rgba(255,255,255,0.15); }
+
+    .offer-main { flex: 1; min-width: 0; }
+    .offer-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 0.4rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .offer-title a { color: inherit; text-decoration: none; }
+    .offer-title a:hover { color: var(--accent); }
+
+    .offer-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        font-size: 0.8rem;
+        color: var(--muted);
+    }
+    .offer-meta .val { color: var(--white); font-weight: 600; }
+
+    /* ── Status badge ── */
+    .badge {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 0.25rem 0.7rem;
+        border-radius: 6px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .badge-submitted { background: rgba(56,189,248,0.12); color: var(--accent);  border: 1px solid rgba(56,189,248,0.25); }
+    .badge-accepted  { background: rgba(52,211,153,0.12); color: #34d399;        border: 1px solid rgba(52,211,153,0.25); }
+    .badge-rejected  { background: rgba(248,113,113,0.12); color: var(--danger); border: 1px solid rgba(248,113,113,0.25); }
+
+    /* ── Resubmit button ── */
+    .btn-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 0.45rem 0.9rem;
+        border-radius: 9px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+        transition: all 0.15s;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .btn-sm:hover { background: rgba(255,255,255,0.07); color: var(--white); border-color: rgba(255,255,255,0.2); }
+
+    /* ── Empty state ── */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-title { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .empty-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .btn-primary {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 0.65rem 1.3rem; border-radius: 12px; border: none;
+        background: linear-gradient(135deg, var(--blue), #2563eb);
+        color: #fff; font-family: 'DM Sans', sans-serif;
+        font-size: 0.88rem; font-weight: 700;
+        cursor: pointer; text-decoration: none;
+        transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+</style>
+{% endblock %}
+
 {% block content %}
-<h1>My Offers</h1>
-<p><!-- TODO: Implement this page --></p>
+<div class="page-wrap">
+
+    <div class="page-header">
+        <div class="page-title">My Offers</div>
+        <div class="page-sub">All offers you have submitted across purchase requests.</div>
+    </div>
+
+    {% if offers %}
+        {% for offer in offers %}
+        <div class="offer-card">
+            <div class="offer-main">
+                <div class="offer-title">
+                    <a href="{% url 'purchase_requests:detail' pk=offer.purchase_request.pk %}">
+                        {{ offer.purchase_request.title }}
+                    </a>
+                </div>
+                <div class="offer-meta">
+                    <span>Buyer:&nbsp;<span class="val">{{ offer.purchase_request.buyer.username }}</span></span>
+                    <span>Submitted:&nbsp;<span class="val">{{ offer.submitted_at|date:"M d, Y · g:i A" }}</span></span>
+                    {% if offer.updated_at != offer.submitted_at %}
+                        <span>Updated:&nbsp;<span class="val">{{ offer.updated_at|date:"M d, Y · g:i A" }}</span></span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if offer.status == 'submitted' %}
+                <span class="badge badge-submitted">Submitted</span>
+            {% elif offer.status == 'accepted' %}
+                <span class="badge badge-accepted">Accepted</span>
+            {% elif offer.status == 'rejected' %}
+                <span class="badge badge-rejected">Rejected</span>
+            {% endif %}
+
+            {% if offer.status != 'accepted' %}
+                <a href="{% url 'purchase_requests:submit_offer' pk=offer.purchase_request.pk %}" class="btn-sm">
+                    ↩ Resubmit
+                </a>
+            {% endif %}
+
+            <form method="post" action="{% url 'purchase_requests:delete_offer' offer_pk=offer.pk %}"
+                  onsubmit="return confirm('Delete this offer? This cannot be undone.')">
+                {% csrf_token %}
+                <button type="submit" class="btn-sm danger">🗑 Delete</button>
+            </form>
+        </div>
+        {% endfor %}
+
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📤</div>
+            <div class="empty-title">No offers submitted yet</div>
+            <div class="empty-sub">Browse open purchase requests and submit your first offer.</div>
+            <a href="{% url 'purchase_requests:available_list' %}" class="btn-primary">Browse Requests</a>
+        </div>
+    {% endif %}
+
+</div>
 {% endblock %}

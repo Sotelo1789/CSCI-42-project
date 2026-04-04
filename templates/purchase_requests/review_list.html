@@ -2,24 +2,223 @@
 
 {% block title %}Review List{% endblock %}
 
-{% block content %}
-{% if all_participations %}
-    <h1>Review List</h1>
-    {% for participation in all_participations %}
-        <div>
-            <p>Title: <a href="{% url 'purchase_requests:detail' pk=participation.purchase_request.pk %}">{{ participation.purchase_request.title }}</a></p>
-            <p>Deadline: {{ participation.purchase_request.closing_deadline }}</p>
-            {% if participation.is_participating %}
-                <button disabled>Already Participating</button>
-            {% else %}
-                <button><a href="{% url 'purchase_requests:participate' pk=participation.pk %}">Participate</a></button>
-            {% endif %}
-            <button><a href="{% url 'purchase_requests:remove' pk=participation.pk %}">Remove From Consideration</a></button>
-            <button><a href="{% url 'purchase_requests:download_rfq' pk=participation.purchase_request.pk %}">Download RFQ</a></button>
-        </div>
-    {% endfor %}
-{% else %}
-    <p>No purchase requests left to consider. Join other purchase requests</p>
-{% endif %}
+{% block extra_css %}
+<style>
+    .page-wrap { max-width: 900px; margin: 0 auto; }
 
+    /* ── Header ── */
+    .page-header { margin-bottom: 1.75rem; }
+    .page-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin-bottom: 0.25rem;
+    }
+    .page-sub { color: var(--muted); font-size: 0.9rem; }
+
+    /* ── Card ── */
+    .review-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+        transition: border-color 0.15s;
+    }
+    .review-card:hover { border-color: rgba(255,255,255,0.15); }
+
+    /* left accent bar based on participation status */
+    .review-card.participating { border-left: 3px solid #34d399; }
+    .review-card.joined        { border-left: 3px solid rgba(56,189,248,0.5); }
+
+    .card-body { padding: 1.3rem 1.5rem 1.1rem; }
+
+    /* top row */
+    .card-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.55rem;
+    }
+    .card-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+    }
+    .card-title a { color: inherit; text-decoration: none; }
+    .card-title a:hover { color: var(--accent); }
+
+    .card-badges { display: flex; gap: 0.4rem; flex-shrink: 0; flex-wrap: wrap; }
+    .badge {
+        font-size: 0.68rem;
+        font-weight: 700;
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+    .badge-participating { background: rgba(52,211,153,0.15); color: #34d399;   border: 1px solid rgba(52,211,153,0.3); }
+    .badge-joined        { background: rgba(56,189,248,0.1);  color: var(--accent); border: 1px solid rgba(56,189,248,0.25); }
+    .badge-cat           { background: rgba(255,255,255,0.06); color: var(--muted);  border: 1px solid var(--border); }
+
+    /* meta */
+    .card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.25rem;
+        margin-bottom: 1rem;
+        font-size: 0.81rem;
+        color: var(--muted);
+    }
+    .card-meta .val { color: var(--white); font-weight: 600; }
+
+    /* deadline urgency */
+    .meta-deadline-soon   .val { color: #fbbf24; }
+    .meta-deadline-urgent .val { color: var(--danger); }
+
+    /* actions */
+    .card-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        padding-top: 0.85rem;
+        border-top: 1px solid var(--border);
+    }
+    .actions-right { margin-left: auto; }
+
+    /* buttons */
+    .btn-sm {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 0.45rem 0.9rem;
+        border-radius: 9px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.8rem; font-weight: 600;
+        cursor: pointer; text-decoration: none;
+        border: 1px solid var(--border);
+        background: transparent; color: var(--muted);
+        transition: all 0.15s;
+        white-space: nowrap;
+    }
+    .btn-sm:hover { background: rgba(255,255,255,0.07); color: var(--white); border-color: rgba(255,255,255,0.2); }
+    .btn-sm.green  { color: #34d399; border-color: rgba(52,211,153,0.3); }
+    .btn-sm.green:hover  { background: rgba(52,211,153,0.1); border-color: #34d399; }
+    .btn-sm.accent { color: var(--accent); border-color: rgba(56,189,248,0.3); }
+    .btn-sm.accent:hover { background: rgba(56,189,248,0.1); border-color: var(--accent); }
+    .btn-sm.danger { color: var(--danger); border-color: rgba(248,113,113,0.3); }
+    .btn-sm.danger:hover { background: rgba(248,113,113,0.1); border-color: var(--danger); }
+    .btn-sm.blue   { color: #93c5fd; border-color: rgba(147,197,253,0.3); }
+    .btn-sm.blue:hover   { background: rgba(147,197,253,0.1); border-color: #93c5fd; }
+    .btn-sm[disabled] {
+        opacity: 0.4; cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+    }
+    .empty-icon  { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-title { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .empty-sub   { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .btn-primary {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 0.65rem 1.3rem; border-radius: 12px; border: none;
+        background: linear-gradient(135deg, var(--blue), #2563eb);
+        color: #fff; font-family: 'DM Sans', sans-serif;
+        font-size: 0.88rem; font-weight: 700;
+        text-decoration: none;
+        transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+
+    <div class="page-header">
+        <div class="page-title">Review List</div>
+        <div class="page-sub">Purchase requests you've joined — participate to confirm your interest and submit an offer.</div>
+    </div>
+
+    {% if all_participations %}
+        {% for p in all_participations %}
+
+        {% with pr=p.purchase_request %}
+        <div class="review-card {% if p.is_participating %}participating{% else %}joined{% endif %}">
+            <div class="card-body">
+
+                <!-- Title + badges -->
+                <div class="card-top">
+                    <div class="card-title">
+                        <a href="{% url 'purchase_requests:detail' pk=pr.pk %}">{{ pr.title }}</a>
+                    </div>
+                    <div class="card-badges">
+                        {% if p.is_participating %}
+                            <span class="badge badge-participating">Participating</span>
+                        {% else %}
+                            <span class="badge badge-joined">Joined</span>
+                        {% endif %}
+                        <span class="badge badge-cat">{{ pr.get_category_display }}</span>
+                    </div>
+                </div>
+
+                <!-- Meta info -->
+                <div class="card-meta">
+                    <span>Budget:&nbsp;<span class="val">₱{{ pr.budget|floatformat:2 }}</span></span>
+                    <span>Delivery:&nbsp;<span class="val">{{ pr.area_of_delivery }}</span></span>
+                    <span>Buyer:&nbsp;<span class="val">{{ pr.buyer.username }}</span></span>
+                    <span>Joined:&nbsp;<span class="val">{{ p.joined_at|date:"M d, Y" }}</span></span>
+                    <span class="
+                        {% now 'U' as now_ts %}
+                        {% if pr.closing_deadline|timeuntil == '0\xa0minutes' %}meta-deadline-urgent
+                        {% endif %}
+                    ">
+                        Deadline:&nbsp;<span class="val">{{ pr.closing_deadline|date:"M d, Y · g:i A" }}</span>
+                    </span>
+                </div>
+
+                <!-- Actions -->
+                <div class="card-actions">
+                    {% if p.is_participating %}
+                        <span class="btn-sm green" disabled>✓ Participating</span>
+                    {% else %}
+                        <a href="{% url 'purchase_requests:participate' pk=p.pk %}" class="btn-sm green">✓ Participate</a>
+                    {% endif %}
+
+                    <a href="{% url 'purchase_requests:submit_offer' pk=pr.pk %}" class="btn-sm blue">📤 Submit Offer</a>
+                    <a href="{% url 'purchase_requests:download_rfq' pk=pr.pk %}" class="btn-sm accent">⬇ Download RFQ</a>
+
+                    <div class="actions-right">
+                        <a href="{% url 'purchase_requests:remove' pk=p.pk %}"
+                           class="btn-sm danger"
+                           onclick="return confirm('Remove this request from your review list?')">
+                            ✕ Remove
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        {% endwith %}
+
+        {% endfor %}
+
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <div class="empty-title">Your review list is empty</div>
+            <div class="empty-sub">Browse open purchase requests and join the ones you want to bid on.</div>
+            <a href="{% url 'purchase_requests:available_list' %}" class="btn-primary">Browse Requests</a>
+        </div>
+    {% endif %}
+
+</div>
 {% endblock %}

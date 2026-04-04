@@ -151,6 +151,28 @@
             padding: 0.75rem 1rem;
             border-radius: 12px;
             margin-bottom: 0.5rem;
+            font-size: 0.92rem;
+            font-weight: 500;
+        }
+        .message.success {
+            background: rgba(52,211,153,0.1);
+            border-color: rgba(52,211,153,0.35);
+            color: #34d399;
+        }
+        .message.error {
+            background: rgba(248,113,113,0.1);
+            border-color: rgba(248,113,113,0.35);
+            color: var(--danger);
+        }
+        .message.warning {
+            background: rgba(251,191,36,0.1);
+            border-color: rgba(251,191,36,0.35);
+            color: #fbbf24;
+        }
+        .message.info {
+            background: rgba(56,189,248,0.1);
+            border-color: rgba(56,189,248,0.35);
+            color: var(--accent);
         }
 
         @media (max-width: 768px) {
@@ -185,7 +207,7 @@
         {% if user.is_business %}
         <div class="nav-section">
             <div class="nav-label">As Seller</div>
-            <a href="{% url 'purchase_requests:search_browse' %}" class="nav-link">
+            <a href="{% url 'purchase_requests:available_list' %}" class="nav-link">
                 <span class="nav-icon">🔍</span> Browse Requests
             </a>
             <a href="{% url 'purchase_requests:review_list' %}" class="nav-link">

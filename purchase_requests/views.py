@@ -21,8 +21,7 @@ def isBusiness(request):
 
 @login_required
 def search_browse_view(request):
-    # TODO: Render search form
-    return render(request, 'purchase_requests/search_browse.html')
+    return redirect('purchase_requests:available_list')
 
 
 @login_required
@@ -192,20 +191,14 @@ def download_rfq_view(request, pk):
 @login_required
 def submit_offer_view(request, pk):
     pr = get_object_or_404(PurchaseRequest, pk=pk)
-    # TODO: Handle PDF upload and offer creation/replacement
-    return render(request, 'purchase_requests/submit_offer.html', {'pr': pr})
-
-
-@login_required
-def my_offers_view(request):
 
     if not pr.is_open:
         messages.error(request, 'This purchase request is no longer open.')
-        return redirect('purchase_requests:detail', pk)
+        return redirect('purchase_requests:detail', pk=pk)
 
     existing_offer = Offer.objects.filter(
-        purchase_request = pr,
-        seller = request.user
+        purchase_request=pr,
+        seller=request.user
     ).first()
 
     if request.method == 'POST':
@@ -221,20 +214,36 @@ def my_offers_view(request):
                 messages.success(request, 'Your offer has been resubmitted successfully.')
             else:
                 Offer.objects.create(
-                    purchase_request = pr,
-                    seller = request.user,
-                    offer_file = offer_file
+                    purchase_request=pr,
+                    seller=request.user,
+                    offer_file=offer_file
                 )
                 messages.success(request, 'Your offer has been submitted successfully.')
             return redirect('purchase_requests:detail', pk=pk)
     else:
         form = SubmitOffer()
 
-    return render(request, 'purchase_requests/submit_offer.html',
-                  {'pr': pr,
-                  'form':form,
-                  'existing_offer':existing_offer}
-                )
+    return render(request, 'purchase_requests/submit_offer.html', {
+        'pr': pr,
+        'form': form,
+        'existing_offer': existing_offer,
+    })
+
+
+@login_required
+def my_offers_view(request):
+    offers = Offer.objects.filter(seller=request.user).select_related('purchase_request').order_by('-submitted_at')
+    return render(request, 'purchase_requests/my_offers.html', {'offers': offers})
+
+
+@login_required
+def delete_offer_view(request, offer_pk):
+    offer = get_object_or_404(Offer, pk=offer_pk, seller=request.user)
+    if request.method == 'POST':
+        offer.offer_file.delete()
+        offer.delete()
+        messages.success(request, 'Offer deleted.')
+    return redirect('purchase_requests:my_offers')
 
 
 @login_required
@@ -388,16 +397,28 @@ def cancel_purchase_request_view(request, pk):
 @login_required
 def view_offers_view(request, pk):
     pr = get_object_or_404(PurchaseRequest, pk=pk, buyer=request.user)
-    return render(request, 'purchase_requests/view_offers.html', {'pr': pr})
+    offers = Offer.objects.filter(purchase_request=pr).select_related('seller').order_by('-submitted_at')
+    return render(request, 'purchase_requests/view_offers.html', {'pr': pr, 'offers': offers})
 
 
 @login_required
 def accept_offer_view(request, pk, offer_pk):
-    # TODO: Accept offer, update statuses
+    pr = get_object_or_404(PurchaseRequest, pk=pk, buyer=request.user)
+    offer = get_object_or_404(Offer, pk=offer_pk, purchase_request=pr)
+    offer.status = 'accepted'
+    offer.save()
+    Offer.objects.filter(purchase_request=pr).exclude(pk=offer_pk).update(status='rejected')
+    pr.status = 'completed'
+    pr.save()
+    messages.success(request, f"You accepted {offer.seller.username}'s offer. The request is now marked as completed.")
     return redirect('purchase_requests:view_offers', pk=pk)
 
 
 @login_required
 def reject_offer_view(request, pk, offer_pk):
-    # TODO: Reject offer
+    pr = get_object_or_404(PurchaseRequest, pk=pk, buyer=request.user)
+    offer = get_object_or_404(Offer, pk=offer_pk, purchase_request=pr)
+    offer.status = 'rejected'
+    offer.save()
+    messages.success(request, f"You rejected {offer.seller.username}'s offer.")
     return redirect('purchase_requests:view_offers', pk=pk)

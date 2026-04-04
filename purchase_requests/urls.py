@@ -19,6 +19,7 @@ urlpatterns = [
     # Offers
     path('<int:pk>/submit-offer/', views.submit_offer_view, name='submit_offer'),
     path('my-offers/', views.my_offers_view, name='my_offers'),
+    path('my-offers/<int:offer_pk>/delete/', views.delete_offer_view, name='delete_offer'),
 
     # My purchase requests (as buyer)
     path('my-requests/', views.my_requests_view, name='my_requests'),

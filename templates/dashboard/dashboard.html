@@ -12,38 +12,30 @@
 
         :root {
             --navy:   #0b1426;
-            --navy2:  #111d35;
             --panel:  #0f1a30;
             --blue:   #1a56db;
-            --blue2:  #2563eb;
             --accent: #38bdf8;
             --white:  #f0f4ff;
             --muted:  #8899bb;
             --border: rgba(255,255,255,0.08);
+            --danger: #f87171;
             --success:#34d399;
             --warn:   #fbbf24;
         }
 
-        html, body {
-            min-height: 100%;
-            background: var(--navy);
-            color: var(--white);
-            font-family: 'DM Sans', sans-serif;
-        }
+        html, body { min-height: 100%; background: var(--navy); color: var(--white); font-family: 'DM Sans', sans-serif; }
 
-        /* ── Sidebar ── */
+        /* ── Layout ── */
         .layout { display: flex; min-height: 100vh; }
 
+        /* ── Sidebar ── */
         .sidebar {
-            width: 240px;
-            background: var(--panel);
+            width: 240px; background: var(--panel);
             border-right: 1px solid var(--border);
             display: flex; flex-direction: column;
             padding: 1.5rem 0;
-            position: fixed; top: 0; left: 0; bottom: 0;
-            z-index: 10;
+            position: fixed; top: 0; left: 0; bottom: 0; z-index: 10;
         }
-
         .brand {
             display: flex; align-items: center; gap: 10px;
             padding: 0 1.5rem 1.5rem;
@@ -51,187 +43,193 @@
             margin-bottom: 1rem;
         }
         .brand-icon {
-            width: 36px; height: 36px;
+            width: 44px; height: 44px;
             background: linear-gradient(135deg, var(--blue), var(--accent));
-            border-radius: 8px;
-            display: grid; place-items: center;
-            font-size: 16px; flex-shrink: 0;
+            border-radius: 12px; display: grid; place-items: center;
+            font-size: 18px; flex-shrink: 0;
         }
-        .brand-name {
-            font-family: 'Syne', sans-serif;
-            font-weight: 800; font-size: 1.1rem;
-            color: var(--white);
-        }
+        .brand-name { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem; letter-spacing: 0.02em; }
         .brand-name span { color: var(--accent); }
 
-        .nav-section {
-            padding: 0 0.75rem;
-            margin-bottom: 0.5rem;
-        }
+        .nav-section { padding: 0 0.75rem; margin-bottom: 0.5rem; }
         .nav-label {
-            font-size: 0.65rem;
-            font-weight: 600;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--muted);
-            padding: 0 0.75rem;
-            margin-bottom: 0.25rem;
+            font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em;
+            text-transform: uppercase; color: var(--muted);
+            padding: 0 0.75rem; margin-bottom: 0.35rem;
         }
-
         .nav-link {
             display: flex; align-items: center; gap: 10px;
-            padding: 0.6rem 0.75rem;
-            border-radius: 8px;
-            color: var(--muted);
-            text-decoration: none;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: background 0.15s, color 0.15s;
-            margin-bottom: 2px;
+            padding: 0.75rem 0.85rem; border-radius: 12px;
+            color: var(--muted); text-decoration: none;
+            font-size: 0.95rem; font-weight: 600;
+            transition: background 0.15s, color 0.15s; margin-bottom: 6px;
         }
-        .nav-link:hover { background: rgba(255,255,255,0.05); color: var(--white); }
-        .nav-link.active { background: rgba(26,86,219,0.2); color: var(--white); }
-        .nav-link.active .nav-icon { color: var(--accent); }
-        .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+        .nav-link:hover { background: rgba(255,255,255,0.06); color: var(--white); }
+        .nav-link.active { background: rgba(26,86,219,0.22); color: var(--white); }
+        .nav-icon { width: 22px; text-align: center; }
 
-        .sidebar-footer {
-            margin-top: auto;
-            padding: 1rem 1.5rem 0;
-            border-top: 1px solid var(--border);
-        }
-        .user-chip {
-            display: flex; align-items: center; gap: 10px;
-            margin-bottom: 0.75rem;
-        }
+        .sidebar-footer { margin-top: auto; padding: 1rem 1.5rem 0; border-top: 1px solid var(--border); }
+        .user-chip { display: flex; align-items: center; gap: 10px; margin-bottom: 0.75rem; }
         .user-avatar {
-            width: 34px; height: 34px;
+            width: 36px; height: 36px;
             background: linear-gradient(135deg, var(--blue), var(--accent));
             border-radius: 50%; display: grid; place-items: center;
-            font-family: 'Syne', sans-serif; font-weight: 700;
-            font-size: 0.85rem; flex-shrink: 0;
+            font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.9rem; flex-shrink: 0;
         }
         .user-info { overflow: hidden; }
-        .user-name { font-size: 0.875rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .user-role { font-size: 0.7rem; color: var(--muted); text-transform: capitalize; }
-
+        .user-name { font-size: 0.92rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-role { font-size: 0.75rem; color: var(--muted); text-transform: capitalize; }
         .logout-btn {
-            display: flex; align-items: center; gap: 8px;
-            width: 100%; padding: 0.5rem 0.75rem;
-            background: none; border: 1px solid var(--border);
-            border-radius: 8px; color: var(--muted);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.8rem; cursor: pointer;
-            transition: all 0.15s; text-decoration: none;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            width: 100%; padding: 0.65rem 0.85rem;
+            background: transparent; border: 1px solid var(--border); border-radius: 12px;
+            color: var(--muted); font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem; cursor: pointer; transition: all 0.15s; text-decoration: none;
         }
-        .logout-btn:hover { border-color: var(--error, #f87171); color: #f87171; }
+        .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
 
-        /* ── Main content ── */
-        .main {
-            margin-left: 240px;
-            flex: 1;
-            padding: 2rem 2.5rem;
-            animation: fadeUp 0.5s ease both;
-        }
+        /* ── Main ── */
+        .main { margin-left: 240px; flex: 1; padding: 2.5rem 2.5rem; animation: fadeUp 0.4s ease both; }
 
-        .page-header {
-            margin-bottom: 2rem;
-        }
-        .greeting {
-            font-family: 'Syne', sans-serif;
-            font-weight: 700;
-            font-size: 1.75rem;
-            margin-bottom: 0.25rem;
-        }
-        .greeting span { color: var(--accent); }
+        /* ── Header ── */
+        .page-header { margin-bottom: 2rem; }
+        .greeting { font-family: 'Syne', sans-serif; font-size: 1.9rem; font-weight: 800; margin-bottom: 0.25rem; }
+        .greeting .name { color: var(--accent); }
         .subheading { color: var(--muted); font-size: 0.9rem; }
 
-        /* ── Stat cards ── */
+        /* ── Stats ── */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 1rem;
             margin-bottom: 2rem;
         }
-
         .stat-card {
             background: var(--panel);
             border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 1.25rem 1.5rem;
-            transition: transform 0.2s, box-shadow 0.2s;
+            border-radius: 18px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, border-color 0.2s;
         }
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        .stat-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.15); }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
         }
-        .stat-icon {
-            font-size: 1.5rem; margin-bottom: 0.75rem;
+        .stat-card.blue::before   { background: linear-gradient(90deg, var(--blue), var(--accent)); }
+        .stat-card.green::before  { background: linear-gradient(90deg, #059669, var(--success)); }
+        .stat-card.purple::before { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+
+        .stat-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1rem; }
+        .stat-icon-wrap {
+            width: 44px; height: 44px; border-radius: 12px;
+            display: grid; place-items: center; font-size: 1.25rem;
         }
-        .stat-value {
+        .stat-card.blue   .stat-icon-wrap { background: rgba(26,86,219,0.2); }
+        .stat-card.green  .stat-icon-wrap { background: rgba(52,211,153,0.15); }
+        .stat-card.purple .stat-icon-wrap { background: rgba(124,58,237,0.2); }
+        .stat-value { font-family: 'Syne', sans-serif; font-size: 2.4rem; font-weight: 800; line-height: 1; }
+        .stat-label { font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem; }
+
+        /* ── Two-col layout ── */
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
+
+        /* ── Section card ── */
+        .section-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            overflow: hidden;
+        }
+        .section-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1.1rem 1.4rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .section-head-title {
             font-family: 'Syne', sans-serif;
-            font-size: 2rem; font-weight: 800;
-            color: var(--white);
-            line-height: 1;
-            margin-bottom: 0.25rem;
+            font-size: 0.88rem; font-weight: 700;
         }
-        .stat-label {
-            font-size: 0.8rem; color: var(--muted);
+        .section-head a {
+            font-size: 0.78rem; color: var(--accent); text-decoration: none; font-weight: 600;
+        }
+        .section-head a:hover { text-decoration: underline; }
+
+        /* ── Activity rows ── */
+        .activity-row {
+            display: flex; align-items: center; gap: 0.85rem;
+            padding: 0.85rem 1.4rem;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.12s;
+        }
+        .activity-row:last-child { border-bottom: none; }
+        .activity-row:hover { background: rgba(255,255,255,0.03); }
+        .activity-dot {
+            width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+        }
+        .dot-blue   { background: var(--accent); }
+        .dot-green  { background: var(--success); }
+        .dot-purple { background: #a78bfa; }
+        .activity-text { flex: 1; min-width: 0; }
+        .activity-title {
+            font-size: 0.85rem; font-weight: 600;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            margin-bottom: 2px;
+        }
+        .activity-sub { font-size: 0.72rem; color: var(--muted); }
+        .activity-date { font-size: 0.72rem; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+
+        .empty-row {
+            padding: 1.75rem 1.4rem;
+            text-align: center;
+            font-size: 0.82rem; color: var(--muted);
         }
 
         /* ── Quick actions ── */
-        .section-title {
-            font-family: 'Syne', sans-serif;
-            font-weight: 700; font-size: 1rem;
-            margin-bottom: 1rem;
-            color: var(--white);
-        }
-
         .actions-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 0.75rem;
-            margin-bottom: 2rem;
         }
-
         .action-card {
             background: var(--panel);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.25rem;
-            text-decoration: none;
-            color: var(--white);
-            transition: all 0.2s;
+            border-radius: 14px;
+            padding: 1.2rem 1rem;
+            text-decoration: none; color: var(--white);
+            transition: all 0.18s;
             display: flex; flex-direction: column; gap: 0.5rem;
         }
         .action-card:hover {
-            border-color: var(--blue2);
+            border-color: rgba(26,86,219,0.5);
             background: rgba(26,86,219,0.1);
-            transform: translateY(-1px);
+            transform: translateY(-2px);
         }
-        .action-icon { font-size: 1.5rem; }
-        .action-title { font-size: 0.875rem; font-weight: 600; }
-        .action-desc { font-size: 0.75rem; color: var(--muted); }
-
-        /* ── Empty state ── */
-        .empty {
-            text-align: center;
-            padding: 3rem;
-            color: var(--muted);
-            background: var(--panel);
-            border: 1px dashed var(--border);
-            border-radius: 14px;
-        }
-        .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
-        .empty-text { font-size: 0.9rem; }
+        .action-icon { font-size: 1.4rem; }
+        .action-title { font-size: 0.85rem; font-weight: 700; }
+        .action-desc  { font-size: 0.73rem; color: var(--muted); }
 
         @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(16px); }
+            from { opacity: 0; transform: translateY(14px); }
             to   { opacity: 1; transform: translateY(0); }
         }
 
+        @media (max-width: 900px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .two-col { grid-template-columns: 1fr; }
+            .actions-grid { grid-template-columns: 1fr 1fr; }
+        }
         @media (max-width: 768px) {
             .sidebar { display: none; }
             .main { margin-left: 0; padding: 1.5rem; }
+        }
+        @media (max-width: 500px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .actions-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -242,7 +240,7 @@
     <aside class="sidebar">
         <div class="brand">
             <div class="brand-icon">📋</div>
-            <div class="brand-name">PR<span>MS</span></div>
+            <div class="brand-name">PR<span>OC</span></div>
         </div>
 
         <div class="nav-section">
@@ -258,7 +256,7 @@
         {% if user.is_business %}
         <div class="nav-section">
             <div class="nav-label">As Seller</div>
-            <a href="{% url 'purchase_requests:search_browse' %}" class="nav-link">
+            <a href="{% url 'purchase_requests:available_list' %}" class="nav-link">
                 <span class="nav-icon">🔍</span> Browse Requests
             </a>
             <a href="{% url 'purchase_requests:review_list' %}" class="nav-link">
@@ -268,7 +266,6 @@
                 <span class="nav-icon">📤</span> My Offers
             </a>
         </div>
-
         <div class="nav-section">
             <div class="nav-label">As Buyer</div>
             <a href="{% url 'purchase_requests:my_requests' %}" class="nav-link">
@@ -299,50 +296,107 @@
         </div>
     </aside>
 
-    <!-- Main -->
+    <!-- Main content -->
     <main class="main">
+
+        <!-- Greeting -->
         <div class="page-header">
-            <div class="greeting">Good day, <span>{{ user.username }}</span> 👋</div>
-            <div class="subheading">Here's an overview of your account activity.</div>
+            <div class="greeting">Welcome back, <span class="name">{{ user.username }}</span></div>
+            <div class="subheading">Here's what's happening with your account.</div>
         </div>
 
         {% if user.is_business %}
+
         <!-- Stats -->
         <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">📁</div>
+            <div class="stat-card blue">
+                <div class="stat-top">
+                    <div class="stat-icon-wrap">📁</div>
+                </div>
                 <div class="stat-value">{{ open_requests_count|default:"0" }}</div>
                 <div class="stat-label">Open Purchase Requests</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon">🤝</div>
+            <div class="stat-card green">
+                <div class="stat-top">
+                    <div class="stat-icon-wrap">🤝</div>
+                </div>
                 <div class="stat-value">{{ participations_count|default:"0" }}</div>
                 <div class="stat-label">Requests Joined</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon">📤</div>
+            <div class="stat-card purple">
+                <div class="stat-top">
+                    <div class="stat-icon-wrap">📤</div>
+                </div>
                 <div class="stat-value">{{ submitted_offers_count|default:"0" }}</div>
                 <div class="stat-label">Offers Submitted</div>
             </div>
         </div>
 
+        <!-- Recent activity -->
+        <div class="two-col">
+
+            <!-- Recent participations -->
+            <div class="section-card">
+                <div class="section-head">
+                    <div class="section-head-title">Recently Joined</div>
+                    <a href="{% url 'purchase_requests:review_list' %}">View all →</a>
+                </div>
+                {% if recent_participations %}
+                    {% for p in recent_participations %}
+                    <div class="activity-row">
+                        <div class="activity-dot dot-blue"></div>
+                        <div class="activity-text">
+                            <div class="activity-title">{{ p.purchase_request.title }}</div>
+                            <div class="activity-sub">{{ p.purchase_request.get_category_display }} · ₱{{ p.purchase_request.budget|floatformat:0 }}</div>
+                        </div>
+                        <div class="activity-date">{{ p.joined_at|date:"M d" }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-row">No requests joined yet</div>
+                {% endif %}
+            </div>
+
+            <!-- Recent offers -->
+            <div class="section-card">
+                <div class="section-head">
+                    <div class="section-head-title">Recent Offers</div>
+                    <a href="{% url 'purchase_requests:my_offers' %}">View all →</a>
+                </div>
+                {% if recent_offers %}
+                    {% for offer in recent_offers %}
+                    <div class="activity-row">
+                        <div class="activity-dot {% if offer.status == 'accepted' %}dot-green{% elif offer.status == 'rejected' %}activity-dot" style="background:var(--danger){% else %}dot-purple{% endif %}"></div>
+                        <div class="activity-text">
+                            <div class="activity-title">{{ offer.purchase_request.title }}</div>
+                            <div class="activity-sub">{{ offer.status|capfirst }}</div>
+                        </div>
+                        <div class="activity-date">{{ offer.submitted_at|date:"M d" }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-row">No offers submitted yet</div>
+                {% endif %}
+            </div>
+
+        </div>
+
         <!-- Quick actions -->
-        <div class="section-title">Quick Actions</div>
         <div class="actions-grid">
-            <a href="{% url 'purchase_requests:search_browse' %}" class="action-card">
+            <a href="{% url 'purchase_requests:available_list' %}" class="action-card">
                 <div class="action-icon">🔍</div>
                 <div class="action-title">Browse Requests</div>
-                <div class="action-desc">Find purchase requests to bid on</div>
+                <div class="action-desc">Find open procurement requests</div>
             </a>
             <a href="{% url 'purchase_requests:review_list' %}" class="action-card">
                 <div class="action-icon">📋</div>
                 <div class="action-title">Review List</div>
                 <div class="action-desc">Requests you've joined</div>
             </a>
-            <a href="{% url 'purchase_requests:my_offers' %}" class="action-card">
-                <div class="action-icon">📤</div>
-                <div class="action-title">My Offers</div>
-                <div class="action-desc">Track your submitted offers</div>
+            <a href="{% url 'purchase_requests:my_requests' %}" class="action-card">
+                <div class="action-icon">📁</div>
+                <div class="action-title">My Requests</div>
+                <div class="action-desc">Manage requests you posted</div>
             </a>
             <a href="{% url 'purchase_requests:create' %}" class="action-card">
                 <div class="action-icon">➕</div>
@@ -353,16 +407,14 @@
 
         {% else %}
         <!-- Consumer view -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">🛒</div>
+        <div class="stats-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+            <div class="stat-card blue">
+                <div class="stat-top"><div class="stat-icon-wrap">🛒</div></div>
                 <div class="stat-value">0</div>
                 <div class="stat-label">Marketplace Listings</div>
             </div>
         </div>
-
-        <div class="section-title">Quick Actions</div>
-        <div class="actions-grid">
+        <div class="actions-grid" style="grid-template-columns: 1fr 1fr;">
             <a href="{% url 'marketplace:marketplace' %}" class="action-card">
                 <div class="action-icon">🛒</div>
                 <div class="action-title">Marketplace</div>
@@ -371,15 +423,8 @@
             <a href="{% url 'profiles:my_profile' %}" class="action-card">
                 <div class="action-icon">👤</div>
                 <div class="action-title">My Profile</div>
-                <div class="action-desc">View and edit your profile</div>
+                <div class="action-desc">View your profile</div>
             </a>
-        </div>
-        {% endif %}
-
-        {% if not user.is_business and not user.is_consumer %}
-        <div class="empty">
-            <div class="empty-icon">🔧</div>
-            <div class="empty-text">Your account is being set up. Check back soon.</div>
         </div>
         {% endif %}
 
