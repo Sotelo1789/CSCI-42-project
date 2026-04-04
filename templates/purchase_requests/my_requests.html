@@ -1,6 +1,380 @@
 {% extends "base.html" %}
+{% load humanize %}
 
-{% block title %}My Requests{% endblock %}
+{% block title %}My Purchase Requests{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* =========================================================
+       PAGE LAYOUT CONTAINER
+       Centers the page and limits the maximum width
+       ========================================================= */
+    .page-wrap {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    /* =========================================================
+       PAGE HEADER
+       Displays the page title and short description
+       ========================================================= */
+    .page-header {
+        margin-bottom: 1.75rem;
+    }
+    .page-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin-bottom: 0.25rem;
+    }
+    .page-sub { color: var(--muted); font-size: 0.98rem; }
+
+    /* =========================================================
+       TOP PANEL
+       Contains results count and items-per-page selector
+       ========================================================= */
+    .top-panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.1rem 1.35rem;
+        margin-bottom: 1.5rem;
+    }
+    .top-panel-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    /* =========================================================
+       GENERAL BUTTON STYLING
+       Base button style used across the page
+       ========================================================= */
+    .btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        padding: 0.6rem 1.1rem;
+        border-radius: 9px; border: 1px solid var(--border);
+        font-family: 'DM Sans', sans-serif; font-size: 0.875rem;
+        font-weight: 600; cursor: pointer; text-decoration: none;
+        transition: all 0.15s; white-space: nowrap;
+        background: transparent; color: var(--white);
+    }
+    .btn:hover { background: rgba(255,255,255,0.06); }
+
+    /* =========================================================
+       PRIMARY BUTTON
+       Used for main actions such as changing items-per-page
+       ========================================================= */
+    .btn-primary {
+        background: linear-gradient(135deg, var(--blue), #2563eb);
+        border-color: transparent; color: #fff;
+        box-shadow: 0 3px 14px rgba(26,86,219,0.35);
+    }
+    .btn-primary:hover {
+        filter: brightness(1.08);
+        box-shadow: 0 5px 20px rgba(26,86,219,0.45);
+    }
+
+    /* =========================================================
+       SECONDARY BUTTON
+       Used for non-critical actions like deadline changes
+       ========================================================= */
+    .btn-secondary {
+        background: rgba(100,116,139,0.22);
+        border: 1px solid rgba(100,116,139,0.38);
+        color: var(--white);
+    }
+    .btn-secondary:hover {
+        background: rgba(100,116,139,0.32);
+    }
+
+    /* =========================================================
+       DANGER BUTTON
+       Used for destructive actions such as canceling a request
+       ========================================================= */
+    .btn-danger {
+        background: rgba(239,68,68,0.16);
+        border: 1px solid rgba(239,68,68,0.35);
+        color: #fecaca;
+    }
+    .btn-danger:hover {
+        background: rgba(239,68,68,0.26);
+        color: #fff;
+    }
+
+    /* =========================================================
+       RESULTS BAR
+       Displays number of results and pagination controls
+       ========================================================= */
+    .results-bar {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 1rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .results-count {
+        font-size: 0.85rem; color: var(--muted);
+    }
+    .results-count strong { color: var(--white); }
+
+    /* =========================================================
+       PER PAGE FORM
+       Allows the user to change how many PRs are shown per page
+       ========================================================= */
+    .per-page-form {
+        display: flex; align-items: center; gap: 8px;
+    }
+    .per-page-form label { font-size: 0.8rem; color: var(--muted); }
+    .per-page-form input,
+    .per-page-form select {
+        width: 68px; padding: 0.45rem 0.55rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border); border-radius: 8px;
+        color: var(--white); font-size: 0.85rem;
+        font-family: 'DM Sans', sans-serif; outline: none;
+        text-align: center;
+    }
+    .per-page-form input:focus,
+    .per-page-form select:focus { border-color: var(--blue); }
+
+    /* =========================================================
+       PURCHASE REQUEST LIST
+       Container holding all PR cards
+       ========================================================= */
+    .pr-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    /* =========================================================
+       PURCHASE REQUEST CARD
+       Displays summary information for each PR
+       ========================================================= */
+    .pr-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 1.25rem 1.5rem;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 1rem;
+        align-items: start;
+        transition: border-color 0.2s, transform 0.15s, box-shadow 0.15s;
+        animation: fadeUp 0.35s ease both;
+    }
+    .pr-card:hover {
+        border-color: rgba(26,86,219,0.38);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 24px rgba(0,0,0,0.28);
+    }
+
+    /* =========================================================
+       PR TITLE
+       Main title of the purchase request
+       ========================================================= */
+    .pr-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.2rem; font-weight: 700;
+        color: var(--white);
+        display: block; margin-bottom: 0.25rem;
+    }
+    .pr-sub {
+        font-size: 0.9rem; color: var(--muted); margin-bottom: 0.95rem;
+    }
+
+    /* =========================================================
+       PR METADATA
+       Displays category, budget, date created, request ID
+       ========================================================= */
+    .pr-meta {
+        display: flex; flex-wrap: wrap; gap: 1rem;
+        align-items: flex-start;
+    }
+    .pr-meta-item {
+        display: flex; flex-direction: column; gap: 2px;
+        min-width: 120px;
+    }
+    .pr-meta-label {
+        font-size: 0.74rem; font-weight: 700;
+        letter-spacing: 0.07em; text-transform: uppercase;
+        color: var(--muted);
+    }
+    .pr-meta-value {
+        font-size: 0.96rem; color: var(--white); font-weight: 600;
+    }
+
+    /* =========================================================
+       CATEGORY BADGE
+       Displays the PR category
+       ========================================================= */
+    .cat-pill {
+        display: inline-flex; align-items: center;
+        padding: 3px 10px; border-radius: 20px;
+        font-size: 0.78rem; font-weight: 700;
+        letter-spacing: 0.04em;
+        background: rgba(56,189,248,0.1);
+        border: 1px solid rgba(56,189,248,0.2);
+        color: var(--accent);
+    }
+
+    /* =========================================================
+       BUDGET DISPLAY
+       Highlights the maximum allocated budget
+       ========================================================= */
+    .budget-val {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.08rem; font-weight: 700;
+        color: #34d399;
+    }
+
+    .deadline-block {
+        min-width: 260px;
+    }
+
+    /* =========================================================
+       DEADLINE SECTION
+       Displays and allows updating of the PR deadline
+       ========================================================= */
+    .deadline-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+    }
+
+    .deadline-top {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+    }
+
+    .deadline-form {
+        display: flex;
+        gap: 0.55rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .deadline-form input {
+        padding: 0.5rem 0.7rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--white);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.84rem;
+        outline: none;
+    }
+
+    /* =========================================================
+       RIGHT ACTION COLUMN
+       Contains View Offers and Cancel Request buttons
+       ========================================================= */
+    .pr-card-action {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.55rem;
+        min-width: 150px;
+    }
+
+    /* =========================================================
+       VIEW OFFERS BUTTON
+       Primary navigation to the offers submitted by sellers
+       ========================================================= */
+    .action-btn-primary {
+        display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+        padding: 0.72rem 1rem;
+        background: rgba(26,86,219,0.18);
+        border: 1px solid rgba(26,86,219,0.32);
+        border-radius: 8px; color: var(--accent);
+        text-decoration: none; font-size: 0.9rem;
+        font-weight: 700; transition: all 0.15s;
+        white-space: nowrap;
+        width: 100%;
+    }
+    .action-btn-primary:hover {
+        background: rgba(26,86,219,0.3);
+        border-color: var(--accent);
+    }
+
+    .action-form {
+        width: 100%;
+    }
+
+    .action-form button {
+        width: 100%;
+    }
+
+    /* =========================================================
+       EMPTY STATE
+       Displayed when the user has no purchase requests
+       ========================================================= */
+    .empty-state {
+        text-align: center; padding: 4rem 2rem;
+        background: var(--panel); border: 1px dashed var(--border);
+        border-radius: 16px; color: var(--muted);
+        animation: fadeUp 0.35s ease both;
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-title {
+        font-family: 'Syne', sans-serif;
+        font-weight: 700; font-size: 1.1rem;
+        color: var(--white); margin-bottom: 0.4rem;
+    }
+    .empty-sub { font-size: 0.875rem; }
+
+    /* =========================================================
+       PAGINATION SECTION
+       Navigation between multiple pages of purchase requests
+       ========================================================= */
+    .pagination {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-top: 1.5rem; padding-top: 1rem;
+        border-top: 1px solid var(--border);
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .page-links { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .page-link {
+        padding: 0.45rem 0.85rem;
+        border-radius: 8px; border: 1px solid var(--border);
+        color: var(--muted); text-decoration: none;
+        font-size: 0.825rem; font-weight: 500;
+        transition: all 0.15s;
+    }
+    .page-link:hover { background: rgba(255,255,255,0.06); color: var(--white); }
+    .page-link.current {
+        background: rgba(26,86,219,0.2);
+        border-color: rgba(26,86,219,0.4);
+        color: var(--white);
+    }
+    .page-info { font-size: 0.82rem; color: var(--muted); }
+
+    .errorlist {
+        margin: 0;
+        padding-left: 18px;
+        color: #fca5a5;
+        font-size: 13px;
+    }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 860px) {
+        .pr-card { grid-template-columns: 1fr; }
+        .pr-card-action { flex-direction: row; align-items: center; flex-wrap: wrap; }
+        .action-btn-primary,
+        .action-form button { width: auto; }
+    }
+    @media (max-width: 560px) {
+        .deadline-form { flex-direction: column; align-items: stretch; }
+        .deadline-form input,
+        .deadline-form button { width: 100%; }
+    }
+</style>
+{% endblock %}
 
 {% block extra_css %}
 <style>

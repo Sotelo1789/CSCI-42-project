@@ -452,3 +452,175 @@
 
 </div>
 {% endblock %}
+
+{% block content %}
+<div class="wrap">
+
+  <!-- =========================================
+       CHECK IF PURCHASE REQUESTS EXIST
+       Show the available list if prlist has data
+       Otherwise show the empty state
+       ========================================= -->
+  {% if prlist %}
+
+    <!-- =========================================
+         TOP SECTION OF PAGE
+         Contains page heading and filter controls
+         ========================================= -->
+    <div class="topbar">
+      <div class="title-block">
+        <h1>Available Purchase Requests</h1>
+        <p>Browse open procurement opportunities and review request details.</p>
+      </div>
+
+      <!-- =========================================
+           FILTER / ITEM COUNT FORM
+           Allows user to change items shown per page
+           ========================================= -->
+      <form method="get" class="controls">
+        {{ dictate_form.dictate }}
+        <button type="submit" class="btn btn-change">Change</button>
+      </form>
+    </div>
+
+    <!-- =========================================
+         PURCHASE REQUEST CARD LIST
+         Loops through page_prlist and displays
+         one card for each purchase request
+         ========================================= -->
+    <div class="list">
+      {% for pr in page_prlist %}
+
+        <!-- =========================================
+             SINGLE PURCHASE REQUEST CARD
+             Main card container for one PR
+             ========================================= -->
+        <div class="card">
+
+          <!-- =========================================
+               CARD HEADER SECTION
+               Contains title, buyer, and details button
+               ========================================= -->
+          <div class="card-head">
+            <div>
+
+              <!-- =========================================
+                   PURCHASE REQUEST TITLE + LINK
+                   ========================================= -->
+              <h2 class="pr-title">
+                <a href="{% url 'purchase_requests:detail' pk=pr.pk %}">
+                  {{ pr.title }}
+                </a>
+              </h2>
+
+              <!-- =========================================
+                   BUYER NAME DISPLAY
+                   Shows business name if available
+                   ========================================= -->
+              <p class="sub">
+                Buyer:
+                {% if pr.buyer.business_profile.business_name %}
+                  {{ pr.buyer.business_profile.business_name }}
+                {% else %}
+                  {{ pr.buyer.business_profile }}
+                {% endif %}
+              </p>
+            </div>
+
+            <!-- =========================================
+                 VIEW DETAILS BUTTON
+                 Links to purchase request detail page
+                 ========================================= -->
+            <a class="btn btn-view" href="{% url 'purchase_requests:detail' pk=pr.pk %}">
+              View Details
+            </a>
+          </div>
+
+          <!-- =========================================
+               META INFORMATION SECTION
+               Displays category, date created,
+               closing deadline, and budget
+               ========================================= -->
+          <div class="meta">
+
+            {# Category row #}
+            <div class="row">
+              <div class="k">Category</div>
+              <div class="v">{{ pr.category }}</div>
+            </div>
+
+            {# Date created row #}
+            <div class="row">
+              <div class="k">Date created</div>
+              <div class="v">{{ pr.created_at|date:"M d, Y (D) - h:i A" }}</div>
+            </div>
+
+            {# Closing deadline row #}
+            <div class="row">
+              <div class="k">Closing deadline</div>
+              <div class="v">{{ pr.closing_deadline|date:"M d, Y (D) - h:i A" }}</div>
+            </div>
+
+            {# Budget row - only shown if budget exists #}
+            {% if pr.budget %}
+            <div class="row">
+              <div class="k">Budget</div>
+              <div class="v">₱ {{ pr.budget|floatformat:2|intcomma }}</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- =========================================
+         PAGINATION SECTION
+         Shows navigation between pages
+         ========================================= -->
+    <div class="pagination-wrap">
+      <div class="pagination">
+
+        {# Previous page buttons #}
+        {% if page_prlist.has_previous %}
+          <a class="btn btn-page" href="?page=1&dictate={{ page_item_count }}">&laquo; First</a>
+          <a class="btn btn-page-active" href="?page={{ page_prlist.previous_page_number }}&dictate={{ page_item_count }}">Previous</a>
+        {% endif %}
+
+        {# Current page label #}
+        <span class="page-label">
+          Page {{ page_prlist.number }} of {{ page_prlist.paginator.num_pages }}
+        </span>
+
+        {# Next page buttons #}
+        {% if page_prlist.has_next %}
+          <a class="btn btn-page-active" href="?page={{ page_prlist.next_page_number }}&dictate={{ page_item_count }}">Next</a>
+          <a class="btn btn-page" href="?page={{ page_prlist.paginator.num_pages }}&dictate={{ page_item_count }}">Last &raquo;</a>
+        {% endif %}
+      </div>
+
+      <!-- =========================================
+           ITEMS PER PAGE INFO
+           ========================================= -->
+      <p class="page-info">
+        There
+        {% if is_one_per_page %}
+          is 1 item
+        {% else %}
+          are {{ page_item_count }} items
+        {% endif %}
+        per page.
+      </p>
+    </div>
+
+  {% else %}
+
+    <!-- =========================================
+         EMPTY STATE MESSAGE
+         Shown when there are no purchase requests
+         ========================================= -->
+    <div class="empty">
+      <p>No Purchase Requests Available. Come back at a different time!</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

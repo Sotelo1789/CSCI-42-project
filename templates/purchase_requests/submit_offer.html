@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}Submit Offer — {{ pr.title }}{% endblock %}
 
@@ -237,4 +238,128 @@
         }
     });
 </script>
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+
+  <!-- =========================================
+       PAGE HEADER
+       Displays title and navigation link
+       ========================================= -->
+  <div class="topbar">
+    <div class="title-block">
+      <h1>Submit Offer</h1>
+      <p>Prepare and upload your offer for this purchase request.</p>
+    </div>
+
+    <a class="btn" href="{% url 'purchase_requests:detail' pk=pr.pk %}">← Back to Request</a>
+  </div>
+
+  <!-- =========================================
+       MAIN GRID LAYOUT
+       Left: Purchase Request Information
+       Right: Offer Submission Form
+       ========================================= -->
+  <div class="grid">
+
+    <!-- =========================================
+         PURCHASE REQUEST DETAILS CARD
+         Shows information about the request
+         ========================================= -->
+    <div class="card">
+      <h2 class="section-title">{{ pr.title }}</h2>
+      <p class="sub">Review the request details before submitting your offer.</p>
+
+      <div class="row">
+        <div class="k">Category</div>
+        <div class="v">{{ pr.category }}</div>
+      </div>
+
+      <div class="row">
+        <div class="k">Area of delivery</div>
+        <div class="v">{{ pr.area_of_delivery }}</div>
+      </div>
+
+      <div class="row">
+        <div class="k">Closing deadline</div>
+        <div class="v">{{ pr.closing_deadline|date:"M d, Y (D) - h:i A" }}</div>
+      </div>
+
+      {% if pr.budget %}
+      <div class="row">
+        <div class="k">Budget</div>
+        <div class="v">₱ {{ pr.budget|floatformat:2|intcomma }}</div>
+      </div>
+      {% endif %}
+
+      <div class="row">
+        <div class="k">Description</div>
+        <div class="v" style="max-width:60%;white-space:pre-wrap;">{{ pr.description }}</div>
+      </div>
+    </div>
+
+    <!-- =========================================
+         OFFER SUBMISSION CARD
+         Contains the supplier submission form
+         ========================================= -->
+    <div class="card">
+      <h2 class="section-title">Offer Submission</h2>
+      <p class="sub">Upload your proposal and complete the required fields.</p>
+
+      <!-- =========================================
+           OFFER SUBMISSION FORM
+           ========================================= -->
+      <form method="post" enctype="multipart/form-data" class="form-grid">
+        {% csrf_token %}
+
+        <!-- =========================================
+             DJANGO FORM LOOP
+             Automatically renders form fields
+             ========================================= -->
+        {% if form %}
+          {% for field in form %}
+            <div class="field">
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}
+                <div class="hint">{{ field.help_text }}</div>
+              {% endif %}
+              {{ field.errors }}
+            </div>
+          {% endfor %}
+        {% else %}
+
+        <!-- =========================================
+             FALLBACK STATIC FORM
+             Used if Django form object is missing
+             ========================================= -->
+          <div class="field">
+            <label for="offer_price">Offer Price</label>
+            <input type="number" step="0.01" name="offer_price" id="offer_price" placeholder="Enter your offered amount">
+          </div>
+
+          <div class="field">
+            <label for="remarks">Remarks</label>
+            <textarea name="remarks" id="remarks" placeholder="Add notes, scope, inclusions, or lead time"></textarea>
+          </div>
+
+          <div class="field">
+            <label for="offer_file">Upload Offer File</label>
+            <input type="file" name="offer_file" id="offer_file" accept=".pdf,.doc,.docx">
+            <div class="hint">Recommended format: PDF</div>
+          </div>
+        {% endif %}
+
+        <!-- =========================================
+             FORM ACTION BUTTONS
+             ========================================= -->
+        <div class="actions">
+          <button type="submit" class="btn btn-success">Submit Offer</button>
+          <a class="btn btn-danger" href="{% url 'purchase_requests:review_list' %}">Go to Review List</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 {% endblock %}
