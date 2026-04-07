@@ -26,7 +26,7 @@ class Listing(models.Model):
     min_price = models.DecimalField(max_digits=15, decimal_places=2)
     max_price = models.DecimalField(max_digits=15, decimal_places=2)
     unit = models.CharField(max_length=10)
-    delivery = models.CharField(max_length=10, choices=DELIVERY_CHOICES)
+    delivery_option = models.CharField(max_length=10, choices=DELIVERY_CHOICES)
     delivery_areas = models.ArrayField(models.CharField(max_length=100))
     delivery_time = models.IntegerField() # assumes delivery time is in number of days
     terms_conditions = models.FileField(upload_to='uploads/listings/termsconditions')
@@ -79,3 +79,13 @@ class BusinessResponse(models.Model):
     message = models.TextField()
     price = models.DecimalField(max_digits=15, decimal_places=2)
     quotation = models.FileField(upload_to='uploads/quotations/')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'business_response'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'Response of {self.business.username} to {self.consumer_request.title}'
