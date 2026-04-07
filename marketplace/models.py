@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.conf import settings
-from authentication.models import BusinessProfile
 
 
 class Listing(models.Model):
@@ -16,7 +15,7 @@ class Listing(models.Model):
     ]
 
     business = models.ForeignKey(
-        BusinessProfile,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='listings'
     )
@@ -27,7 +26,7 @@ class Listing(models.Model):
     max_price = models.DecimalField(max_digits=15, decimal_places=2)
     unit = models.CharField(max_length=10)
     delivery_option = models.CharField(max_length=10, choices=DELIVERY_CHOICES)
-    delivery_areas = models.ArrayField(models.CharField(max_length=100))
+    #delivery_areas = models.ArrayField(models.CharField(max_length=100))
     delivery_time = models.IntegerField() # assumes delivery time is in number of days
     terms_conditions = models.FileField(upload_to='uploads/listings/termsconditions')
     availability = models.BooleanField(default=True)
