@@ -28,7 +28,7 @@ class CreatePurchaseRequest(forms.ModelForm):
         if not rfq:
             raise forms.ValidationError('You must upload an RFQ file.')
         if rfq.size == 0:
-            raise forms.ValidationError('Your uplaoded RFQ file is empty.')
+            raise forms.ValidationError('Your uploaded RFQ file is empty.')
         if rfq.content_type != 'application/pdf':
             raise forms.ValidationError('Your uploaded RFQ file must be a PDF.')
 
