@@ -192,8 +192,15 @@
                     {% else %}
                         <a href="{% url 'purchase_requests:participate' pk=p.pk %}" class="btn-sm green">✓ Participate</a>
                     {% endif %}
-
-                    <a href="{% url 'purchase_requests:submit_offer' pk=pr.pk %}" class="btn-sm blue">📤 Submit Offer</a>
+                    
+                    {% if p.is_participating %}
+                        <!--ENABLED-->
+                        <a href="{% url 'purchase_requests:submit_offer' pk=pr.pk %}" class="btn-sm blue">📤 Submit Offer</a>
+                    {% else%}
+                        <!--DISABLED-->
+                        <button class="btn-sm blue" disabled title="Click Participate first">📤 Submit Offer</button>
+                    {% endif %}
+                    
                     <a href="{% url 'purchase_requests:download_rfq' pk=pr.pk %}" class="btn-sm accent">⬇ Download RFQ</a>
 
                     <div class="actions-right">
