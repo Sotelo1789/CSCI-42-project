@@ -191,6 +191,15 @@ def download_rfq_view(request, pk):
 @login_required
 def submit_offer_view(request, pk):
     pr = get_object_or_404(PurchaseRequest, pk=pk)
+    participation = Participation.objects.filter(
+        purchase_request=pr,
+        seller=request.user,
+        is_participating=True
+    ).first()
+
+    if not participation:
+        messages.error(request,"You must first participate before submitting an offer.")
+        return redirect('purchase_requests:detail', pk=pk)
 
     if not pr.is_open:
         messages.error(request, 'This purchase request is no longer open.')
@@ -398,7 +407,8 @@ def cancel_purchase_request_view(request, pk):
 def view_offers_view(request, pk):
     pr = get_object_or_404(PurchaseRequest, pk=pk, buyer=request.user)
     offers = Offer.objects.filter(purchase_request=pr).select_related('seller').order_by('-submitted_at')
-    return render(request, 'purchase_requests/view_offers.html', {'pr': pr, 'offers': offers})
+    deadline_passed = timezone.now() >= pr.closing_deadline
+    return render(request, 'purchase_requests/view_offers.html', {'pr': pr, 'offers': offers, 'deadline_passed':deadline_passed,})
 
 
 @login_required

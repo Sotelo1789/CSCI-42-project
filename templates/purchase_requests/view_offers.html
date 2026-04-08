@@ -120,7 +120,8 @@
     .btn-sm.accent { color: var(--accent); border-color: rgba(56,189,248,0.3); }
     .btn-sm.accent:hover { background: rgba(56,189,248,0.1); border-color: var(--accent); }
     .btn-sm[disabled] { opacity: 0.35; pointer-events: none; cursor: default; }
-
+    .btn-sm.disabled {background: #2a344a; color: #7f8ca3; border: 1px solid #3b4a66; cursor: not-allowed; opacity: 0.7;}
+    
     /* ── Empty state ── */
     .empty-state {
         text-align: center; padding: 3.5rem 2rem;
@@ -182,12 +183,27 @@
                    class="btn-sm accent">⬇ Download</a>
 
                 {% if offer.status == 'submitted' %}
-                    <a href="{% url 'purchase_requests:accept_offer' pk=pr.pk offer_pk=offer.pk %}"
-                       class="btn-sm green"
-                       onclick="return confirm('Accept this offer from {{ offer.seller.username }}?')">✓ Accept</a>
-                    <a href="{% url 'purchase_requests:reject_offer' pk=pr.pk offer_pk=offer.pk %}"
-                       class="btn-sm danger"
-                       onclick="return confirm('Reject this offer from {{ offer.seller.username }}?')">✕ Reject</a>
+
+                    {% if deadline_passed %}
+                        <!--ENABLED after deadline-->
+                        <a href="{% url 'purchase_requests:accept_offer' pk=pr.pk offer_pk=offer.pk %}"
+                            class="btn-sm green"
+                            onclick="return confirm('Accept this offer from {{ offer.seller.username }}?')">✓ Accept</a>
+
+                        <a href="{% url 'purchase_requests:reject_offer' pk=pr.pk offer_pk=offer.pk %}"
+                            class="btn-sm danger"
+                            onclick="return confirm('Reject this offer from {{ offer.seller.username }}?')">✕ Reject</a>
+                    
+                    {% else %}
+                        <!--DISABLED before deadline-->
+                        <button class="btn-sm disabled" disabled title="Available after deadline">
+                            ✓ Accept
+                        </button>
+                        <button class="btn-sm disabled" disabled title="Available after deadline">
+                            ✕ Reject
+                        </button>
+                    {% endif %}
+
                 {% elif offer.status == 'accepted' %}
                     <span class="btn-sm green" disabled>✓ Accepted</span>
                 {% elif offer.status == 'rejected' %}
