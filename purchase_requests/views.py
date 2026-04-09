@@ -83,7 +83,7 @@ def available_list_view(request):
         "filter_form": filter_form,          # new
         "page_item_count": page_item_count,
         "is_one_per_page": is_one_per_page,
-        "request_get": request.GET.urlencode(),  # needed for pagination links
+        "request_get": "&".join(f"{k}={v}" for k, v in request.GET.items() if k != "page"),
     }
     return render(request, 'purchase_requests/available_list.html', ctx)
 
