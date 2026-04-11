@@ -345,14 +345,14 @@ def my_requests_view(request):
     """
     Get available purchase requests not of the user, and split them by the page
     """
-    prlist = PurchaseRequest.objects.filter(buyer=request.user).exclude(status__in=["cancelled", "completed"]).order_by("pk")
+    prlist = PurchaseRequest.objects.filter(buyer=request.user).exclude(status__in=["cancelled"]).order_by("pk")
 
     """Ensure all purchase requests are truly open"""
     for pr in prlist:
         if pr.status == "open" and pr.closing_deadline <= timezone.now():
             pr.status = "closed"
             pr.save()
-    prlist = PurchaseRequest.objects.filter(buyer=request.user).exclude(status__in=["cancelled", "completed"]).order_by("pk")
+    prlist = PurchaseRequest.objects.filter(buyer=request.user).exclude(status__in=["cancelled"]).order_by("pk")
 
     paginator = Paginator(prlist, page_item_count)
     page_number = request.GET.get("page")
@@ -394,7 +394,21 @@ def create_purchase_request_view(request):
 @login_required
 def edit_purchase_request_view(request, pk):
     pr = get_object_or_404(PurchaseRequest, pk=pk, buyer=request.user)
-    return render(request, 'purchase_requests/edit.html', {'pr': pr})
+
+    if request.method == 'POST':
+        form = CreatePurchaseRequest(request.POST, request.FILES, instance=pr)
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Purchase request updated successfully.')
+            return redirect('purchase_requests:my_requests')
+    else:
+        form = CreatePurchaseRequest(instance=pr)
+
+    return render(request, 'purchase_requests/edit.html', {
+        'form': form,
+        'pr': pr,
+    })
 
 
 # Might need to depreciate this one...or recode my_requests_view to accommodate this function
