@@ -1,8 +1,163 @@
 {% extends "base.html" %}
 
-{% block title %}Edit{% endblock %}
+{% block title %}Edit Purchase Request{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-wrap { max-width: 900px; margin: 0 auto; }
+
+    .page-header { margin-bottom: 1.75rem; }
+    .page-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin-bottom: 0.25rem;
+    }
+    .page-sub { color: var(--muted); font-size: 0.9rem; }
+
+    .form-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 0.35rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--muted);
+    }
+
+    input, select, textarea {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #0b1426;
+        color: var(--white);
+        font-size: 0.85rem;
+    }
+
+    input:focus, select:focus, textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    .form-actions {
+        margin-top: 1.25rem;
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .btn-primary {
+        padding: 0.65rem 1.3rem;
+        border-radius: 12px;
+        border: none;
+        background: linear-gradient(135deg, var(--blue), #2563eb);
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.15s;
+    }
+
+    .btn-primary:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    .btn-cancel {
+        padding: 0.6rem 1.2rem;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(255,255,255,0.07);
+        color: var(--white);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<h1>Edit</h1>
-<p><!-- TODO: Implement this page --></p>
+<div class="page-wrap">
+
+    <!-- Header -->
+    <div class="page-header">
+        <div class="page-title">Edit Purchase Request</div>
+        <div class="page-sub">Update the details of your request below.</div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Title -->
+            <div class="form-group">
+                <label>Title</label>
+                {{ form.title }}
+            </div>
+
+            <!-- Category -->
+            <div class="form-group">
+                <label>Category</label>
+                {{ form.category }}
+            </div>
+
+            <!-- Budget -->
+            <div class="form-group">
+                <label>Budget (₱)</label>
+                {{ form.budget }}
+            </div>
+
+            <!-- Area -->
+            <div class="form-group">
+                <label>Area of Delivery</label>
+                {{ form.area_of_delivery }}
+            </div>
+
+            <!-- Deadline -->
+            <div class="form-group">
+                <label>Closing Deadline</label>
+                {{ form.closing_deadline }}
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+                <label>Description</label>
+                {{ form.description }}
+            </div>
+
+            <!-- RFQ File -->
+            <div class="form-group">
+                <label>RFQ File (PDF)</label>
+                {{ form.rfq_file }}
+            </div>
+
+            <!-- Actions -->
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">💾 Save Changes</button>
+                <a href="{% url 'purchase_requests:my_requests' %}" class="btn-cancel">Cancel</a>
+            </div>
+
+        </form>
+    </div>
+
+</div>
 {% endblock %}

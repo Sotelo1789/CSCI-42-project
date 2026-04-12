@@ -1,3 +1,4 @@
+from django.db import models as django_models
 from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
@@ -7,53 +8,38 @@ from django.utils import timezone
 from django.core.paginator import Paginator
 from .models import PurchaseRequest, Participation, Offer
 from authentication.models import BusinessProfile
-from .forms import CreatePurchaseRequest, SubmitOffer, AmountInPage, UpdatePurchaseRequestDeadline, SearchFilterForm
+from .forms import CreatePurchaseRequest, SubmitOffer, AmountInPage, UpdatePurchaseRequestDeadline
 from datetime import datetime
-
-"""
-Checks if user is a consumer. If yes, redirect to dashboard 
-(they should not be able to access pages with this function)
-"""
-def isBusiness(request):
-    if hasattr(request.user,"consumer_profile"):
-        return redirect("dashboard")
 
 
 @login_required
 def search_browse_view(request):
-    # TODO: Render search form
-    return render(request, 'purchase_requests/search_browse.html')
+    return redirect('purchase_requests:available_list')
 
 
 @login_required
 def available_list_view(request):
-    """Verify that user is business"""
-    isBusiness(request)
+    if not hasattr(request.user,"business_profile"):
+        return redirect('dashboard:dashboard')
 
-    """Default number of items per page"""
-    page_item_count = 15 
+    from .forms import SearchFilterForm
 
-    """Get data from page limiter"""
-    dictate_form = AmountInPage(request.GET or None) 
-
-    """
-    If there is data, either change number of items per page or stick to default if nothing is in
-    """
-    if dictate_form.is_valid(): 
+    page_item_count = 15
+    dictate_form = AmountInPage(request.GET or None)
+    if dictate_form.is_valid():
         page_item_count = dictate_form.cleaned_data['dictate'] or 15
 
-    """
-    Close any overdue purchase requests not of the user
-    """
-    prlist = PurchaseRequest.objects.exclude(buyer=request.user).filter(status="open")
-    """Ensure all purchase requests are truly open (may need better implementation to cover all possible bases, but for now it works)"""
+    # Close any overdue requests first (Justin's existing logic)
+    prlist = PurchaseRequest.objects.exclude(buyer=request.user).filter(status="open", buyer__business_profile__status="approved")
     for pr in prlist:
         if pr.closing_deadline <= timezone.now():
             pr.status = "closed"
             pr.save()
-    prlist = PurchaseRequest.objects.exclude(buyer=request.user).filter(status="open").order_by("pk")
 
-    """Applying filters"""
+    # Start with Justin's base queryset
+    prlist = PurchaseRequest.objects.exclude(buyer=request.user).filter(status="open", buyer__business_profile__status="approved").order_by("pk")
+
+    # Apply your filters on top
     filter_form = SearchFilterForm(request.GET or None)
     if filter_form.is_valid():
         kw = filter_form.cleaned_data.get('keyword')
@@ -64,6 +50,7 @@ def available_list_view(request):
         deadline = filter_form.cleaned_data.get('deadline')
 
         if kw:
+            from django.db.models import Q
             prlist = prlist.filter(
                 Q(title__icontains=kw) | Q(description__icontains=kw)
             )
@@ -81,27 +68,24 @@ def available_list_view(request):
     paginator = Paginator(prlist, page_item_count)
     page_number = request.GET.get("page")
     page_prlist = paginator.get_page(page_number)
-    """For more accurate grammar later in the template"""
     is_one_per_page = (page_item_count == 1)
 
-    """
-    Fill up the context for the template
-    """
     ctx = {
-        "prlist" : prlist,
-        "page_prlist" : page_prlist,
-        "dictate_form" : dictate_form,
-        "filter_form" : filter_form,    # new
-        "page_item_count" : page_item_count,
-        "is_one_per_page" : is_one_per_page,
-        "request_get" : request.GET.urlencode(), # for pagination links
+        "prlist": prlist,
+        "page_prlist": page_prlist,
+        "dictate_form": dictate_form,
+        "filter_form": filter_form,          # new
+        "page_item_count": page_item_count,
+        "is_one_per_page": is_one_per_page,
+        "request_get": "&".join(f"{k}={v}" for k, v in request.GET.items() if k != "page"),
     }
-
     return render(request, 'purchase_requests/available_list.html', ctx)
 
 
 @login_required
 def purchase_request_detail_view(request, pk):
+    if not hasattr(request.user,"business_profile"):
+        return redirect('dashboard:dashboard')
     # extra TODO in future iteration: Might want to figure out how to not let users see their own purchase requests this way 
     pr = get_object_or_404(PurchaseRequest, pk=pk)
 
@@ -124,6 +108,8 @@ def purchase_request_detail_view(request, pk):
 
 @login_required
 def join_purchase_request(request, pk):
+    if not hasattr(request.user,"business_profile"):
+        return redirect('dashboard:dashboard')
     pr = get_object_or_404(PurchaseRequest, pk=pk)
 
     business = getattr(request.user, "business_profile", None) # Needs underscore to work
@@ -139,7 +125,8 @@ def join_purchase_request(request, pk):
 @login_required
 def review_list_view(request):
     """Verify that user is business"""
-    isBusiness(request)
+    if not hasattr(request.user,"business_profile"):
+        return redirect('dashboard:dashboard')
 
     """Get all available purchase requests that have the user as a potential seller"""
     all_participations = Participation.objects.filter(seller=request.user, purchase_request__status="open").order_by("purchase_request__closing_deadline")
@@ -164,16 +151,11 @@ def review_list_view(request):
 @login_required
 def participate_view(request, pk):
     """Verify that user is business"""
-    isBusiness(request)
+    if not hasattr(request.user,"business_profile"):
+        return redirect('dashboard:dashboard')
 
     """Get the selected purchase request"""
     participation = get_object_or_404(Participation, pk=pk)
-
-    if participation.purchase_request.closing_deadline <= timezone.now():
-        pr = participation.purchase_request
-        pr.status = "closed"
-        pr.save()
-        return redirect('purchase_requests:review_list')
 
     """Officially mark business user as a participating seller"""
     if participation.seller == request.user:
@@ -186,14 +168,15 @@ def participate_view(request, pk):
 @login_required
 def remove_from_review_view(request, pk):
     """Verify that user is business"""
-    isBusiness(request)
+    if not hasattr(request.user,"business_profile"):
+        return redirect('dashboard:dashboard')
     
     """Obtain the related purchase request"""
     participation = get_object_or_404(Participation, pk=pk)
     pr = participation.purchase_request
 
-    """Verify that business user is a potential seller"""
-    if participation.seller == request.user:
+    """Verify that business user is a potential seller, and that the purchase request is still open now"""
+    if participation.seller == request.user and pr.status == "open":
         """Then delete the connection between the potentially selling business user and the purchase request"""
         participation.delete()
 
@@ -202,30 +185,35 @@ def remove_from_review_view(request, pk):
 
 @login_required
 def download_rfq_view(request, pk):
-    """Get the purchase request"""
+    if not hasattr(request.user,"business_profile"):
+        return redirect('dashboard:dashboard')
+    """Get the purchase request, and then download the RFQ file of that purchase request"""
     pr = get_object_or_404(PurchaseRequest, pk=pk)
-    print("Attempt")
-
-    """If purchase request is still open, then download the RFQ file of that purchase request"""
-    if pr.closing_deadline > timezone.now():
-        print("Downloading")
-        return FileResponse(pr.rfq_file.open('rb'), as_attachment=True)
-    
-    print("Nope")
-    return redirect('purchase_requests:review_list')
+    return FileResponse(pr.rfq_file.open('rb'), as_attachment=True)
 
 
 @login_required
 def submit_offer_view(request, pk):
+    if not hasattr(request.user,"business_profile"):
+        return redirect('dashboard:dashboard')
     pr = get_object_or_404(PurchaseRequest, pk=pk)
+    participation = Participation.objects.filter(
+        purchase_request=pr,
+        seller=request.user,
+        is_participating=True
+    ).first()
+
+    if not participation:
+        messages.error(request,"You must first participate before submitting an offer.")
+        return redirect('purchase_requests:detail', pk=pk)
 
     if not pr.is_open:
         messages.error(request, 'This purchase request is no longer open.')
-        return redirect('purchase_requests:detail', pk)
+        return redirect('purchase_requests:detail', pk=pk)
 
     existing_offer = Offer.objects.filter(
-        purchase_request = pr,
-        seller = request.user
+        purchase_request=pr,
+        seller=request.user
     ).first()
 
     if request.method == 'POST':
@@ -241,67 +229,47 @@ def submit_offer_view(request, pk):
                 messages.success(request, 'Your offer has been resubmitted successfully.')
             else:
                 Offer.objects.create(
-                    purchase_request = pr,
-                    seller = request.user,
-                    offer_file = offer_file
+                    purchase_request=pr,
+                    seller=request.user,
+                    offer_file=offer_file
                 )
                 messages.success(request, 'Your offer has been submitted successfully.')
             return redirect('purchase_requests:detail', pk=pk)
     else:
         form = SubmitOffer()
 
-    return render(request, 'purchase_requests/submit_offer.html',
-                  {'pr': pr,
-                  'form':form,
-                  'existing_offer':existing_offer}
-                )
+    return render(request, 'purchase_requests/submit_offer.html', {
+        'pr': pr,
+        'form': form,
+        'existing_offer': existing_offer,
+    })
 
 
 @login_required
 def my_offers_view(request):
+    if not hasattr(request.user,"business_profile"):
+        return redirect('dashboard:dashboard')
+    offers = Offer.objects.filter(seller=request.user).select_related('purchase_request').order_by('-submitted_at')
+    return render(request, 'purchase_requests/my_offers.html', {'offers': offers})
 
-    if not pr.is_open:
-        messages.error(request, 'This purchase request is no longer open.')
-        return redirect('purchase_requests:detail', pk)
 
-    existing_offer = Offer.objects.filter(
-        purchase_request = pr,
-        seller = request.user
-    ).first()
-
+@login_required
+def delete_offer_view(request, offer_pk):
+    if not hasattr(request.user,"business_profile"):
+        return redirect('dashboard:dashboard')
+    offer = get_object_or_404(Offer, pk=offer_pk, seller=request.user)
     if request.method == 'POST':
-        form = SubmitOffer(request.POST, request.FILES)
-
-        if form.is_valid():
-            offer_file = form.cleaned_data['offer_file']
-            if existing_offer:
-                existing_offer.offer_file.delete()
-                existing_offer.offer_file = offer_file
-                existing_offer.submitted_at = timezone.now()
-                existing_offer.save()
-                messages.success(request, 'Your offer has been resubmitted successfully.')
-            else:
-                Offer.objects.create(
-                    purchase_request = pr,
-                    seller = request.user,
-                    offer_file = offer_file
-                )
-                messages.success(request, 'Your offer has been submitted successfully.')
-            return redirect('purchase_requests:detail', pk=pk)
-    else:
-        form = SubmitOffer()
-
-    return render(request, 'purchase_requests/submit_offer.html',
-                  {'pr': pr,
-                  'form':form,
-                  'existing_offer':existing_offer}
-                )
+        offer.offer_file.delete()
+        offer.delete()
+        messages.success(request, 'Offer deleted.')
+    return redirect('purchase_requests:my_offers')
 
 
 @login_required
 def my_requests_view(request):
     """Verify that user is business"""
-    isBusiness(request)
+    if not hasattr(request.user,"business_profile"):
+        return redirect('dashboard:dashboard')
 
     """Default number of items per page"""
     page_item_count = 15 
@@ -388,13 +356,14 @@ def my_requests_view(request):
     """
     Get available purchase requests not of the user, and split them by the page
     """
-    prlist = PurchaseRequest.objects.filter(status="open",buyer=request.user).order_by("pk")
+    prlist = PurchaseRequest.objects.filter(buyer=request.user).exclude(status__in=["cancelled"]).order_by("pk")
+
     """Ensure all purchase requests are truly open"""
     for pr in prlist:
-        if pr.closing_deadline <= timezone.now():
+        if pr.status == "open" and pr.closing_deadline <= timezone.now():
             pr.status = "closed"
             pr.save()
-    prlist = PurchaseRequest.objects.filter(status="open",buyer=request.user).order_by("pk")
+    prlist = PurchaseRequest.objects.filter(buyer=request.user).exclude(status__in=["cancelled"]).order_by("pk")
 
     paginator = Paginator(prlist, page_item_count)
     page_number = request.GET.get("page")
@@ -419,6 +388,9 @@ def my_requests_view(request):
 
 @login_required
 def create_purchase_request_view(request):
+    if not hasattr(request.user,"business_profile"):
+        return redirect('dashboard:dashboard')
+
     if request.method == 'POST':
         form = CreatePurchaseRequest(request.POST, request.FILES)
 
@@ -435,30 +407,59 @@ def create_purchase_request_view(request):
 
 @login_required
 def edit_purchase_request_view(request, pk):
+    if not hasattr(request.user,"business_profile"):
+        return redirect('dashboard:dashboard')
+        
     pr = get_object_or_404(PurchaseRequest, pk=pk, buyer=request.user)
-    return render(request, 'purchase_requests/edit.html', {'pr': pr})
+    
+    if request.method == 'POST':
+        form = CreatePurchaseRequest(request.POST, request.FILES, instance=pr)
 
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Purchase request updated successfully.')
+            return redirect('purchase_requests:my_requests')
+    else:
+        form = CreatePurchaseRequest(instance=pr)
 
-# Might need to depreciate this one...or recode my_requests_view to accommodate this function
-@login_required
-def cancel_purchase_request_view(request, pk):
-    # TODO: Cancel purchase request
-    return redirect('purchase_requests:my_requests')
+    return render(request, 'purchase_requests/edit.html', {
+        'form': form,
+        'pr': pr,
+    })
 
 
 @login_required
 def view_offers_view(request, pk):
+    if not hasattr(request.user,"business_profile"):
+        return redirect('dashboard:dashboard')
     pr = get_object_or_404(PurchaseRequest, pk=pk, buyer=request.user)
-    return render(request, 'purchase_requests/view_offers.html', {'pr': pr})
+    offers = Offer.objects.filter(purchase_request=pr).select_related('seller').order_by('-submitted_at')
+    deadline_passed = timezone.now() >= pr.closing_deadline
+    return render(request, 'purchase_requests/view_offers.html', {'pr': pr, 'offers': offers, 'deadline_passed':deadline_passed,})
 
 
 @login_required
 def accept_offer_view(request, pk, offer_pk):
-    # TODO: Accept offer, update statuses
+    if not hasattr(request.user,"business_profile"):
+        return redirect('dashboard:dashboard')
+    pr = get_object_or_404(PurchaseRequest, pk=pk, buyer=request.user)
+    offer = get_object_or_404(Offer, pk=offer_pk, purchase_request=pr)
+    offer.status = 'accepted'
+    offer.save()
+    Offer.objects.filter(purchase_request=pr).exclude(pk=offer_pk).update(status='rejected')
+    pr.status = 'completed'
+    pr.save()
+    messages.success(request, f"You accepted {offer.seller.username}'s offer. The request is now marked as completed.")
     return redirect('purchase_requests:view_offers', pk=pk)
 
 
 @login_required
 def reject_offer_view(request, pk, offer_pk):
-    # TODO: Reject offer
+    if not hasattr(request.user,"business_profile"):
+        return redirect('dashboard:dashboard')
+    pr = get_object_or_404(PurchaseRequest, pk=pk, buyer=request.user)
+    offer = get_object_or_404(Offer, pk=offer_pk, purchase_request=pr)
+    offer.status = 'rejected'
+    offer.save()
+    messages.success(request, f"You rejected {offer.seller.username}'s offer.")
     return redirect('purchase_requests:view_offers', pk=pk)

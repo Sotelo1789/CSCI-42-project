@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Marketplace{% endblock %}
+
+{% block content %}
+<h1>Marketplace</h1>
+<div>
+    <a href="{% url 'marketplace:marketplace_listings' %}">To Marketplace Listings</a>
+    <p>See what is available for purchase!</p>
+</div>
+<div>
+    <a href="{% url 'marketplace:create_consumer_request' %}">Make a Request</a>
+    <p>Got an unfulfilled need? Show businesses your demand!</p>    
+</div>
+{% endblock %}

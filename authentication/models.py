@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.utils import timezone
+from marketplace.models import Listing, BusinessResponse, ListingTransaction, ConsumerRequestTransaction, Review
 
 
 class ClientManager(BaseUserManager):
@@ -96,6 +97,8 @@ class BusinessProfile(models.Model):
     reviewed_at = models.DateTimeField(null=True, blank=True)
     rejection_reason = models.TextField(blank=True)
 
+    rating = models.DecimalField(max_digits=3, decimal_places=1, default=0)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -104,6 +107,32 @@ class BusinessProfile(models.Model):
 
     def __str__(self):
         return self.business_name
+
+    def update_rate(self):
+        listing_transactions = ListingTransaction.objects.filter(listing__business=self.client)
+        consumer_request_transactions = ConsumerRequestTransaction.objects.filter(business_response__business=self.client)
+        total_reviewed_transactions = 0
+        final_rating = 0
+        for ltransaction in listing_transactions:
+            try:
+                review = Review.objects.get(listing_transaction=ltransaction)
+            except Review.DoesNotExist:
+                review = None
+            if review is not None:
+                final_rating += review.rating
+                total_reviewed_transactions += 1
+        for crtransaction in consumer_request_transactions:
+            try:
+                review = Review.objects.get(consumer_request_transaction=crtransaction)
+            except Review.DoesNotExist:
+                review = None
+            if review is not None:
+                final_rating += review.rating
+                total_reviewed_transactions += 1
+        if(total_reviewed_transactions != 0):
+            final_rating = float(final_rating) / float(total_reviewed_transactions)
+            self.rating = final_rating
+        self.save()
 
 
 class ConsumerProfile(models.Model):
