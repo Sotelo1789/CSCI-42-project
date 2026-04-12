@@ -1,9 +1,17 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}Marketplace{% endblock %}
+{% block title %}Create Consumer Request{% endblock %}
 
 {% block content %}
-<h1>Marketplace</h1>
-<p><!-- TODO: Implement this page --></p>
+<h1>Create Consumer Request</h1>
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <label>Upload Images (maximum of 5)</label>
+    <input type="file" name="images" multiple>
+
+    <button type="submit">Create Consumer Request</button>
+</form>
 {% endblock %}

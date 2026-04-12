@@ -43,13 +43,6 @@
                     <p>{{favedlisting.1}}</p>
                 {% endif %}
             {% endfor %}
-            <!--
-            {% if favedlisting %}
-                <p>FAVED</p>
-            {% else %}
-                <p>NOTFAVED</p>
-            {% endif %}
-            -->
             {% if listing.images.exists %}
                 {% for image in listing.images.all %}
                     {% if image.is_primary == True %}

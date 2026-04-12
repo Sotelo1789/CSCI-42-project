@@ -1,9 +1,41 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}Marketplace{% endblock %}
+{% block title %}Listing: {{ listing.title }}{% endblock %}
 
 {% block content %}
-<h1>Marketplace</h1>
-<p><!-- TODO: Implement this page --></p>
+<h1>{{ listing.title }}</h1>
+{% if user.consumer_profile %}
+    {% if is_favorite == True %}
+        <p style="color: yellow">FAVORITE</p>
+        <button><a href="{% url 'marketplace:unfavorite_in_detail' pk=listing.pk %}">Unfavorite?</a></button>
+    {% else %}
+        <p style="color: grey">Not Favorite</p>
+        <button><a href="{% url 'marketplace:set_favorite_in_detail' pk=listing.pk %}">Make favorite?</a></button>
+    {% endif %}
+{% endif %}
+<p>Viewed: {{ listing.view_count }}</p>
+<div>
+    <p>Category: {{ listing.category|upper }}</p>
+    <p>Pricing: {{ listing.min_price }} - {{ listing.max_price }}</p>
+    {% if listing.availability == True %}
+        <p>Listing Available For Inquiry</p>
+    {% else %}
+        <p>Listing Unavailable For Now</p>
+    {% endif %}
+    <p>On Stock: {{ listing.quantity }} {{ listing.unit }}</p>
+</div>
+<div>
+    <p>Delivery Option: {{ listing.delivery_option|upper }}</p>
+    <p>Delivery Areas: {{ listing.delivery_area }}</p>
+    <p>Delivery Time (in Days): {{ listing.delivery_time }}</p>
+</div>
+<p>Business Contact: {{ listing.business.business_profile.rep_contact }}</p>
+<p>{{ listing.description }}</p>
+{% if listing.images.exists %}
+    {% for image in listing.images.all %}
+        <img src="{{ image.image.url }}" alt="Image {{ forloop.counter }}">
+    {% endfor %}
+{% endif %}
+<button><a href="{% url 'marketplace:download_toc' pk=listing.pk %}">⬇ Download Terms and Conditions</a></button>
 {% endblock %}

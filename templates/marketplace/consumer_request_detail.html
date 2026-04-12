@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Consumer Request: {{ cr.title }}{% endblock %}
+
+{% block content %}
+<h1>{{ cr.title }}</h1>
+<p>Responded: {{ cr.response_count }}</p>
+{% if user.business_profile %}
+    {% if has_responded == True %}
+        <p>You have responded</p>
+    {% else %}
+        <p>You have not responded</p>
+        <button><a href="{% url 'marketplace:respond_to_request' pk=cr.pk %}">Write Response?</a></button>
+    {% endif %}
+{% endif %}
+<div>
+    <p>Category: {{ cr.category|upper }}</p>
+    <p>Pricing: {{ cr.min_price }} - {{ cr.max_price }}</p>
+</div>
+<p>Consumer: {{ cr.consumer.consumer_profile.full_name }}</p>
+<p>{{ cr.description }}</p>
+{% if cr.images.exists %}
+    {% for image in cr.images.all %}
+        <img src="{{ image.image.url }}" alt="Image {{ forloop.counter }}">
+    {% endfor %}
+{% endif %}
+{% endblock %}

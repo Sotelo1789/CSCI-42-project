@@ -5,5 +5,12 @@
 
 {% block content %}
 <h1>Marketplace</h1>
-<p><!-- TODO: Implement this page --></p>
+<div>
+    <a href="{% url 'marketplace:marketplace_requests' %}">To Marketplace Requests</a>
+    <p>See what is demanded for purchase!</p>
+</div>
+<div>
+    <a href="{% url 'marketplace:create_listing' %}">Make a Listing</a>
+    <p>Is there an unfulfilled need? Show consumers you got it!</p>    
+</div>
 {% endblock %}

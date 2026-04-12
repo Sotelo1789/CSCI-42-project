@@ -38,10 +38,9 @@ class Listing(models.Model):
     delivery_option = models.CharField(max_length=10, choices=DELIVERY_CHOICES)
     delivery_area = models.CharField(max_length=100)
     delivery_time = models.IntegerField() # assumes delivery time is in number of days
-    terms_conditions = models.FileField(upload_to='uploads/listings/termsconditions')
+    terms_conditions = models.FileField(upload_to='uploads/listings/termsconditions', null=False, blank=False)
     availability = models.BooleanField(default=True)
     view_count = models.IntegerField(validators=[validate_nonnegative], default=0)
-    terms_conditions = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -70,6 +69,12 @@ class ConsumerRequest(models.Model):
         ('cancelled', 'Cancelled'),
     ]
 
+    CATEGORY_CHOICES = [
+        ('goods', 'Goods'),
+        ('services', 'Services'),
+        ('custom', 'Custom'),
+    ]
+
     consumer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -77,10 +82,11 @@ class ConsumerRequest(models.Model):
     )
     title = models.CharField(max_length=255)
     description = models.TextField()
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='custom')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
-    price_min = models.DecimalField(max_digits=15, decimal_places=2, validators=[validate_nonnegative])
-    price_max = models.DecimalField(max_digits=15, decimal_places=2, validators=[validate_nonnegative])
-    response_count = models.IntegerField(validators=[validate_nonnegative])
+    min_price = models.DecimalField(max_digits=15, decimal_places=2, validators=[validate_nonnegative])
+    max_price = models.DecimalField(max_digits=15, decimal_places=2, validators=[validate_nonnegative])
+    response_count = models.IntegerField(validators=[validate_nonnegative], default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -105,7 +111,7 @@ class BusinessResponse(models.Model):
     )
     message = models.TextField()
     price = models.DecimalField(max_digits=15, decimal_places=2, validators=[validate_nonnegative])
-    quotation = models.FileField(upload_to='uploads/quotations/')
+    quotation = models.FileField(upload_to='uploads/quotations/', null=False, blank=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
