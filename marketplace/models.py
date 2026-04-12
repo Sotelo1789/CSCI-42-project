@@ -29,6 +29,7 @@ class Listing(models.Model):
     delivery_time = models.IntegerField() # assumes delivery time is in number of days
     terms_conditions = models.FileField(upload_to='uploads/listings/termsconditions')
     availability = models.BooleanField(default=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -50,9 +51,20 @@ class ListingImage(models.Model):
 
 
 class ConsumerRequest(models.Model):
-    # INCOMPLETE
     CATEGORY_CHOICES = [
         ('temp', 'Temporary Category')
+    ]
+
+    CONTACT_CHOICES = [
+        ('message', 'Message'),
+        ('email', 'Email'),
+        ('phone', "Phone")
+    ]
+
+    STATUS_CHOICES = [
+        ('none', 'No Responses'),
+        ('response', 'Received Responses'),
+        ('closed', 'Closed')
     ]
 
     title = models.CharField(max_length=255)
@@ -60,7 +72,29 @@ class ConsumerRequest(models.Model):
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
     min_budget = models.DecimalField(max_digits=15, decimal_places=2)
     max_budget = models.DecimalField(max_digits=15, decimal_places=2)
-    #etc
+    delivery_area = models.CharField(max_length=100)
+    needed_by = models.DateTimeField()
+    contact_pref = models.CharField(max_length=10, choices=CONTACT_CHOICES)
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='none')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'request'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+
+class RequestImage(models.Model):
+    request = models.ForeignKey(
+        ConsumerRequest,
+        on_delete=models.CASCADE,
+        related_name='images'
+    )
+    image = models.ImageField(upload_to='uploads/requests/images/')
 
 
 class BusinessResponse(models.Model):
@@ -76,6 +110,8 @@ class BusinessResponse(models.Model):
     )
     message = models.TextField()
     price = models.DecimalField(max_digits=15, decimal_places=2)
+    earliest_delivery = models.DateTimeField()
+    latest_delivery = models.DateTimeField()
     quotation = models.FileField(upload_to='uploads/quotations/')
 
     created_at = models.DateTimeField(auto_now_add=True)

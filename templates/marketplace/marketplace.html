@@ -4,5 +4,48 @@
 
 {% block content %}
 <h1>Marketplace</h1>
-<p><!-- TODO: Implement this page --></p>
+<!-- TODO: Implement this page -->
+
+{% if acc_type == 'business' %}
+    <h3>Filter Requests</h2>
+    <form method="GET">
+        {{ filter_form.as_p }}
+        <button type="submit">Search</button>
+    </form>
+
+    <h2>Requests List</h2>
+    {% if page_requests %}
+        <ul>
+            {% for req in page_requests %}
+            <li>
+                <strong>{{ req.title }}</strong><br>
+                Description: {{ req.description }}<br>
+                Category: {{ req.category }}<br>
+                Area: {{ req.delivery_area }}<br>
+                Needed by: P{{ req.needed_by }}<br>
+                <a href="/marketplace/requests/{{ req.id }}/respond">Respond</a>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No requests found.</p>
+    {% endif %}
+
+    <div>
+        {% if page_requests.has_previous %}
+            <a href="?page=1&{{ request_get }}">First</a>
+            <a href="?page={{ page_requests.previous_page_number }}&{{ request_get }}">Previous</a>
+        {% endif %}
+
+        <span>
+            Page {{ page_requests.number }} of {{ page_requests.paginator.num_pages }}
+        </span>
+
+        {% if requests.has_next %}
+            <a href="?page={{ page_requests.next_page_number }}&{{ request_get }}">Next</a>
+            <a href="?page={{ page_requests.paginator.num_pages }}&{{ request_get }}">Last</a>
+        {% endif %}
+    </div>
+{% endif %}
+
 {% endblock %}

@@ -8,9 +8,10 @@
     {% csrf_token %}
     {{ form.as_p }}
 
-    <label>Upload Images (maximum of 5)</label>
+    <label>Upload images (optional, maximum of 5)</label>
     <input type="file" name="images" multiple>
 
+    <br>
     <button type="submit">Create Listing</button>
 </form>
 {% endblock %}

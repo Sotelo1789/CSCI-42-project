@@ -1,8 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .forms import CreateListing, RespondToRequest
-from .models import Listing, ListingImage
+from django.utils import timezone
+from django.core.paginator import Paginator
+from .forms import CreateListing, RequestSearchFilter, RespondToRequest
+from .models import Listing, ListingImage, ConsumerRequest
 
 
 def isBusiness(request):
@@ -14,19 +16,62 @@ def isConsumer(request):
         return redirect("dashboard")
 
 @login_required
-def consumer_marketplace_view(request):
-    isConsumer(request)
-    # TODO: Implement marketplace
-    return render(request, 'marketplace/consumer_marketplace.html')
+def marketplace_view(request):
+    acc_type = 'business'
+    if hasattr(request.user, "consumer_profile"):
+        acc_type = 'consumer'
+
+    if acc_type == 'business':
+        requests = ConsumerRequest.objects.filter(status="open")
+        for r in requests:
+            if r.closing_deadline <= timezone.now():
+                r.status = "closed"
+                r.save()
+
+        requests = ConsumerRequest.objects.filter(status="open").order_by("pk")
+
+        filter_form = RequestSearchFilter(request.GET or None)
+        if filter_form.is_valid():
+            kw = filter_form.cleaned_data.get('keyword')
+            cat = filter_form.cleaned_data.get('category')
+            min = filter_form.cleaned_data.get('min_price')
+            max = filter_form.cleaned_data.get('max_price')
+            area = filter_form.cleaned_data.get('area')
+
+            if kw:
+                from django.db.models import Q
+                requests = request.filter(
+                    Q(title__icontains=kw) | Q(description__icontains=kw)
+                )
+            if cat:
+                requests = requests.filter(category=cat)
+            if min is not None:
+                requests = requests.filter(budget__gte=min)
+            if max is not None:
+                requests = requests.filter(budget__lte=max)
+            if area:
+                requests = requests.filter(delivery_area__icontains=area)
+
+        paginator = Paginator(requests, 15)
+        page_number = request.GET.get("page")
+        page_requests = paginator.get_page(page_number)
+
+        ctx = {
+            "acc_type": acc_type,
+            "requests": requests,
+            "page_requests": page_requests,
+            "filter_form": filter_form,
+            "request_get": "&".join(f"{k}={v}" for k, v in request.GET.items() if k != "page"),
+        }
+        return render(request, 'market', ctx)
+    else:
+        null = 1 # placeholder
+        # TODO: Implement consumer marketplace
+
+    return render(request, 'marketplace/marketplace.html')
 
 @login_required
-def business_marketplace_view(request):
-    isBusiness(request)
-    # TODO: Implement marketplace
-    return render(request, 'marketplace/business_marketplace.html')
-
-@login_required
-def create_listing_view(request, pk):
+def create_listing_view(request):
     isBusiness(request)
 
     if request.method == 'POST':
@@ -49,7 +94,7 @@ def create_listing_view(request, pk):
                 )
 
             messages.success(request, 'You have successfully created a listing.')
-            return redirect('marketplace:listing_detail', pk=pk)
+            return redirect('marketplace:listing_detail', pk=listing.pk)
     else:
         form = CreateListing()
 
@@ -61,6 +106,27 @@ def listing_detail_view(request):
     return render(request, 'marketplace/listing_detail.html')
 
 @login_required
-def respond_to_request_view(request):
-    # TODO: implement respond to request
-    return render(request, 'marketplace/business_response.html')
+def respond_to_request_view(request, pk):
+    isBusiness(request)
+    req = get_object_or_404(ConsumerRequest, id=pk)
+    business = request.user
+
+    if request.method == 'POST':
+        form = RespondToRequest(request.POST, request.FILES)
+
+        if form.is_valid():
+            response = form.save(commit=False)
+            response.consumer_request = req
+            response.business = business
+            response.save()
+            req.status = 'response'
+
+            messages.success(request, 'You have successfully submitted a response.')
+            return redirect('marketplace:request_detail', pk=pk)
+    else:
+        form = RespondToRequest()
+
+    return render(request, 'marketplace/business_response.html', {
+        'form': form,
+        'req': req
+    })
