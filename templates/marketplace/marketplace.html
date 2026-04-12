@@ -22,7 +22,7 @@
                 Description: {{ req.description }}<br>
                 Category: {{ req.category }}<br>
                 Area: {{ req.delivery_area }}<br>
-                Needed by: P{{ req.needed_by }}<br>
+                Needed by: {{ req.needed_by }}<br>
                 <a href="/marketplace/requests/{{ req.id }}/respond">Respond</a>
             </li>
             {% endfor %}

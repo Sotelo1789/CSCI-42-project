@@ -22,13 +22,7 @@ def marketplace_view(request):
         acc_type = 'consumer'
 
     if acc_type == 'business':
-        requests = ConsumerRequest.objects.filter(status="open")
-        for r in requests:
-            if r.closing_deadline <= timezone.now():
-                r.status = "closed"
-                r.save()
-
-        requests = ConsumerRequest.objects.filter(status="open").order_by("pk")
+        requests = ConsumerRequest.objects.exclude(status="closed").order_by("pk")
 
         filter_form = RequestSearchFilter(request.GET or None)
         if filter_form.is_valid():
@@ -63,12 +57,11 @@ def marketplace_view(request):
             "filter_form": filter_form,
             "request_get": "&".join(f"{k}={v}" for k, v in request.GET.items() if k != "page"),
         }
-        return render(request, 'market', ctx)
     else:
         null = 1 # placeholder
         # TODO: Implement consumer marketplace
 
-    return render(request, 'marketplace/marketplace.html')
+    return render(request, 'marketplace/marketplace.html', ctx)
 
 @login_required
 def create_listing_view(request):
