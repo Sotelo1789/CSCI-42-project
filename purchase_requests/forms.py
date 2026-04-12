@@ -25,11 +25,20 @@ class CreatePurchaseRequest(forms.ModelForm):
     def clean_rfq_file(self):
         rfq = self.cleaned_data.get('rfq_file')
 
+        # If no new file uploaded
         if not rfq:
-            raise forms.ValidationError('You must upload an RFQ file.')
-        if rfq.size == 0:
+            # If creating (no instance yet) → required
+            if not self.instance.pk:
+                raise forms.ValidationError('You must upload an RFQ file.')
+            # If editing → allow existing file
+            return rfq
+
+        # If file exists, validate it
+        if hasattr(rfq, 'size') and rfq.size == 0:
             raise forms.ValidationError('Your uploaded RFQ file is empty.')
-        if rfq.content_type != 'application/pdf':
+
+        content_type = getattr(rfq, 'content_type', None)
+        if content_type and content_type != 'application/pdf':
             raise forms.ValidationError('Your uploaded RFQ file must be a PDF.')
 
         return rfq

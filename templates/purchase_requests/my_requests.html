@@ -337,6 +337,7 @@
                 <div class="card-actions">
                     <a href="{% url 'purchase_requests:view_offers' pk=pr.pk %}" class="btn-sm blue">📥 View Offers</a>
                     <a href="{% url 'purchase_requests:download_rfq' pk=pr.pk %}" class="btn-sm accent">⬇ Download RFQ</a>
+                    <a href="{% url 'purchase_requests:edit' pk=pr.pk %}" class="btn-sm blue">✏ Edit</a>
                     <button type="button"
                             class="btn-sm blue extend-btn"
                             data-target="deadline-panel-{{ pr.pk }}">
