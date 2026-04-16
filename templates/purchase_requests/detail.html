@@ -18,6 +18,10 @@
         font-family: inherit;
     }
     .btn:hover{background:rgba(255,255,255,0.05)}
+    .btn-back{background-color:#374151; /* dark gray */color:#e5e7eb;border:1px solid #4b5563;}
+    .btn-back:hover{background-color:#4b5563;}
+    .btn-join{background-color:#22c55e;color:white;border:none;font-weight:600;}
+    .btn-join:hover{background-color:#16a34a;}
     .btn-primary{background:var(--blue2);border-color:transparent;color:var(--white)}
     .btn-primary:hover{filter:brightness(1.05)}
     .btn-disabled{opacity:.55;cursor:not-allowed}
@@ -67,7 +71,7 @@
 <div class="wrap">
   <!--Top Bar (Back Button + Status Badge + Join Button)-->
   <div class="topbar">
-    <a class="btn" href="{% url 'purchase_requests:available_list' %}">← Back</a>
+    <a class="btn btn-back" href="{% url 'purchase_requests:available_list' %}">← Back</a>
 
     <div style="display:flex;gap:10px;align-items:center">
       {% if is_closed %}
@@ -83,7 +87,7 @@
       {% else %}
         <form method="post" action="{% url 'purchase_requests:join' pr.id %}">
           {% csrf_token %}
-          <button class="btn btn-primary" type="submit">Join Purchase Request</button>
+          <button class="btn btn-join" type="submit">Join Purchase Request</button>
         </form>
       {% endif %}
     </div>
@@ -144,7 +148,7 @@
           <span class="badge" style="opacity:.8">View in Review List</span>
         </div>
       {% empty %}
-        <div style="color:var(--muted)">No attachments uploaded.</div>
+        <div style="color:var(--muted)">Attachment can only be downloaded once joined in review purchase requests page.</div>
       {% endfor %}
     </div>
   </div>
