@@ -2,7 +2,216 @@
 
 {% block title %}My Profile{% endblock %}
 
+{% block extra_css %}
+<style>
+    .page-wrap { max-width: 780px; margin: 0 auto; }
+
+    .page-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.75rem; font-weight: 800;
+        margin-bottom: 1.75rem;
+    }
+
+    /* ── Profile header card ── */
+    .profile-header {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 2rem;
+        display: flex; align-items: center; gap: 1.5rem;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+    }
+    .profile-avatar {
+        width: 72px; height: 72px; flex-shrink: 0;
+        background: linear-gradient(135deg, var(--blue), var(--accent));
+        border-radius: 50%;
+        display: grid; place-items: center;
+        font-family: 'Syne', sans-serif;
+        font-size: 1.8rem; font-weight: 800;
+    }
+    .profile-meta { flex: 1; min-width: 0; }
+    .profile-name {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.3rem; font-weight: 800;
+        margin-bottom: 0.3rem;
+    }
+    .profile-email { color: var(--muted); font-size: 0.88rem; margin-bottom: 0.5rem; }
+    .profile-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .badge {
+        font-size: 0.68rem; font-weight: 700;
+        padding: 0.22rem 0.65rem; border-radius: 6px;
+        letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .badge-business  { background: rgba(26,86,219,0.2);   color: #93c5fd; border: 1px solid rgba(26,86,219,0.35); }
+    .badge-consumer  { background: rgba(56,189,248,0.12); color: var(--accent); border: 1px solid rgba(56,189,248,0.25); }
+    .badge-admin     { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
+    .badge-pending   { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
+    .badge-approved  { background: rgba(52,211,153,0.12); color: #34d399; border: 1px solid rgba(52,211,153,0.25); }
+    .badge-rejected  { background: rgba(248,113,113,0.12); color: var(--danger); border: 1px solid rgba(248,113,113,0.25); }
+
+    /* ── Info card ── */
+    .info-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 1.75rem 2rem;
+        margin-bottom: 1.25rem;
+    }
+    .card-section-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 0.68rem; font-weight: 700;
+        letter-spacing: 0.12em; text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.6rem;
+        border-bottom: 1px solid var(--border);
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem 2rem;
+    }
+    .info-grid.single { grid-template-columns: 1fr; }
+    .info-item {}
+    .info-label {
+        font-size: 0.72rem; font-weight: 700;
+        color: var(--muted); text-transform: uppercase;
+        letter-spacing: 0.06em; margin-bottom: 4px;
+    }
+    .info-value {
+        font-size: 0.92rem; font-weight: 500;
+        color: var(--white);
+        word-break: break-word;
+    }
+    .info-value.empty { color: var(--muted); font-style: italic; }
+
+    .edit-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 0.65rem 1.3rem; border-radius: 12px;
+        border: 1px solid var(--blue);
+        background: var(--blue);
+        color: #fff;
+        font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 600;
+        text-decoration: none; transition: all 0.15s; white-space: nowrap;
+    }
+    .edit-btn:hover {
+        background: #fff;
+        border-color: #fff;
+        color: var(--blue);
+    }
+
+    @media (max-width: 560px) {
+        .info-grid { grid-template-columns: 1fr; }
+        .profile-header { flex-direction: column; text-align: center; }
+        .profile-badges { justify-content: center; }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<h1>My Profile</h1>
-<p><!-- TODO: Implement this page --></p>
+<div class="page-wrap">
+    <div class="page-title">My Profile</div>
+
+    <!-- Header -->
+    <div class="profile-header">
+        <div class="profile-avatar">{{ user.username|first|upper }}</div>
+        <div class="profile-meta">
+            <div class="profile-name">{{ user.username }}</div>
+            <div class="profile-email">{{ user.email }}</div>
+            <div class="profile-badges">
+                <span class="badge badge-{{ user.account_type }}">{{ user.account_type }}</span>
+                {% if profile and user.is_business %}
+                    <span class="badge badge-{{ profile.status }}">{{ profile.status|capfirst }}</span>
+                {% endif %}
+            </div>
+        </div>
+        <a href="{% url 'profiles:edit_profile' %}" class="edit-btn">✏ Edit Profile</a>
+    </div>
+
+    <!-- Account info -->
+    <div class="info-card">
+        <div class="card-section-title">Account</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Username</div>
+                <div class="info-value">{{ user.username }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Email</div>
+                <div class="info-value">{{ user.email }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Contact Number</div>
+                <div class="info-value {% if not user.contact_number %}empty{% endif %}">
+                    {{ user.contact_number|default:"Not provided" }}
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Member Since</div>
+                <div class="info-value">{{ user.date_joined|date:"F d, Y" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Business profile -->
+    {% if user.is_business and profile %}
+    <div class="info-card">
+        <div class="card-section-title">Business Information</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Business Name</div>
+                <div class="info-value">{{ profile.business_name }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Business Type</div>
+                <div class="info-value">{{ profile.get_business_type_display }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">TIN</div>
+                <div class="info-value">{{ profile.tin }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Business Address</div>
+                <div class="info-value">{{ profile.business_address }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="card-section-title">Authorized Representative</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Full Name</div>
+                <div class="info-value">{{ profile.rep_name }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Position</div>
+                <div class="info-value">{{ profile.rep_position }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Contact</div>
+                <div class="info-value">{{ profile.rep_contact }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Consumer profile -->
+    {% elif user.is_consumer and profile %}
+    <div class="info-card">
+        <div class="card-section-title">Personal Information</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Full Name</div>
+                <div class="info-value">{{ profile.full_name }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Address</div>
+                <div class="info-value">{{ profile.address }}</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
 {% endblock %}

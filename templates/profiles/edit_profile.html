@@ -2,7 +2,209 @@
 
 {% block title %}Edit Profile{% endblock %}
 
+{% block extra_css %}
+<style>
+    .page-wrap { max-width: 760px; margin: 0 auto; }
+
+    .back-link {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 0.82rem; font-weight: 600; color: var(--muted);
+        text-decoration: none; margin-bottom: 1rem; transition: color 0.15s;
+    }
+    .back-link:hover { color: var(--white); }
+
+    .page-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.75rem; font-weight: 800; margin-bottom: 1.75rem;
+    }
+
+    /* ── Form card ── */
+    .form-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 1.75rem 2rem;
+        margin-bottom: 1.25rem;
+    }
+    .section-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 0.68rem; font-weight: 700;
+        letter-spacing: 0.12em; text-transform: uppercase;
+        color: var(--muted); margin-bottom: 1.25rem;
+        padding-bottom: 0.6rem; border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Fields ── */
+    .field-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.1rem;
+    }
+    .field-grid.single { grid-template-columns: 1fr; }
+    .field-full { grid-column: 1 / -1; }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label {
+        font-size: 0.78rem; font-weight: 700;
+        color: var(--muted); letter-spacing: 0.03em;
+    }
+    .field label .req { color: var(--accent); margin-left: 2px; }
+    .field input,
+    .field select,
+    .field textarea {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        color: var(--white);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.92rem;
+        padding: 0.65rem 1rem;
+        transition: border-color 0.15s, background 0.15s;
+        outline: none; width: 100%;
+    }
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+        border-color: var(--blue);
+        background: rgba(26,86,219,0.08);
+    }
+    .field input::placeholder,
+    .field textarea::placeholder { color: var(--muted); opacity: 0.6; }
+    .field textarea { resize: vertical; min-height: 90px; }
+    .field select option { background: #0f1a30; }
+
+    /* ── Actions ── */
+    .form-actions {
+        display: flex; align-items: center;
+        justify-content: flex-end; gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+    .btn-ghost {
+        padding: 0.7rem 1.4rem; border-radius: 12px;
+        border: 1px solid var(--border); background: transparent;
+        color: var(--muted); font-family: 'DM Sans', sans-serif;
+        font-size: 0.92rem; font-weight: 600;
+        cursor: pointer; text-decoration: none; transition: all 0.15s;
+    }
+    .btn-ghost:hover { border-color: rgba(255,255,255,0.2); color: var(--white); }
+    .btn-primary {
+        padding: 0.7rem 1.8rem; border-radius: 12px; border: none;
+        background: linear-gradient(135deg, var(--blue), #2563eb);
+        color: #fff; font-family: 'DM Sans', sans-serif;
+        font-size: 0.92rem; font-weight: 700; cursor: pointer;
+        transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    @media (max-width: 560px) { .field-grid { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
 {% block content %}
-<h1>Edit Profile</h1>
-<p><!-- TODO: Implement this page --></p>
+<div class="page-wrap">
+
+    <a href="{% url 'profiles:my_profile' %}" class="back-link">← Back to Profile</a>
+    <div class="page-title">Edit Profile</div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Account -->
+        <div class="form-card">
+            <div class="section-title">Account</div>
+            <div class="field-grid">
+                <div class="field">
+                    <label>Username</label>
+                    <input type="text" value="{{ user.username }}" disabled>
+                </div>
+                <div class="field">
+                    <label>Email</label>
+                    <input type="email" value="{{ user.email }}" disabled>
+                </div>
+                <div class="field">
+                    <label for="contact_number">Contact Number</label>
+                    <input type="text" id="contact_number" name="contact_number"
+                           value="{{ user.contact_number }}"
+                           placeholder="e.g. +63 912 345 6789">
+                </div>
+            </div>
+        </div>
+
+        <!-- Business profile -->
+        {% if user.is_business and profile %}
+        <div class="form-card">
+            <div class="section-title">Business Information</div>
+            <div class="field-grid">
+                <div class="field">
+                    <label for="business_name">Business Name <span class="req">*</span></label>
+                    <input type="text" id="business_name" name="business_name"
+                           value="{{ profile.business_name }}" required>
+                </div>
+                <div class="field">
+                    <label for="business_type">Business Type <span class="req">*</span></label>
+                    <select id="business_type" name="business_type">
+                        <option value="trading"       {% if profile.business_type == 'trading' %}selected{% endif %}>Trading</option>
+                        <option value="servicing"     {% if profile.business_type == 'servicing' %}selected{% endif %}>Servicing</option>
+                        <option value="manufacturing" {% if profile.business_type == 'manufacturing' %}selected{% endif %}>Manufacturing</option>
+                        <option value="other"         {% if profile.business_type == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="tin">TIN <span class="req">*</span></label>
+                    <input type="text" id="tin" name="tin"
+                           value="{{ profile.tin }}" required>
+                </div>
+                <div class="field field-full">
+                    <label for="business_address">Business Address <span class="req">*</span></label>
+                    <textarea id="business_address" name="business_address" required>{{ profile.business_address }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-card">
+            <div class="section-title">Authorized Representative</div>
+            <div class="field-grid">
+                <div class="field">
+                    <label for="rep_name">Full Name <span class="req">*</span></label>
+                    <input type="text" id="rep_name" name="rep_name"
+                           value="{{ profile.rep_name }}" required>
+                </div>
+                <div class="field">
+                    <label for="rep_position">Position <span class="req">*</span></label>
+                    <input type="text" id="rep_position" name="rep_position"
+                           value="{{ profile.rep_position }}" required>
+                </div>
+                <div class="field">
+                    <label for="rep_contact">Contact Number <span class="req">*</span></label>
+                    <input type="text" id="rep_contact" name="rep_contact"
+                           value="{{ profile.rep_contact }}" required>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consumer profile -->
+        {% elif user.is_consumer and profile %}
+        <div class="form-card">
+            <div class="section-title">Personal Information</div>
+            <div class="field-grid">
+                <div class="field">
+                    <label for="full_name">Full Name <span class="req">*</span></label>
+                    <input type="text" id="full_name" name="full_name"
+                           value="{{ profile.full_name }}" required>
+                </div>
+                <div class="field field-full">
+                    <label for="address">Address <span class="req">*</span></label>
+                    <textarea id="address" name="address" required>{{ profile.address }}</textarea>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="form-actions">
+            <a href="{% url 'profiles:my_profile' %}" class="btn-ghost">Cancel</a>
+            <button type="submit" class="btn-primary">Save Changes →</button>
+        </div>
+    </form>
+
+</div>
 {% endblock %}
