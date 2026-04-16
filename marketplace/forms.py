@@ -1,6 +1,6 @@
 from django import forms
 from django.utils import timezone
-from .models import Listing, ConsumerRequest, BusinessResponse
+from .models import Listing, ConsumerRequest, BusinessResponse, ListingTransaction
 
 
 class CreateListing(forms.ModelForm):
@@ -42,6 +42,34 @@ class CreateListing(forms.ModelForm):
 
         return cleaned_data
 
+class CreateListingTransaction(forms.ModelForm):
+    class Meta:
+        model = ListingTransaction
+        exclude = ['listing', 'consumer', 'created_at']
+
+class ChooseTransactionKind(forms.Form):
+    TRANSACTION_KIND = [('listing','From Listings'),('consumer_request','From Consumer Request')]
+    CATEGORY_CHOICES = [('','All Categories'),('goods', 'Goods'),('services', 'Services'),('custom', 'Custom')]
+
+    keyword       = forms.CharField(required=False, label='Search')
+    category      = forms.ChoiceField(required=False, choices=CATEGORY_CHOICES, label='Category')
+    person        = forms.CharField(required=False)
+    min_price     = forms.DecimalField(required=False, label='Min Price', min_value=0)
+    max_price     = forms.DecimalField(required=False, label='Max Price', min_value=0)
+    earliest_date = forms.DateTimeField(required=False)
+    latest_date   = forms.DateTimeField(required=False)
+    transaction   = forms.ChoiceField(required=False, choices=TRANSACTION_KIND, label='Kind of Transaction')
+
+    class Meta:
+        widgets = {
+            'earliest_date': forms.DateTimeInput(
+                attrs={'type':'datetime-local'}
+            ),
+            'latest_date': forms.DateTimeInput(
+                attrs={'type':'datetime-local'}
+            )
+        }
+
 class CreateConsumerRequest(forms.ModelForm):
     class Meta:
         model = ConsumerRequest
@@ -73,6 +101,7 @@ class CreateConsumerRequest(forms.ModelForm):
                 )
 
         return cleaned_data
+
 
 class RespondToRequest(forms.ModelForm):
     class Meta:

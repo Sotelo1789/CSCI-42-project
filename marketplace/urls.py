@@ -16,8 +16,8 @@ urlpatterns = [
     # TODO path('consumer/my-requests', views.my_consumer_requests_view, name='my_consumer_requests'),
     # potential TODO path('listings/my-favorites', views.my_favorite_listings_view, name='my_favorite_listings'),
     # potential TODO path('request/<int:pk>/edit', views.edit_consumer_request_view, name='edit_consumer_request'),
-    # potential TODO path('listing/<int:pk>/pay', views.pay_listing_view, name='pay_listing'),
-    # potential TODO path('response/<int:pk>/pay', views.pay_response_view, name='pay_response'),
+    path('listing/<int:pk>/pay', views.pay_listing_view, name='pay_listing'), #DONE
+    path('response/<int:pk>/pay', views.pay_response, name='pay_response'), #DONE
     # potential TODO path('listing/<int:pk>/review', views.review_listing_view, name='review_listing'),
     # potential TODO path('response/<int:pk>/review', views.review_response_view, name='review_response'),
 
@@ -33,9 +33,11 @@ urlpatterns = [
     # potential TODO path('business/reviews/', views.business_reviews_view, name='business_reviews'),
 
     # Available for all with different versions
-    path('listing/<int:pk>', views.listing_detail_view, name='listing_detail'), #DONE for this iter3
-    path('request/<int:pk>', views.consumer_request_detail_view, name='consumer_request_detail') #DONE for this iter3
-    # TODO path('response/<int:pk>', views.business_response_view, name='business_response_detail'), for iter4
+    path('listing/<int:pk>', views.listing_detail_view, name='listing_detail'), #DONE
+    path('request/<int:pk>', views.consumer_request_detail_view, name='consumer_request_detail'), #DONE for this iter3
+    path('transactions', views.my_transactions_view, name='transactions'), #DONE
+    path('response/<int:pk>', views.business_response_view, name='business_response_detail'), #DONE
+    path('response/<int:pk>/download/quotation', views.download_quotation, name='download_quotation'), #DONE
     # potential TODO path('chat/listing/<int:pk>', views.chat_over_listing_view, name='chat_over_listing),
     # potential TODO path('chat/response/<int:pk>', views.chat_over_response_view, name='chat_over_response),
     

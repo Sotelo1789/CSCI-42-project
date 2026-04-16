@@ -23,8 +23,11 @@
     {% else %}
         <p>Listing Unavailable For Now</p>
     {% endif %}
-    <p>On Stock: {{ listing.quantity }} {{ listing.unit }}</p>
+    <p>Amount per Transaction: {{ listing.quantity }} {{ listing.unit }}</p>
 </div>
+{% if user.consumer_profile and listing.availability == True %}
+    <a href="{% url 'marketplace:pay_listing' pk=listing.pk %}">Attempt to purchase</a>
+{% endif %}
 <div>
     <p>Delivery Option: {{ listing.delivery_option|upper }}</p>
     <p>Delivery Areas: {{ listing.delivery_area }}</p>

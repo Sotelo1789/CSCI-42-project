@@ -51,6 +51,7 @@ class Listing(models.Model):
     def __str__(self):
         return self.title
 
+
 class ListingImage(models.Model):
     listing = models.ForeignKey(
         Listing,
@@ -127,6 +128,7 @@ class BusinessResponse(models.Model):
     def __str__(self):
         return f'Response of {self.business.username} to {self.consumer_request.title}'
 
+
 class ConsumerRequestImage(models.Model):
     consumer_request = models.ForeignKey(
         ConsumerRequest,
@@ -134,6 +136,7 @@ class ConsumerRequestImage(models.Model):
         related_name='images'
     )
     image = models.ImageField(upload_to='uploads/consumer_requests/images/')
+
 
 class ListingTransaction(models.Model):
     listing = models.ForeignKey(
@@ -149,6 +152,7 @@ class ListingTransaction(models.Model):
     price = models.DecimalField(max_digits=15, decimal_places=2, validators=[validate_nonnegative])
     created_at = models.DateTimeField(auto_now_add=True)
 
+
 class ConsumerRequestTransaction(models.Model):
     consumer_request = models.ForeignKey(
         ConsumerRequest,
@@ -163,6 +167,7 @@ class ConsumerRequestTransaction(models.Model):
     price = models.DecimalField(max_digits=15, decimal_places=2, validators=[validate_nonnegative])
     created_at = models.DateTimeField(auto_now_add=True)
 
+
 class FavoriteListing(models.Model):
     listing = models.ForeignKey(
         Listing,
@@ -175,6 +180,7 @@ class FavoriteListing(models.Model):
         related_name='favorite_listing'
     )
     added_favorite_date = models.DateTimeField(auto_now_add=True)
+
 
 class Review(models.Model):
     listing_transaction = models.ForeignKey(

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %} Pay for Listing: {{ listing.title }}{% endblock %}
+
+{% block content %}
+<h1>Paying for {{ listing.title }}</h1>
+<div>
+    <p>Pricing: {{ listing.min_price }} - {{ listing.max_price }}</p>
+    <p>Amount per Transaction: {{ listing.quantity }} {{ listing.unit }}</p>
+</div>
+<div>
+    <p>Delivery Option: {{ listing.delivery_option|upper }}</p>
+    <p>Delivery Areas: {{ listing.delivery_area }}</p>
+    <p>Delivery Time (in Days): {{ listing.delivery_time }}</p>
+</div>
+<p>Business Contact: {{ listing.business.business_profile.rep_contact }}</p>
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ pay_form.as_p }}
+    <button type="submit">Pay</button>
+</form>
+{% if listing.images.exists %}
+    {% for image in listing.images.all %}
+        <img src="{{ image.image.url }}" alt="Image {{ forloop.counter }}">
+    {% endfor %}
+{% endif %}
+<button><a href="{% url 'marketplace:download_toc' pk=listing.pk %}">⬇ Download Terms and Conditions</a></button>
+{% endblock %}

@@ -1,11 +1,12 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q
 from django.http import FileResponse
+from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from .forms import CreateListing, CreateConsumerRequest, RespondToRequest, RespondToRequest, ListingSearchFilterForm, RequestSearchFilterForm, AmountInPage
-from .models import Listing, ListingImage, ConsumerRequest, ConsumerRequestImage, BusinessResponse, FavoriteListing
+from .forms import CreateListing, CreateConsumerRequest, RespondToRequest, RespondToRequest, ListingSearchFilterForm, RequestSearchFilterForm, AmountInPage, CreateListingTransaction, ChooseTransactionKind
+from .models import Listing, ListingImage, ConsumerRequest, ConsumerRequestImage, BusinessResponse, FavoriteListing, ListingTransaction, ConsumerRequestTransaction
 from authentication.models import BusinessProfile
 
 @login_required
@@ -261,6 +262,26 @@ def respond_to_request_view(request, pk):
     return render(request, 'marketplace/respond_to_request.html', {'form': form, 'cr': cr})
 
 @login_required
+def business_response_view(request, pk):
+    br = get_object_or_404(BusinessResponse, pk=pk)
+
+    if hasattr(request.user, "business_profile"):
+        if br.business != request.user:
+            return redirect('dashboard:dashboard')
+    elif hasattr(request.user, "consumer_profile"):
+        if br.consumer_request.consumer != request.user:
+            return redirect('dashboard:dashboard')
+
+    is_accepted = ConsumerRequestTransaction.objects.filter(consumer_request=br.consumer_request, business_response=br).exists()
+    ctx = {
+        'br': br,
+        'is_accepted': is_accepted
+    }
+
+    return render(request, 'marketplace/business_response_detail.html', ctx)
+
+
+@login_required
 def create_consumer_request_view(request):
     if not hasattr(request.user,"consumer_profile"):
         return redirect('dashboard:dashboard')
@@ -297,18 +318,39 @@ def create_consumer_request_view(request):
 @login_required
 def consumer_request_detail_view(request, pk):
     cr = get_object_or_404(ConsumerRequest, pk=pk)
+    try:
+        crt = ConsumerRequestTransaction.objects.get(consumer_request=cr)
+    except:
+        crt = None
 
     if hasattr(request.user, "consumer_profile"):
         if cr.consumer != request.user:
             return redirect('dashboard:dashboard')
     elif hasattr(request.user, "business_profile"):
-        if cr.status != "open":
+        if cr.status != "open" and not (crt and crt.business_response.business == request.user):
             return redirect('dashboard:dashboard')
 
     has_responded = BusinessResponse.objects.filter(consumer_request=cr, business=request.user).exists()
+    if has_responded:
+        br = BusinessResponse.objects.get(consumer_request=cr, business=request.user)
+    else:
+        br = None
+
+    has_chosen = ConsumerRequestTransaction.objects.filter(consumer_request=cr).exists()
+
+    if has_chosen:
+        crt = ConsumerRequestTransaction.objects.filter(consumer_request=cr)
+    else:
+        crt = None
+
+    has_chosen_you = ConsumerRequestTransaction.objects.filter(consumer_request=cr, business_response__business=request.user).exists()
+    
     ctx = {
         'cr': cr,
-        'has_responded': has_responded
+        'br': br,
+        'crt': crt,
+        'has_responded': has_responded,
+        'has_chosen_you': has_chosen_you
     }
 
     return render(request, 'marketplace/consumer_request_detail.html', ctx)
@@ -320,6 +362,12 @@ def download_toc(request, pk):
     """Get the listing, and then download the TOC file of that listing"""
     listing = get_object_or_404(Listing, pk=pk)
     return FileResponse(listing.terms_conditions.open('rb'), as_attachment=True)
+
+@login_required
+def download_quotation(request, pk):
+    """Get the business response, and then download the quotation file of that business response"""
+    br = get_object_or_404(BusinessResponse, pk=pk)
+    return FileResponse(br.quotation.open('rb'), as_attachment=True)
 
 @login_required
 def set_favorite(request, pk):
@@ -378,3 +426,121 @@ def unfavorite_in_detail(request, pk):
         favlisting.delete()
     
     return redirect('marketplace:listing_detail',pk=pk)
+
+@login_required
+def pay_listing_view(request, pk):
+    if not hasattr(request.user,"consumer_profile"):
+        return redirect('dashboard:dashboard')
+    
+    listing = get_object_or_404(Listing,pk=pk)
+
+    if listing.availability == False:
+        return redirect('marketplace:listing_detail', pk=pk)
+
+    if request.method == 'POST':
+        pay_form = CreateListingTransaction(request.POST)
+
+        if pay_form.is_valid():
+            lt = pay_form.save(commit=False)
+            lt.consumer = request.user
+            lt.listing = listing
+            lt.save()
+            
+            messages.success(request, 'You have successfully bought something. For smoother proceedings, have the decided amount ready to give to the business')
+            return redirect('marketplace:listing_detail', pk=pk)
+    else:
+        pay_form = CreateListingTransaction()
+
+    ctx = {
+        'listing': listing,
+        'pay_form': pay_form
+    }
+
+    return render(request, 'marketplace/pay_listing.html', ctx)
+
+@login_required
+def pay_response(request, pk):
+    if not hasattr(request.user,"consumer_profile"):
+        return redirect('dashboard:dashboard')
+    
+    business_response = get_object_or_404(BusinessResponse,pk=pk)
+
+    if business_response.consumer_request.needed_by <= timezone.now():
+        return redirect('marketplace:business_response_detail', pk=pk)
+    
+    ConsumerRequestTransaction.objects.create(
+        business_response=business_response,
+        consumer_request=business_response.consumer_request,
+        price=business_response.price,
+    )
+
+    consumer_request = business_response.consumer_request
+    consumer_request.status = 'closed'
+    consumer_request.save()
+            
+    messages.success(request, 'You have successfully bought something. For smoother proceedings, have the decided amount ready to give to the business')
+    return redirect('marketplace:business_response_detail', pk=pk)
+
+@login_required
+def my_transactions_view(request):
+    if hasattr(request.user,"consumer_profile"):
+        tk = "listing"
+        transactions = ListingTransaction.objects.filter(consumer=request.user)
+    elif hasattr(request.user,"business_profile"):
+        tk = "consumer_request"
+        transactions = ConsumerRequestTransaction.objects.filter(business_response__business=request.user)
+    
+    filter_form = ChooseTransactionKind(request.GET or None)
+    if filter_form.is_valid():
+        print(filter_form.cleaned_data.get('transaction'))
+        tk = filter_form.cleaned_data.get('transaction') or tk
+        if hasattr(request.user,"consumer_profile"):
+            if tk == 'listing':
+                transactions = ListingTransaction.objects.filter(consumer=request.user)
+            elif tk == 'consumer_request':
+                transactions = ConsumerRequestTransaction.objects.filter(consumer_request__consumer=request.user)
+        elif hasattr(request.user,"business_profile"):
+            if tk == 'listing':
+                transactions = ListingTransaction.objects.filter(listing__business=request.user)
+            elif tk == 'consumer_request':
+                transactions = ConsumerRequestTransaction.objects.filter(business_response__business=request.user)
+            
+        kw = filter_form.cleaned_data.get('keyword')
+        cat = filter_form.cleaned_data.get('category')
+        min_price = filter_form.cleaned_data.get('min_price')
+        max_price = filter_form.cleaned_data.get('max_price')
+        person = filter_form.cleaned_data.get('person')
+        edate = filter_form.cleaned_data.get('earliest_date')
+        ldate = filter_form.cleaned_data.get('latest_date')
+
+        if kw:
+            if tk == 'listing':
+                transactions = transactions.filter(listing__title__icontains=kw)
+            if tk == 'consumer_request':
+                transactions = transactions.filter(consumer_request__title__icontains=kw)
+        if cat:
+            if tk == 'listing':
+                transactions = transactions.filter(listing__category=cat)
+            if tk == 'consumer_request':
+                transactions = transactions.filter(consumer_request__category=cat)
+        if min_price is not None:
+            transactions = transactions.filter(price__gte=min_price)
+        if max_price is not None:
+            transactions = transactions.filter(price__lte=max_price)
+        if person:
+            if tk == 'listing':
+                transactions = transactions.filter(listing__business__business_profile__business_name__icontains=person)
+            if tk == 'consumer_request':
+                transactions = transactions.filter(business_response__business__business_profile__business_name__icontains=person)
+        if edate is not None:
+            transactions = transactions.filter(created_at__gte=edate)
+        if ldate is not None:
+            transactions = transactions.filter(created_at__lte=ldate)
+    
+    ctx = {
+        'transactions': transactions,
+        'tk': tk,
+        'filter_form': filter_form,
+    }
+    # TODO Transactions view for both profiles
+    return render(request, 'marketplace/marketplace_transactions.html', ctx)

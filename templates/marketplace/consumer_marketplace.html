@@ -4,7 +4,7 @@
 {% block title %}Marketplace{% endblock %}
 
 {% block content %}
-<h1>Marketplace</h1>
+<h1>Marketplace: Consumer Side</h1>
 <div>
     <a href="{% url 'marketplace:marketplace_listings' %}">To Marketplace Listings</a>
     <p>See what is available for purchase!</p>
@@ -12,5 +12,9 @@
 <div>
     <a href="{% url 'marketplace:create_consumer_request' %}">Make a Request</a>
     <p>Got an unfulfilled need? Show businesses your demand!</p>    
+</div>
+<div>
+    <a href="{% url 'marketplace:transactions' %}">My Transactions</a>
+    <p>View all transactions you have been involved with</p>
 </div>
 {% endblock %}

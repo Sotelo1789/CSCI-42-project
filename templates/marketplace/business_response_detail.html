@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Business Response to {{ br.consumer_request.title }}{% endblock %}
+
+{% block content %}
+<h1>Response to {{ br.consumer_request.title }}</h1>
+{% if user.business_profile %}
+    {% if is_accepted == True %}
+        <p>Your offer has been accepted</p>
+    {% else %}
+        <p>Your offer hasn't been accepted</p>
+    {% endif %}
+{% elif user.consumer_profile %}
+    {% if is_accepted == False %}
+        <a href="{% url 'marketplace:pay_response' pk=br.pk %}">Accept Deal</a>
+    {% else %}
+        <p>You've accepted this </p>
+    {% endif %}
+{% endif %}
+<div>
+    <p>Pricing: {{ br.price }}</p>
+    <p>Message: {{ br.message }}</p>
+    <p>Earliest Delivery Date: {{ br.earliest_delivery }}</p>
+    <p>Latest Delivery Date: {{ br.latest_delivery }}</p>
+    <button><a href="{% url 'marketplace:download_quotation' pk=br.pk %}">⬇ Download Quotation</a></button>
+</div>
+<p><a href="{% url 'marketplace:consumer_request_detail' pk=br.consumer_request.pk %}">To Consumer Request...</a></p>
+{% endblock %}
