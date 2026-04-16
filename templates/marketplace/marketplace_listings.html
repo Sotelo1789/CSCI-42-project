@@ -40,7 +40,6 @@
                         <p style="color:grey">Not Favorite</p>
                         <button><a href="{% url 'marketplace:set_favorite' pk=favedlisting.1 %}">Set Favorite?</a></button>
                     {% endif %}
-                    <p>{{favedlisting.1}}</p>
                 {% endif %}
             {% endfor %}
             {% if listing.images.exists %}
@@ -54,7 +53,7 @@
         <br>
     {% endfor %}
 
-    {% if page_listings.paginator.num_pages > 1 %}
+    {% if page_listings.paginator.num_pages %}
     <div class="pagination">
         <div class="page-links">
             {% if page_listings.has_previous %}
@@ -83,7 +82,7 @@
         per page </p>
         <form method="get" style="margin-bottom: 1rem;">
             {{ dictate_form.dictate }}
-            <button type="submit">Change</button>
+            <button type="submit">Change Item Count</button>
         </form>
     </div>
     {% endif %}

@@ -13,6 +13,7 @@
     <p>{{ filter_form.keyword.label }}: {{ filter_form.keyword }}</p>
     <p>{{ filter_form.category.label }}: {{ filter_form.category }}</p>
     <p> Price Range: {{ filter_form.min_price }} to {{ filter_form.max_price }}</p>
+    <p>{{ filter_form.delivery_area.label }}: {{ filter_form.delivery_area }}</p>
     <button type="submit">Filter</button>
 </form>
 {% if crs %}
@@ -22,6 +23,18 @@
             <p>Category: {{ cr.category }}</p>
             <p>Price Range: {{ cr.min_price }} - {{ cr.max_price}}</p>
             <p>Consumer: {{ cr.consumer.consumer_profile.full_name }}</p>
+            {% for respondedrequest in page_respondedrequests %}
+                {% if forloop.counter == forloop.parentloop.counter %}
+                    {% if respondedrequest.0 == True %}
+                        <p style="color: yellow">You have responded to this request</p>
+                        <button>TODO enter chat/edit response</button>
+                    {% else %}
+                        <p style="color:grey">Not responded by user</p>
+                        <button><a href="{% url 'marketplace:respond_to_request' pk=respondedrequest.1 %}">Respond?</a></button>
+                    {% endif %}
+                    <p>{{respondedrequest.1}}</p>
+                {% endif %}
+            {% endfor %}
             {% if cr.images.exists %}
                 {% for image in cr.images.all %}
                     {% if forloop.counter == 1 %}
@@ -33,7 +46,7 @@
         <br>
     {% endfor %}
 
-    {% if page_consumer_requests.paginator.num_pages > 1 %}
+    {% if page_consumer_requests.paginator.num_pages %}
     <div class="pagination">
         <div class="page-links">
             {% if page_consumer_requests.has_previous %}
@@ -62,7 +75,7 @@
         per page </p>
         <form method="get" style="margin-bottom: 1rem;">
             {{ dictate_form.dictate }}
-            <button type="submit">Change</button>
+            <button type="submit">Change Item Count</button>
         </form>
     </div>
     {% endif %}

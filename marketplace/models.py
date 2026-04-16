@@ -86,6 +86,8 @@ class ConsumerRequest(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
     min_price = models.DecimalField(max_digits=15, decimal_places=2, validators=[validate_nonnegative])
     max_price = models.DecimalField(max_digits=15, decimal_places=2, validators=[validate_nonnegative])
+    delivery_area = models.CharField(max_length=100)
+    needed_by = models.DateTimeField()
     response_count = models.IntegerField(validators=[validate_nonnegative], default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -111,6 +113,8 @@ class BusinessResponse(models.Model):
     )
     message = models.TextField()
     price = models.DecimalField(max_digits=15, decimal_places=2, validators=[validate_nonnegative])
+    earliest_delivery = models.DateTimeField()
+    latest_delivery = models.DateTimeField()
     quotation = models.FileField(upload_to='uploads/quotations/', null=False, blank=False)
 
     created_at = models.DateTimeField(auto_now_add=True)

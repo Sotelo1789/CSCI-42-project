@@ -123,6 +123,7 @@ def marketplace_consumer_requests_view(request):
         cat = filter_form.cleaned_data.get('category')
         bmin = filter_form.cleaned_data.get('min_price')
         bmax = filter_form.cleaned_data.get('max_price')
+        area = filter_form.cleaned_data.get('delivery_area')
         
         if kw:
             from django.db.models import Q
@@ -135,15 +136,32 @@ def marketplace_consumer_requests_view(request):
             crs = crs.filter(min_price__gte=bmin)
         if bmax is not None:
             crs = crs.filter(max_price__lte=bmax)
+        if area:
+            crs = crs.filter(delivery_area__icontains=area)
         
     paginator = Paginator(crs, page_item_count)
     page_number = request.GET.get("page")
     page_consumer_requests = paginator.get_page(page_number)
     is_one_per_page = (page_item_count == 1)
 
+    page_respondedrequests = [False]*page_consumer_requests.object_list.count()
+
+    request_order = 0
+    for consumer_request in page_consumer_requests.object_list:
+        has_responded = False
+        responses = BusinessResponse.objects.filter(consumer_request=consumer_request)
+        for response in responses:
+            if response.business == request.user:
+                has_responded = True
+        page_respondedrequests[request_order] = (has_responded,consumer_request.pk)
+        request_order += 1
+
+    print(page_respondedrequests)
+
     ctx = {
         "crs": crs,
         "page_consumer_requests": page_consumer_requests,
+        "page_respondedrequests": page_respondedrequests,
         "dictate_form": dictate_form,
         "filter_form": filter_form,
         "page_item_count": page_item_count,
