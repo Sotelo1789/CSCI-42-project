@@ -308,7 +308,14 @@
                         <a href="{% url 'purchase_requests:detail' pk=pr.pk %}">{{ pr.title }}</a>
                     </div>
                     <div class="card-badges">
-                        <span class="badge badge-open">Open</span>
+                        <!-- 🔄 Dynamic Status Badge -->
+                        {% if pr.status == "open" %}
+                            <span class="badge badge-open">Open</span>
+                        {% elif pr.status == "closed" %}
+                            <span class="badge badge-closed">Closed</span>
+                        {% elif pr.status == "completed" %}
+                            <span class="badge badge-completed">Completed</span>
+                        {% endif %}
                         <span class="badge badge-cat">{{ pr.get_category_display }}</span>
                     </div>
                 </div>
@@ -337,39 +344,72 @@
                 <div class="card-actions">
                     <a href="{% url 'purchase_requests:view_offers' pk=pr.pk %}" class="btn-sm blue">📥 View Offers</a>
                     <a href="{% url 'purchase_requests:download_rfq' pk=pr.pk %}" class="btn-sm accent">⬇ Download RFQ</a>
-                    <a href="{% url 'purchase_requests:edit' pk=pr.pk %}" class="btn-sm blue">✏ Edit</a>
-                    <button type="button"
-                            class="btn-sm blue extend-btn"
-                            data-target="deadline-panel-{{ pr.pk }}">
-                        🗓 Extend Deadline
+                    <!-- ✏ EDIT BUTTON (LOCK IF NOT OPEN) -->
+                    {% if pr.status == "open" %}
+                        <a href="{% url 'purchase_requests:edit' pk=pr.pk %}" class="btn-sm blue">
+                            ✏ Edit
+                        </a>
+                    {% else %}
+                        <button class="btn-sm gray" disabled>
+                            🔒 Editing Locked
+                        </button>
+                    {% endif %}
+                    <!-- 🗓 EXTEND DEADLINE (ONLY IF OPEN) -->
+                    {% if pr.status == "open" %}
+                        <button type="button"
+                                class="btn-sm blue extend-btn"
+                                data-target="deadline-panel-{{ pr.pk }}">
+                            🗓 Extend Deadline
+                        </button>
+                    {% else %}
+                        <button class="btn-sm gray" disabled>
+                            🔒 Cannot Extend
+                        </button>
+                    {% endif %}
                     </button>
                     <div class="actions-right">
-                        <form method="post" onsubmit="return confirm('Cancel this purchase request?')">
-                            {% csrf_token %}
-                            <input type="hidden" name="purchase_request" value="{{ pr.pk }}">
-                            <input type="hidden" name="action" value="cancelRequest">
-                            <button type="submit" class="btn-sm danger">✕ Cancel Request</button>
-                        </form>
+                        <!-- ❌ CANCEL REQUEST (ONLY IF OPEN) -->
+                        {% if pr.status == "open" %}
+                            <form method="post" onsubmit="return confirm('Cancel this purchase request?')">
+                                {% csrf_token %}
+                                <input type="hidden" name="purchase_request" value="{{ pr.pk }}">
+                                <input type="hidden" name="action" value="cancelRequest">
+                                <button type="submit" class="btn-sm danger">
+                                    ✕ Cancel Request
+                                </button>
+                            </form>
+                        {% else %}
+                            <button class="btn-sm gray" disabled>
+                                🔒 Cannot Cancel
+                            </button>
+                        {% endif %}
                     </div>
                 </div>
             </div>
 
             <!-- Extend deadline panel (hidden by default) -->
+            {% if pr.status == "open" %}
             <div class="deadline-panel" id="deadline-panel-{{ pr.pk }}" style="display:none;">
                 <form method="post">
                     {% csrf_token %}
                     <input type="hidden" name="purchase_request" value="{{ pr.pk }}">
                     <input type="hidden" name="action" value="changeDeadline">
+
                     <div class="deadline-panel-inner">
                         <div>
                             <label for="dl-{{ pr.pk }}">New Closing Deadline</label>
                             <input type="datetime-local" id="dl-{{ pr.pk }}" name="closing_deadline">
-                            <div class="deadline-hint">Must be later than current deadline ({{ pr.closing_deadline|date:"M d, Y · g:i A" }})</div>
+                            <div class="deadline-hint">
+                                Must be later than current deadline ({{ pr.closing_deadline|date:"M d, Y · g:i A" }})
+                            </div>
                         </div>
+
                         <button type="submit" class="btn-submit-sm">Save →</button>
                     </div>
                 </form>
             </div>
+            {% endif %}
+
         </div>
         {% endfor %}
 

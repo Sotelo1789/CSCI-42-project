@@ -412,6 +412,16 @@ def edit_purchase_request_view(request, pk):
         
     pr = get_object_or_404(PurchaseRequest, pk=pk, buyer=request.user)
     
+    # Auto-close if deadline already passed
+    if pr.status == "open" and pr.closing_deadline <= timezone.now():
+        pr.status = "closed"
+        pr.save()
+
+    # Block editing if request is closed or completed
+    if pr.status in ["closed", "completed", "cancelled"]:
+        messages.error(request, "You cannot edit a closed, completed, or cancelled purchase request.")
+        return redirect('purchase_requests:my_requests')
+
     if request.method == 'POST':
         form = CreatePurchaseRequest(request.POST, request.FILES, instance=pr)
 
