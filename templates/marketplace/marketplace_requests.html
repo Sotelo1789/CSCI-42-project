@@ -1,87 +1,328 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}Marketplace Consumer Requests{% endblock %}
+{% block title %}Consumer Requests{% endblock %}
 
 {% block extra_css %}
-<!--TODO in iter4-->
+<style>
+    .page-wrap { max-width: 1100px; margin: 0 auto; }
+
+    .page-header { margin-bottom: 1.5rem; }
+    .page-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.75rem; font-weight: 800;
+        margin-bottom: 0.25rem;
+    }
+    .page-sub { color: var(--muted); font-size: 0.9rem; }
+
+    .filter-panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .filter-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 1.4fr;
+        gap: 0.75rem;
+        align-items: end;
+        margin-bottom: 0.75rem;
+    }
+    .filter-field { display: flex; flex-direction: column; gap: 5px; }
+    .filter-label {
+        font-size: 0.7rem; font-weight: 600;
+        letter-spacing: 0.08em; text-transform: uppercase;
+        color: var(--muted);
+    }
+    .filter-panel input,
+    .filter-panel select {
+        width: 100%;
+        padding: 0.55rem 0.7rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--white);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.875rem;
+        outline: none;
+        -webkit-appearance: none;
+    }
+    .filter-panel input:focus,
+    .filter-panel select:focus {
+        border-color: var(--blue);
+        background: rgba(26,86,219,0.08);
+    }
+    .filter-panel select option { background: #0f1a30; }
+    .filter-actions {
+        display: flex; gap: 0.5rem;
+        align-items: center; justify-content: flex-end;
+    }
+    .btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 0.55rem 1.15rem;
+        border-radius: 9px; border: 1px solid var(--border);
+        font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+        font-weight: 600; cursor: pointer; text-decoration: none;
+        background: transparent; color: var(--white);
+    }
+    .btn:hover { background: rgba(255,255,255,0.06); }
+    .btn-primary {
+        background: linear-gradient(135deg, var(--blue), #2563eb);
+        border-color: transparent; color: #fff;
+        box-shadow: 0 3px 14px rgba(26,86,219,0.35);
+    }
+    .btn-ghost { color: var(--muted); }
+    .btn-ghost:hover { color: var(--white); }
+
+    /* Results bar */
+    .results-bar {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+    .results-count { font-size: 0.85rem; color: var(--muted); }
+    .results-count strong { color: var(--white); }
+
+    /* Request cards */
+    .req-list { display: flex; flex-direction: column; gap: 0.85rem; }
+    .req-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 1.15rem 1.4rem;
+        display: grid;
+        grid-template-columns: 90px 1fr auto;
+        gap: 1.15rem;
+        align-items: center;
+        transition: all 0.2s;
+        animation: fadeUp 0.4s ease both;
+    }
+    .req-card:hover {
+        border-color: rgba(26,86,219,0.4);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 22px rgba(0,0,0,0.3);
+    }
+
+    .req-thumb {
+        width: 90px; height: 90px;
+        border-radius: 11px;
+        background: linear-gradient(135deg, rgba(167,139,250,0.15), rgba(139,92,246,0.05));
+        display: flex; align-items: center; justify-content: center;
+        overflow: hidden;
+        border: 1px solid var(--border);
+    }
+    .req-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .req-thumb-empty { font-size: 1.8rem; opacity: 0.4; }
+
+    .req-body { min-width: 0; }
+    .req-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.05rem; font-weight: 700;
+        color: var(--white); text-decoration: none;
+        display: block; margin-bottom: 0.3rem;
+    }
+    .req-title:hover { color: var(--accent); }
+    .req-meta-row {
+        display: flex; flex-wrap: wrap; gap: 0.85rem;
+        font-size: 0.82rem; color: var(--muted);
+        margin-bottom: 0.4rem;
+    }
+    .cat-pill {
+        display: inline-flex; align-items: center;
+        padding: 2px 10px; border-radius: 20px;
+        font-size: 0.72rem; font-weight: 600;
+        background: rgba(56,189,248,0.1);
+        border: 1px solid rgba(56,189,248,0.2);
+        color: var(--accent);
+        text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .price-val {
+        font-family: 'Syne', sans-serif;
+        font-weight: 700;
+        color: #34d399;
+    }
+
+    .req-action {
+        display: flex; flex-direction: column;
+        align-items: flex-end; gap: 0.45rem;
+        min-width: 130px;
+    }
+    .respond-btn {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 0.55rem 1rem;
+        background: rgba(26,86,219,0.15);
+        border: 1px solid rgba(26,86,219,0.3);
+        border-radius: 8px; color: var(--accent);
+        text-decoration: none; font-size: 0.82rem;
+        font-weight: 600; transition: all 0.15s;
+        white-space: nowrap;
+    }
+    .respond-btn:hover {
+        background: rgba(26,86,219,0.3);
+        border-color: var(--accent);
+    }
+    .responded-badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 4px 10px; border-radius: 999px;
+        background: rgba(52,211,153,0.12);
+        border: 1px solid rgba(52,211,153,0.3);
+        color: #34d399;
+        font-size: 0.72rem; font-weight: 600;
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center; padding: 4rem 2rem;
+        background: var(--panel); border: 1px dashed var(--border);
+        border-radius: 16px; color: var(--muted);
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--white); margin-bottom: 0.4rem; }
+    .empty-sub { font-size: 0.875rem; }
+
+    /* Pagination */
+    .pagination {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-top: 1.5rem; padding-top: 1rem;
+        border-top: 1px solid var(--border);
+    }
+    .page-links { display: flex; gap: 0.4rem; }
+    .page-link {
+        padding: 0.45rem 0.85rem;
+        border-radius: 8px; border: 1px solid var(--border);
+        color: var(--muted); text-decoration: none;
+        font-size: 0.825rem; font-weight: 500;
+    }
+    .page-link:hover { background: rgba(255,255,255,0.06); color: var(--white); }
+    .page-link.current {
+        background: rgba(26,86,219,0.2);
+        border-color: rgba(26,86,219,0.4);
+        color: var(--white);
+    }
+    .page-info { font-size: 0.82rem; color: var(--muted); }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 760px) {
+        .filter-row { grid-template-columns: 1fr 1fr; }
+        .req-card { grid-template-columns: 1fr; }
+        .req-thumb { width: 100%; height: 140px; }
+        .req-action { flex-direction: row; align-items: center; }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<h1>Marketplace Consumer Requests</h1>
-<form method="get" style="margin-bottom: 1rem;">
-    <p>{{ filter_form.keyword.label }}: {{ filter_form.keyword }}</p>
-    <p>{{ filter_form.category.label }}: {{ filter_form.category }}</p>
-    <p> Price Range: {{ filter_form.min_price }} to {{ filter_form.max_price }}</p>
-    <p>{{ filter_form.delivery_area.label }}: {{ filter_form.delivery_area }}</p>
-    <button type="submit">Filter</button>
-</form>
-{% if crs %}
-    {% for cr in page_consumer_requests %}
-        <div>
-            <p>Title: <a href="{% url 'marketplace:consumer_request_detail' pk=cr.pk %}"> {{ cr.title }}</a></p>
-            <p>Category: {{ cr.category }}</p>
-            <p>Price Range: {{ cr.min_price }} - {{ cr.max_price}}</p>
-            <p>Consumer: {{ cr.consumer.consumer_profile.full_name }}</p>
-            {% for respondedrequest in page_respondedrequests %}
-                {% if forloop.counter == forloop.parentloop.counter %}
-                    {% if respondedrequest.0 == True %}
-                        <p style="color: yellow">You have responded to this request</p>
-                        <button>TODO enter chat/edit response</button>
-                    {% else %}
-                        <p style="color:grey">Not responded by user</p>
-                        <button><a href="{% url 'marketplace:respond_to_request' pk=respondedrequest.1 %}">Respond?</a></button>
-                    {% endif %}
-                    <p>{{respondedrequest.1}}</p>
+<div class="page-wrap">
+    <div class="page-header">
+        <div class="page-title">Marketplace · Consumer Requests</div>
+        <div class="page-sub">Find what consumers are looking for and respond with your offer.</div>
+    </div>
+
+    <div class="filter-panel">
+        <form method="get">
+            <div class="filter-row">
+                <div class="filter-field">
+                    <label class="filter-label">🔍 Keyword</label>
+                    {{ filter_form.keyword }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">📂 Category</label>
+                    {{ filter_form.category }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">💰 Min price</label>
+                    {{ filter_form.min_price }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">💰 Max price</label>
+                    {{ filter_form.max_price }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">📍 Delivery area</label>
+                    {{ filter_form.delivery_area }}
+                </div>
+            </div>
+            <div class="filter-actions">
+                <a href="{% url 'marketplace:marketplace_requests' %}" class="btn btn-ghost">✕ Clear</a>
+                <button type="submit" class="btn btn-primary">Filter →</button>
+            </div>
+        </form>
+    </div>
+
+    {% if crs %}
+    <div class="results-bar">
+        <div class="results-count">
+            Showing <strong>{{ page_consumer_requests.start_index }}–{{ page_consumer_requests.end_index }}</strong>
+            of <strong>{{ crs|length }}</strong> request{{ crs|length|pluralize }}
+        </div>
+    </div>
+
+    <div class="req-list">
+        {% for cr in page_consumer_requests %}
+        <div class="req-card">
+            <div class="req-thumb">
+                {% if cr.images.exists %}
+                    {% for image in cr.images.all %}
+                        {% if forloop.counter == 1 %}
+                            <img src="{{ image.image.url }}" alt="{{ cr.title }}">
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <span class="req-thumb-empty">📋</span>
                 {% endif %}
-            {% endfor %}
-            {% if cr.images.exists %}
-                {% for image in cr.images.all %}
-                    {% if forloop.counter == 1 %}
-                        <img src="{{ image.image.url }}" alt="Main Picture">
+            </div>
+            <div class="req-body">
+                <a href="{% url 'marketplace:consumer_request_detail' pk=cr.pk %}" class="req-title">{{ cr.title }}</a>
+                <div class="req-meta-row">
+                    <span class="cat-pill">{{ cr.category }}</span>
+                    <span class="price-val">₱{{ cr.min_price|floatformat:0|intcomma }} – ₱{{ cr.max_price|floatformat:0|intcomma }}</span>
+                    <span>👤 {{ cr.consumer.consumer_profile.full_name|default:cr.consumer.username }}</span>
+                </div>
+            </div>
+            <div class="req-action">
+                {% for respondedrequest in page_respondedrequests %}
+                    {% if forloop.counter == forloop.parentloop.counter %}
+                        {% if respondedrequest.0 == True %}
+                            <span class="responded-badge">✓ Responded</span>
+                        {% else %}
+                            <a href="{% url 'marketplace:respond_to_request' pk=respondedrequest.1 %}" class="respond-btn">Respond →</a>
+                        {% endif %}
                     {% endif %}
                 {% endfor %}
-            {% endif %}
+            </div>
         </div>
-        <br>
-    {% endfor %}
+        {% endfor %}
+    </div>
 
-    {% if page_consumer_requests.paginator.num_pages %}
+    {% if page_consumer_requests.paginator.num_pages > 1 %}
     <div class="pagination">
         <div class="page-links">
             {% if page_consumer_requests.has_previous %}
                 <a class="page-link" href="?page=1&{{ request_get }}">« First</a>
                 <a class="page-link" href="?page={{ page_consumer_requests.previous_page_number }}&{{ request_get }}">‹ Prev</a>
             {% endif %}
-            <span class="page-link current">{{ page_listings.number }}</span>
-            {% if page_listings.has_next %}
+            <span class="page-link current">{{ page_consumer_requests.number }}</span>
+            {% if page_consumer_requests.has_next %}
                 <a class="page-link" href="?page={{ page_consumer_requests.next_page_number }}&{{ request_get }}">Next ›</a>
                 <a class="page-link" href="?page={{ page_consumer_requests.paginator.num_pages }}&{{ request_get }}">Last »</a>
             {% endif %}
         </div>
         <div class="page-info">
             Page {{ page_consumer_requests.number }} of {{ page_consumer_requests.paginator.num_pages }}
-            &nbsp;·&nbsp;
-            {{ crs|length }} result{{ crs|length|pluralize }}
         </div>
-    </div>
-    <div>
-        <p>There 
-        {% if is_one_per_page %}
-            is 1 item 
-        {% else %}
-            are {{ page_item_count }} items
-        {% endif %}
-        per page </p>
-        <form method="get" style="margin-bottom: 1rem;">
-            {{ dictate_form.dictate }}
-            <button type="submit">Change Item Count</button>
-        </form>
     </div>
     {% endif %}
 
-{% else %}
-    <p>No Consumer Requests Available. Come back at a different time!</p>
-{% endif %}
-
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <div class="empty-title">No consumer requests available</div>
+        <div class="empty-sub">Come back at a different time — new requests are posted regularly.</div>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}

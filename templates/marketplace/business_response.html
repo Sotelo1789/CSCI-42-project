@@ -2,12 +2,113 @@
 
 {% block title %}Respond to Request{% endblock %}
 
-{% block content %}
-<h1>Respond to {{ req.title }}</h1>
-<form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
+{% block extra_css %}
+<style>
+    .page-wrap { max-width: 760px; margin: 0 auto; }
+    .back-link {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-size: 0.85rem; color: var(--muted);
+        text-decoration: none; margin-bottom: 1rem;
+    }
+    .back-link:hover { color: var(--accent); }
+    .page-header { margin-bottom: 1.5rem; }
+    .page-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.65rem; font-weight: 800;
+        margin-bottom: 0.3rem;
+    }
+    .page-sub { color: var(--muted); font-size: 0.9rem; }
 
-    <button type="submit">Submit</button>
-</form>
+    .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.6rem 1.85rem;
+        margin-bottom: 1rem;
+    }
+    .card-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 0.78rem; font-weight: 700;
+        letter-spacing: 0.1em; text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 1rem;
+    }
+
+    .form-fields { display: flex; flex-direction: column; gap: 1rem; }
+    .form-fields p { margin: 0; }
+    .form-fields label {
+        display: block;
+        font-size: 0.78rem; font-weight: 600;
+        letter-spacing: 0.05em; text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 5px;
+    }
+    .form-fields input,
+    .form-fields textarea,
+    .form-fields select {
+        width: 100%;
+        padding: 0.65rem 0.85rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--white);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.92rem;
+        outline: none;
+        -webkit-appearance: none;
+    }
+    .form-fields textarea { min-height: 110px; resize: vertical; line-height: 1.5; }
+    .form-fields input:focus,
+    .form-fields textarea:focus,
+    .form-fields select:focus {
+        border-color: var(--blue);
+        background: rgba(26,86,219,0.06);
+    }
+    .form-fields select option { background: #0f1a30; }
+
+    .button-row { display: flex; gap: 0.6rem; justify-content: flex-end; }
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.92rem; font-weight: 700;
+        cursor: pointer; text-decoration: none;
+        border: 1px solid var(--border);
+        background: transparent; color: var(--white);
+    }
+    .btn:hover { background: rgba(255,255,255,0.06); }
+    .btn-primary {
+        background: linear-gradient(135deg, var(--blue), #2563eb);
+        border-color: transparent; color: #fff;
+        box-shadow: 0 4px 16px rgba(26,86,219,0.35);
+    }
+    .btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+    <a href="{% url 'marketplace:business_marketplace' %}" class="back-link">← Back to marketplace</a>
+
+    <div class="page-header">
+        <div class="page-title">Respond to Request</div>
+        <div class="page-sub">{{ req.title }}</div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="card">
+            <div class="card-title">Your Response</div>
+            <div class="form-fields">
+                {{ form.as_p }}
+            </div>
+        </div>
+
+        <div class="button-row">
+            <a href="{% url 'marketplace:business_marketplace' %}" class="btn">Cancel</a>
+            <button type="submit" class="btn btn-primary">Submit →</button>
+        </div>
+    </form>
+</div>
 {% endblock %}

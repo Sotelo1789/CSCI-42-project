@@ -4,88 +4,266 @@
 {% block title %}My Transactions{% endblock %}
 
 {% block extra_css %}
-<!--TODO in iter4-->
+<style>
+    .page-wrap { max-width: 1000px; margin: 0 auto; }
+
+    .page-header { margin-bottom: 1.5rem; }
+    .page-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.75rem; font-weight: 800;
+        margin-bottom: 0.25rem;
+    }
+    .page-sub { color: var(--muted); font-size: 0.9rem; }
+
+    .filter-panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .filter-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+        gap: 0.75rem;
+        align-items: end;
+        margin-bottom: 0.75rem;
+    }
+    .filter-row-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: 0.75rem;
+        align-items: end;
+        margin-bottom: 0.75rem;
+    }
+    .filter-field { display: flex; flex-direction: column; gap: 5px; }
+    .filter-label {
+        font-size: 0.7rem; font-weight: 600;
+        letter-spacing: 0.08em; text-transform: uppercase;
+        color: var(--muted);
+    }
+    .filter-panel input,
+    .filter-panel select {
+        width: 100%;
+        padding: 0.55rem 0.7rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--white);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.875rem;
+        outline: none;
+        -webkit-appearance: none;
+    }
+    .filter-panel input:focus,
+    .filter-panel select:focus {
+        border-color: var(--blue);
+        background: rgba(26,86,219,0.08);
+    }
+    .filter-panel select option { background: #0f1a30; }
+    .filter-actions {
+        display: flex; gap: 0.5rem;
+        align-items: center; justify-content: flex-end;
+    }
+    .btn {
+        padding: 0.55rem 1.15rem;
+        border-radius: 9px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.85rem; font-weight: 600;
+        cursor: pointer; text-decoration: none;
+        border: 1px solid var(--border);
+        background: transparent; color: var(--white);
+    }
+    .btn:hover { background: rgba(255,255,255,0.06); }
+    .btn-primary {
+        background: linear-gradient(135deg, var(--blue), #2563eb);
+        border-color: transparent; color: #fff;
+        box-shadow: 0 3px 14px rgba(26,86,219,0.35);
+    }
+
+    /* Transaction tabs (kind selector) */
+    .kind-tabs {
+        display: inline-flex;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 3px;
+        margin-bottom: 1rem;
+    }
+    .kind-tab {
+        padding: 0.45rem 1rem;
+        border-radius: 8px;
+        font-size: 0.82rem; font-weight: 600;
+        color: var(--muted); cursor: pointer;
+        transition: all 0.15s;
+        border: none; background: transparent;
+        font-family: 'DM Sans', sans-serif;
+    }
+    .kind-tab:hover { color: var(--white); }
+    .kind-tab.active {
+        background: rgba(26,86,219,0.25);
+        color: var(--white);
+        box-shadow: inset 0 0 0 1px rgba(26,86,219,0.4);
+    }
+
+    /* Transaction cards */
+    .tx-list { display: flex; flex-direction: column; gap: 0.7rem; }
+    .tx-card {
+        display: grid;
+        grid-template-columns: 44px 1fr auto;
+        gap: 1rem;
+        align-items: center;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        transition: all 0.15s;
+        animation: fadeUp 0.4s ease both;
+    }
+    .tx-card:hover {
+        border-color: rgba(26,86,219,0.4);
+        transform: translateY(-1px);
+    }
+    .tx-icon {
+        width: 44px; height: 44px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, rgba(52,211,153,0.15), rgba(16,185,129,0.05));
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.3rem;
+        border: 1px solid rgba(52,211,153,0.2);
+    }
+    .tx-body { min-width: 0; }
+    .tx-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 0.98rem; font-weight: 700;
+        color: var(--white);
+        margin-bottom: 0.2rem;
+    }
+    .tx-title a { color: inherit; text-decoration: none; }
+    .tx-title a:hover { color: var(--accent); }
+    .tx-date {
+        font-size: 0.78rem;
+        color: var(--muted);
+    }
+    .tx-amount {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.1rem; font-weight: 800;
+        color: #34d399;
+        white-space: nowrap;
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center; padding: 4rem 2rem;
+        background: var(--panel); border: 1px dashed var(--border);
+        border-radius: 16px; color: var(--muted);
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--white); margin-bottom: 0.4rem; }
+    .empty-sub { font-size: 0.875rem; }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 760px) {
+        .filter-row, .filter-row-2 { grid-template-columns: 1fr 1fr; }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<h1>My Transactions</h1>
-<br>
-<!--insert form for filtering-->
-<form>
-    <p>{{ filter_form.keyword.label }}: {{ filter_form.keyword }}</p>
-    <p>{{ filter_form.category.label }}: {{ filter_form.category }}</p>
-    <p>
-    {% if user.business_profile %}
-        Consumer: 
-    {% elif user.consumer_profile %}
-        Business: 
-    {% endif %}
-    {{ filter_form.person }}</p>
-    <p>Price Range: {{ filter_form.min_price }} to {{ filter_form.max_price }}</p>
-    <p>Date Range: {{ filter_form.earliest_date }} to {{ filter_form.latest_date }}</p>
-    <p>{{ filter_form.transaction.label }}
-    <select name="transaction" id="id_transaction">
-        <option value="listing" {% if tk == 'listing' %}selected{% endif %}>From Listing</option>
-        <option value="consumer_request" {% if tk == 'consumer_request' %}selected{% endif %}>From Consumer Requests</option>
-    </select></p>
-    <button type="submit">Search</button>
-</form>
-<br>
-{% if transactions %}
-    {% for transaction in transactions %}
-        <div>  
-            {% if tk == 'listing' %}
-                <p><a href="{% url 'marketplace:listing_detail' pk=transaction.listing.pk %}">{{ transaction.listing.title }}</a> made on {{ transaction.created_at }}</p>
-            {% elif tk == 'consumer_request' %}
-                <!--To change into response view-->
-                <p><a href="{% url 'marketplace:consumer_request_detail' pk=transaction.consumer_request.pk %}">{{ transaction.consumer_request.title }}</a> made on {{ transaction.created_at }}</p>
-            {% endif %}
-            <p>Paid: {{ transaction.price }}</p>
-        </div>
-        <br>
-    {% endfor %}
-    <!--
-    {% if page_transactions.paginator.num_pages %}
-    <div class="pagination">
-        <div class="page-links">
-            {% if page_listings.has_previous %}
-                <a class="page-link" href="?page=1&{{ request_get }}">« First</a>
-                <a class="page-link" href="?page={{ page_listings.previous_page_number }}&{{ request_get }}">‹ Prev</a>
-            {% endif %}
-            <span class="page-link current">{{ page_listings.number }}</span>
-            {% if page_listings.has_next %}
-                <a class="page-link" href="?page={{ page_listings.next_page_number }}&{{ request_get }}">Next ›</a>
-                <a class="page-link" href="?page={{ page_listings.paginator.num_pages }}&{{ request_get }}">Last »</a>
-            {% endif %}
-        </div>
-        <div class="page-info">
-            Page {{ page_listings.number }} of {{ page_listings.paginator.num_pages }}
-            &nbsp;·&nbsp;
-            {{ listings|length }} result{{ listings|length|pluralize }}
-        </div>
+<div class="page-wrap">
+    <div class="page-header">
+        <div class="page-title">My Transactions</div>
+        <div class="page-sub">Every deal you have completed in the marketplace.</div>
     </div>
-    <div>
-        <p>There 
-        {% if is_one_per_page %}
-            is 1 item 
-        {% else %}
-            are {{ page_item_count }} items
-        {% endif %}
-        per page </p>
-        <form method="get" style="margin-bottom: 1rem;">
-            {{ dictate_form.dictate }}
-            <button type="submit">Change Item Count</button>
+
+    <!-- Tabs / Kind selector -->
+    <form method="get" id="kindForm">
+        <div class="kind-tabs">
+            <button type="submit" name="transaction" value="listing" class="kind-tab {% if tk == 'listing' %}active{% endif %}">From Listings</button>
+            <button type="submit" name="transaction" value="consumer_request" class="kind-tab {% if tk == 'consumer_request' %}active{% endif %}">From Requests</button>
+        </div>
+    </form>
+
+    <div class="filter-panel">
+        <form method="get">
+            <input type="hidden" name="transaction" value="{{ tk }}">
+            <div class="filter-row">
+                <div class="filter-field">
+                    <label class="filter-label">🔍 Keyword</label>
+                    {{ filter_form.keyword }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">📂 Category</label>
+                    {{ filter_form.category }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">
+                        {% if user.business_profile %}Consumer{% else %}Business{% endif %}
+                    </label>
+                    {{ filter_form.person }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">💰 Min price</label>
+                    {{ filter_form.min_price }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">💰 Max price</label>
+                    {{ filter_form.max_price }}
+                </div>
+            </div>
+            <div class="filter-row-2">
+                <div class="filter-field">
+                    <label class="filter-label">📅 From</label>
+                    {{ filter_form.earliest_date }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">📅 To</label>
+                    {{ filter_form.latest_date }}
+                </div>
+                <div></div>
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary">Search →</button>
+                </div>
+            </div>
         </form>
     </div>
-    {% endif %}
-    -->
 
-{% else %}
-    {% if user.consumer_profile %}
-        <p>No Transactions Available. You haven't bought anything!</p>
-    {% elif user.business_profile %}
-        <p>No Transactions Available. Nobody has bought anything yet!</p>
-    {% endif %}
-{% endif %}
+    {% if transactions %}
+    <div class="tx-list">
+        {% for transaction in transactions %}
+        <div class="tx-card">
+            <div class="tx-icon">{% if tk == 'listing' %}🛍️{% else %}📋{% endif %}</div>
+            <div class="tx-body">
+                <div class="tx-title">
+                    {% if tk == 'listing' %}
+                        <a href="{% url 'marketplace:listing_detail' pk=transaction.listing.pk %}">{{ transaction.listing.title }}</a>
+                    {% elif tk == 'consumer_request' %}
+                        <a href="{% url 'marketplace:consumer_request_detail' pk=transaction.consumer_request.pk %}">{{ transaction.consumer_request.title }}</a>
+                    {% endif %}
+                </div>
+                <div class="tx-date">📅 {{ transaction.created_at|date:"M d, Y" }} · {{ transaction.created_at|time:"h:i A" }}</div>
+            </div>
+            <div class="tx-amount">₱{{ transaction.price|floatformat:2|intcomma }}</div>
+        </div>
+        {% endfor %}
+    </div>
 
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">💳</div>
+        <div class="empty-title">No transactions yet</div>
+        <div class="empty-sub">
+            {% if user.consumer_profile %}
+                You haven't bought anything yet. Browse the marketplace to find what you need.
+            {% elif user.business_profile %}
+                Nobody has bought from you yet. Make sure your listings are active and well-priced.
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}

@@ -1,29 +1,162 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}Business Response to {{ br.consumer_request.title }}{% endblock %}
+{% block title %}Response: {{ br.consumer_request.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-wrap { max-width: 760px; margin: 0 auto; }
+
+    .back-link {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-size: 0.85rem; color: var(--muted);
+        text-decoration: none; margin-bottom: 1rem;
+    }
+    .back-link:hover { color: var(--accent); }
+
+    .page-header { margin-bottom: 1.25rem; }
+    .page-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.65rem; font-weight: 800;
+        margin-bottom: 0.3rem;
+    }
+    .page-sub { color: var(--muted); font-size: 0.9rem; }
+
+    .status-banner {
+        padding: 0.85rem 1.15rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 1.25rem;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .status-pending {
+        background: rgba(251,191,36,0.1);
+        border: 1px solid rgba(251,191,36,0.3);
+        color: #fbbf24;
+    }
+    .status-accepted {
+        background: rgba(52,211,153,0.1);
+        border: 1px solid rgba(52,211,153,0.3);
+        color: #34d399;
+    }
+
+    .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 1.4rem 1.6rem;
+        margin-bottom: 1rem;
+    }
+    .card-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 0.78rem; font-weight: 700;
+        letter-spacing: 0.1em; text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 1rem;
+    }
+    .price-display {
+        font-family: 'Syne', sans-serif;
+        font-size: 2.1rem; font-weight: 800;
+        color: #34d399;
+        margin-bottom: 0.6rem;
+    }
+    .info-row {
+        display: flex; justify-content: space-between; gap: 0.75rem;
+        font-size: 0.9rem;
+        padding: 0.7rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: var(--muted); }
+    .info-value { color: var(--white); font-weight: 500; text-align: right; }
+    .message-block {
+        background: rgba(255,255,255,0.03);
+        border-radius: 10px;
+        padding: 0.95rem 1.1rem;
+        color: var(--white);
+        line-height: 1.6;
+        font-size: 0.92rem;
+        white-space: pre-wrap;
+        margin-bottom: 1rem;
+    }
+    .action-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 0.75rem 1.4rem;
+        border-radius: 10px; border: none;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.92rem; font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.15s;
+    }
+    .action-primary {
+        background: linear-gradient(135deg, #34d399, #10b981);
+        color: #fff;
+        box-shadow: 0 4px 16px rgba(52,211,153,0.3);
+    }
+    .action-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    .action-secondary {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        color: var(--white);
+    }
+    .action-secondary:hover { background: rgba(255,255,255,0.1); }
+
+    .button-row {
+        display: flex; gap: 0.6rem; flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<h1>Response to {{ br.consumer_request.title }}</h1>
-{% if user.business_profile %}
-    {% if is_accepted == True %}
-        <p>Your offer has been accepted</p>
-    {% else %}
-        <p>Your offer hasn't been accepted</p>
+<div class="page-wrap">
+    <a href="{% url 'marketplace:consumer_request_detail' pk=br.consumer_request.pk %}" class="back-link">← Back to request</a>
+
+    <div class="page-header">
+        <div class="page-title">Response to "{{ br.consumer_request.title }}"</div>
+        <div class="page-sub">Quotation details and delivery terms</div>
+    </div>
+
+    {% if user.business_profile %}
+        {% if is_accepted == True %}
+            <div class="status-banner status-accepted">🎉 Your offer has been accepted!</div>
+        {% else %}
+            <div class="status-banner status-pending">⏳ Awaiting consumer's decision</div>
+        {% endif %}
+    {% elif user.consumer_profile %}
+        {% if is_accepted == True %}
+            <div class="status-banner status-accepted">✓ You have accepted this offer</div>
+        {% else %}
+            <div class="status-banner status-pending">⏳ Pending — review and accept this offer</div>
+        {% endif %}
     {% endif %}
-{% elif user.consumer_profile %}
-    {% if is_accepted == False %}
-        <a href="{% url 'marketplace:pay_response' pk=br.pk %}">Accept Deal</a>
-    {% else %}
-        <p>You've accepted this </p>
-    {% endif %}
-{% endif %}
-<div>
-    <p>Pricing: {{ br.price }}</p>
-    <p>Message: {{ br.message }}</p>
-    <p>Earliest Delivery Date: {{ br.earliest_delivery }}</p>
-    <p>Latest Delivery Date: {{ br.latest_delivery }}</p>
-    <button><a href="{% url 'marketplace:download_quotation' pk=br.pk %}">⬇ Download Quotation</a></button>
+
+    <div class="card">
+        <div class="card-title">Quotation</div>
+        <div class="price-display">₱{{ br.price|floatformat:2|intcomma }}</div>
+
+        <div class="info-row">
+            <span class="info-label">Earliest delivery</span>
+            <span class="info-value">{{ br.earliest_delivery|date:"M d, Y" }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Latest delivery</span>
+            <span class="info-value">{{ br.latest_delivery|date:"M d, Y" }}</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Message from Business</div>
+        <div class="message-block">{{ br.message }}</div>
+
+        <div class="button-row">
+            <a href="{% url 'marketplace:download_quotation' pk=br.pk %}" class="action-btn action-secondary">⬇ Download Quotation</a>
+            {% if user.consumer_profile and is_accepted == False %}
+                <a href="{% url 'marketplace:pay_response' pk=br.pk %}" class="action-btn action-primary">Accept Offer →</a>
+            {% endif %}
+        </div>
+    </div>
 </div>
-<p><a href="{% url 'marketplace:consumer_request_detail' pk=br.consumer_request.pk %}">To Consumer Request...</a></p>
 {% endblock %}
