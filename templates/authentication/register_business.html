@@ -4,211 +4,392 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Business Registration — PRMS</title>
+    <title>Business registration · PROC</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        :root {
-            --navy: #0b1426; --navy2: #111d35; --panel: #0f1a30;
-            --blue: #1a56db; --blue2: #2563eb; --accent: #38bdf8;
-            --white: #f0f4ff; --muted: #8899bb; --border: rgba(255,255,255,0.08);
-            --error: #f87171; --success: #34d399;
+        html, body { min-height: 100%; }
+
+        .reg-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
         }
-        html, body { min-height: 100%; background: var(--navy); color: var(--white); font-family: 'DM Sans', sans-serif; }
 
-        .bg { position: fixed; inset: 0; background: linear-gradient(rgba(26,86,219,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(26,86,219,0.06) 1px, transparent 1px); background-size: 48px 48px; animation: gridDrift 20s linear infinite; pointer-events: none; }
-        .bg::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 15% 50%, rgba(26,86,219,0.12) 0%, transparent 60%); }
-        @keyframes gridDrift { from { background-position: 0 0; } to { background-position: 48px 48px; } }
-
-        .page { position: relative; z-index: 1; display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
-
-        /* Left progress sidebar */
-        .sidebar {
-            background: var(--panel);
-            border-right: 1px solid var(--border);
-            padding: 2rem 1.5rem;
-            display: flex; flex-direction: column;
-            position: sticky; top: 0; height: 100vh;
+        /* ── Sidebar ── */
+        .reg-sidebar {
+            background: var(--bg-secondary);
+            border-right: 0.5px solid var(--border-subtle);
+            padding: 28px 24px;
+            position: sticky;
+            top: 0;
+            align-self: start;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        .back-link { display: flex; align-items: center; gap: 6px; color: var(--muted); text-decoration: none; font-size: 0.8rem; margin-bottom: 2rem; transition: color 0.2s; }
-        .back-link:hover { color: var(--white); }
-        .brand { display: flex; align-items: center; gap: 9px; margin-bottom: 2.5rem; }
-        .brand-icon { width: 34px; height: 34px; background: linear-gradient(135deg, var(--blue), var(--accent)); border-radius: 8px; display: grid; place-items: center; font-size: 15px; }
-        .brand-name { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem; }
-        .brand-name span { color: var(--accent); }
+        .back-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 24px;
+        }
+        .back-link:hover { color: var(--accent); text-decoration: none; }
+        .back-link svg { width: 14px; height: 14px; }
 
-        .sidebar-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; margin-bottom: 0.4rem; }
-        .sidebar-sub { color: var(--muted); font-size: 0.8rem; line-height: 1.5; margin-bottom: 2rem; }
+        .brand-mark {
+            font-size: 20px;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+            margin-bottom: 28px;
+        }
+        .brand-mark .dot { color: var(--accent); }
+
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+        .sidebar-sub {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.55;
+            margin-bottom: 28px;
+        }
 
         .steps { display: flex; flex-direction: column; gap: 0; }
-        .step { display: flex; gap: 12px; align-items: flex-start; padding-bottom: 1.5rem; position: relative; }
-        .step:not(:last-child)::before { content: ''; position: absolute; left: 15px; top: 32px; width: 2px; height: calc(100% - 24px); background: var(--border); }
-        .step.done:not(:last-child)::before { background: var(--blue); }
+        .step {
+            display: flex; gap: 12px;
+            padding-bottom: 18px;
+            position: relative;
+        }
+        .step:not(:last-child)::before {
+            content: '';
+            position: absolute;
+            left: 13px; top: 28px;
+            width: 0.5px;
+            height: calc(100% - 18px);
+            background: var(--border-strong);
+        }
+        .step.done:not(:last-child)::before { background: var(--accent); }
+
         .step-num {
-            width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+            width: 26px; height: 26px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            border: 0.5px solid var(--border-strong);
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 500;
             display: grid; place-items: center;
-            font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.8rem;
-            border: 2px solid var(--border); color: var(--muted);
-            background: var(--panel); position: relative; z-index: 1;
-            transition: all 0.3s;
+            position: relative;
+            z-index: 1;
         }
-        .step.active .step-num { border-color: var(--blue2); color: var(--white); background: rgba(26,86,219,0.2); }
-        .step.done .step-num { border-color: var(--blue); background: var(--blue); color: white; }
-        .step-info { padding-top: 5px; }
-        .step-label { font-size: 0.85rem; font-weight: 500; color: var(--muted); }
-        .step.active .step-label, .step.done .step-label { color: var(--white); }
-        .step-desc { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
-
-        /* Main form area */
-        .main { padding: 2.5rem 3rem; overflow-y: auto; }
-        .form-header { margin-bottom: 2rem; animation: fadeUp 0.5s ease both; }
-        .form-header h1 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.6rem; margin-bottom: 0.3rem; }
-        .form-header p { color: var(--muted); font-size: 0.9rem; }
-
-        /* Alerts */
-        .alerts { margin-bottom: 1.5rem; animation: fadeUp 0.4s ease both; }
-        .alert { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.25); border-radius: 10px; padding: 0.75rem 1rem; font-size: 0.85rem; color: var(--error); display: flex; gap: 8px; margin-bottom: 6px; }
-
-        /* Section */
-        .form-section {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
-            border-radius: 16px; padding: 1.75rem;
-            margin-bottom: 1.25rem;
-            animation: fadeUp 0.5s ease both;
+        .step.active .step-num {
+            background: var(--accent-bg);
+            border-color: var(--accent);
+            color: var(--accent);
         }
-        .form-section:nth-child(2) { animation-delay: 0.05s; }
-        .form-section:nth-child(3) { animation-delay: 0.1s; }
-        .form-section:nth-child(4) { animation-delay: 0.15s; }
-        .form-section:nth-child(5) { animation-delay: 0.2s; }
+        .step.done .step-num {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--text-on-accent);
+        }
+        .step-num svg { width: 12px; height: 12px; }
 
-        .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem; }
-        .section-icon { font-size: 1.2rem; }
-        .section-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; }
-        .section-badge { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; background: rgba(26,86,219,0.2); color: var(--blue2); border: 1px solid rgba(26,86,219,0.3); padding: 2px 8px; border-radius: 20px; }
+        .step-info { padding-top: 3px; }
+        .step-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        .step.active .step-label,
+        .step.done .step-label { color: var(--text-primary); }
+        .step-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+            line-height: 1.4;
+        }
 
-        /* Field grid */
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+        /* ── Main ── */
+        .reg-main { padding: 40px 48px 56px; max-width: 900px; }
+
+        .reg-header { margin-bottom: 28px; }
+        .reg-eyebrow {
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+        .reg-title {
+            font-size: 28px;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+        .reg-sub {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .req-star { color: var(--danger); margin-left: 2px; }
+
+        .alerts { margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
+
+        /* Form sections */
+        .reg-section {
+            background: var(--bg-surface);
+            border: 0.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 22px 24px;
+            margin-bottom: 14px;
+        }
+        .section-head {
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 18px;
+        }
+        .section-icon {
+            width: 28px; height: 28px;
+            border-radius: var(--radius-sm);
+            background: var(--accent-bg);
+            color: var(--accent);
+            display: grid; place-items: center;
+            flex-shrink: 0;
+        }
+        .section-icon svg { width: 15px; height: 15px; }
+        .section-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        .section-badge {
+            margin-left: auto;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            background: var(--accent-bg);
+            color: var(--accent);
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+        }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
         .col-span-2 { grid-column: span 2; }
 
         .field { display: flex; flex-direction: column; gap: 6px; }
-        label { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-        .required-star { color: var(--error); margin-left: 2px; }
+        .field-label {
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
 
         .input-wrap { position: relative; }
-        .input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; pointer-events: none; }
-
-        input[type="text"], input[type="email"], input[type="password"], input[type="tel"], select, textarea {
-            width: 100%; padding: 0.7rem 0.875rem 0.7rem 2.5rem;
-            background: rgba(255,255,255,0.04); border: 1px solid var(--border);
-            border-radius: 9px; color: var(--white);
-            font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
-            outline: none; transition: border-color 0.2s, background 0.2s;
+        .input-wrap svg.lead-icon {
+            position: absolute;
+            left: 12px; top: 50%;
+            transform: translateY(-50%);
+            width: 14px; height: 14px;
+            color: var(--text-secondary);
+            pointer-events: none;
         }
-        input:not(.has-icon), select:not(.has-icon), textarea:not(.has-icon) { padding-left: 0.875rem; }
-        input:focus, select:focus, textarea:focus { border-color: var(--blue2); background: rgba(37,99,235,0.07); }
-        input::placeholder, textarea::placeholder { color: rgba(136,153,187,0.4); }
-        select option { background: var(--navy2); }
-        textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
 
-        .show-pw { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; font-size: 14px; transition: color 0.2s; }
-        .show-pw:hover { color: var(--white); }
-
-        /* File upload */
-        .file-field { display: flex; flex-direction: column; gap: 6px; }
-        .file-label-text { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-        .file-drop {
-            border: 2px dashed var(--border); border-radius: 10px;
-            padding: 1.25rem; text-align: center; cursor: pointer;
-            transition: all 0.2s; position: relative;
+        .reg-input {
+            width: 100%;
+            height: 36px;
+            padding: 8px 12px 8px 36px;
+            background: var(--bg-surface);
+            border: 0.5px solid var(--border-strong);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 14px;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            transition: border-color 0.12s, box-shadow 0.12s;
         }
-        .file-drop:hover { border-color: var(--blue2); background: rgba(26,86,219,0.05); }
-        .file-drop.has-file { border-color: var(--success); border-style: solid; background: rgba(52,211,153,0.05); }
-        .file-drop input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
-        .file-icon { font-size: 1.4rem; margin-bottom: 4px; }
-        .file-text { font-size: 0.8rem; color: var(--muted); }
-        .file-text strong { color: var(--accent); }
-        .file-name { font-size: 0.75rem; color: var(--success); margin-top: 4px; display: none; }
-        .file-drop.has-file .file-name { display: block; }
-        .file-drop.has-file .file-text { display: none; }
-        .file-drop.has-file .file-icon { display: none; }
-        .file-required { font-size: 0.7rem; color: var(--muted); margin-top: 3px; }
+        .reg-input.no-icon { padding-left: 12px; }
+        .reg-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(45, 95, 63, 0.12);
+        }
+        .reg-input::placeholder { color: rgba(90, 90, 85, 0.55); }
 
-        /* Docs grid */
-        .docs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        textarea.reg-input {
+            height: auto;
+            min-height: 80px;
+            padding: 10px 12px;
+            line-height: 1.5;
+            resize: vertical;
+        }
+
+        select.reg-input {
+            padding-right: 32px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%235A5A55' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+        }
+
+        .show-pw {
+            position: absolute;
+            right: 10px; top: 50%;
+            transform: translateY(-50%);
+            background: none; border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            display: inline-flex;
+        }
+        .show-pw:hover { color: var(--text-primary); }
+        .show-pw svg { width: 15px; height: 15px; }
 
         /* Password strength */
-        .pw-strength { margin-top: 6px; }
-        .strength-bar { height: 3px; border-radius: 2px; background: var(--border); overflow: hidden; }
-        .strength-fill { height: 100%; width: 0; transition: width 0.3s, background 0.3s; border-radius: 2px; }
-        .strength-text { font-size: 0.7rem; color: var(--muted); margin-top: 4px; }
-
-        /* Submit */
-        .form-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 1.5rem; animation: fadeUp 0.5s 0.25s ease both; }
-        .terms { font-size: 0.78rem; color: var(--muted); max-width: 380px; line-height: 1.5; }
-        .btn-submit {
-            padding: 0.85rem 2.5rem;
-            background: linear-gradient(135deg, var(--blue), var(--blue2));
-            border: none; border-radius: 10px;
-            color: #fff; font-family: 'Syne', sans-serif;
-            font-size: 0.95rem; font-weight: 700; letter-spacing: 0.03em;
-            cursor: pointer; transition: all 0.2s;
-            box-shadow: 0 4px 20px rgba(26,86,219,0.4);
-            white-space: nowrap;
+        .pw-strength { margin-top: 4px; }
+        .strength-bar {
+            height: 3px; border-radius: 2px;
+            background: rgba(0,0,0,0.08);
+            overflow: hidden;
         }
-        .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(26,86,219,0.55); }
-        .btn-submit:active { transform: translateY(0); }
+        .strength-fill {
+            height: 100%; width: 0;
+            background: var(--text-secondary);
+            transition: width 0.3s, background 0.3s;
+            border-radius: 2px;
+        }
+        .strength-text {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
 
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        /* File drop */
+        .docs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .file-field { display: flex; flex-direction: column; gap: 6px; }
+
+        .file-drop {
+            border: 0.5px dashed var(--border-strong);
+            border-radius: var(--radius);
+            padding: 18px 16px;
+            text-align: center;
+            cursor: pointer;
+            background: var(--bg-faint);
+            transition: border-color 0.12s, background 0.12s;
+            position: relative;
+        }
+        .file-drop:hover {
+            border-color: var(--accent);
+            background: var(--accent-bg);
+        }
+        .file-drop.has-file {
+            border-color: var(--accent);
+            border-style: solid;
+            background: var(--accent-bg);
+        }
+        .file-drop input[type="file"] {
+            position: absolute; inset: 0;
+            opacity: 0; cursor: pointer;
+            width: 100%; height: 100%;
+        }
+        .file-icon {
+            width: 24px; height: 24px;
+            margin: 0 auto 6px;
+            color: var(--text-secondary);
+        }
+        .file-drop.has-file .file-icon { color: var(--accent); }
+        .file-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        .file-text strong { color: var(--text-primary); font-weight: 500; }
+        .file-name {
+            display: none;
+            margin-top: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--accent);
+            word-break: break-all;
+        }
+        .file-drop.has-file .file-name { display: block; }
+        .file-drop.has-file .file-text { display: none; }
+
+        /* Footer */
+        .reg-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 16px;
+            margin-top: 22px;
+        }
+        .reg-terms {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            max-width: 420px;
+        }
 
         @media (max-width: 900px) {
-            .page { grid-template-columns: 1fr; }
-            .sidebar { display: none; }
-            .main { padding: 1.5rem; }
+            .reg-layout { grid-template-columns: 1fr; }
+            .reg-sidebar { position: static; height: auto; padding: 20px 24px; }
+            .reg-main { padding: 24px 20px 48px; }
             .grid-2, .grid-3 { grid-template-columns: 1fr; }
             .col-span-2 { grid-column: span 1; }
             .docs-grid { grid-template-columns: 1fr; }
-            .form-footer { flex-direction: column; gap: 1rem; }
-            .btn-submit { width: 100%; }
+            .reg-footer { flex-direction: column; align-items: stretch; }
         }
     </style>
 </head>
 <body>
-<div class="bg"></div>
-<div class="page">
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <a href="{% url 'authentication:register' %}" class="back-link">← Change account type</a>
-        <div class="brand">
-            <div class="brand-icon">📋</div>
-            <div class="brand-name">PR<span>MS</span></div>
-        </div>
-        <div class="sidebar-title">Business Registration</div>
+<div class="reg-layout">
+
+    <aside class="reg-sidebar">
+        <a href="{% url 'authentication:register' %}" class="back-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+            Change account type
+        </a>
+
+        <div class="brand-mark">PR<span class="dot">OC</span></div>
+
+        <div class="sidebar-title">Business registration</div>
         <div class="sidebar-sub">Complete all sections below. Your account will be reviewed by an administrator before activation.</div>
 
         <div class="steps">
-            <div class="step done" id="step-1">
-                <div class="step-num">✓</div>
+            <div class="step done">
+                <div class="step-num">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
                 <div class="step-info">
-                    <div class="step-label">Account Type</div>
+                    <div class="step-label">Account type</div>
                     <div class="step-desc">Business selected</div>
                 </div>
             </div>
             <div class="step active" id="step-2">
                 <div class="step-num">2</div>
                 <div class="step-info">
-                    <div class="step-label">Account Credentials</div>
+                    <div class="step-label">Credentials</div>
                     <div class="step-desc">Username, email, password</div>
                 </div>
             </div>
             <div class="step" id="step-3">
                 <div class="step-num">3</div>
                 <div class="step-info">
-                    <div class="step-label">Business Details</div>
-                    <div class="step-desc">Company info & type</div>
+                    <div class="step-label">Business details</div>
+                    <div class="step-desc">Company info and type</div>
                 </div>
             </div>
             <div class="step" id="step-4">
@@ -222,23 +403,23 @@
                 <div class="step-num">5</div>
                 <div class="step-info">
                     <div class="step-label">Documents</div>
-                    <div class="step-desc">Permits & certificates</div>
+                    <div class="step-desc">Permits and certificates</div>
                 </div>
             </div>
         </div>
     </aside>
 
-    <!-- Main form -->
-    <main class="main">
-        <div class="form-header">
-            <h1>Business Account Registration</h1>
-            <p>Fields marked <span style="color:var(--error)">*</span> are required. Documents must be in PDF format.</p>
+    <main class="reg-main">
+        <div class="reg-header">
+            <div class="reg-eyebrow">Business</div>
+            <h1 class="reg-title">Business account registration</h1>
+            <p class="reg-sub">Fields marked <span class="req-star">*</span> are required. Documents must be in PDF format.</p>
         </div>
 
         {% if messages %}
         <div class="alerts">
             {% for message in messages %}
-            <div class="alert">⚠ {{ message }}</div>
+            <div class="message error">{{ message }}</div>
             {% endfor %}
         </div>
         {% endif %}
@@ -247,32 +428,36 @@
             {% csrf_token %}
 
             <!-- Section 1: Credentials -->
-            <div class="form-section" id="sec-credentials">
-                <div class="section-header">
-                    <span class="section-icon">🔐</span>
-                    <span class="section-title">Account Credentials</span>
+            <section class="reg-section" id="sec-credentials">
+                <div class="section-head">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </div>
+                    <div class="section-title">Account credentials</div>
                 </div>
                 <div class="grid-2">
                     <div class="field">
-                        <label>Username <span class="required-star">*</span></label>
+                        <label class="field-label">Username <span class="req-star">*</span></label>
                         <div class="input-wrap">
-                            <span class="input-icon">👤</span>
-                            <input type="text" name="username" class="has-icon" placeholder="e.g. acme_corp" value="{{ form_data.username|default:'' }}" required>
+                            <svg class="lead-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <input type="text" name="username" class="reg-input" placeholder="e.g. acme_corp" value="{{ form_data.username|default:'' }}" required>
                         </div>
                     </div>
                     <div class="field">
-                        <label>Email Address <span class="required-star">*</span></label>
+                        <label class="field-label">Email address <span class="req-star">*</span></label>
                         <div class="input-wrap">
-                            <span class="input-icon">✉</span>
-                            <input type="email" name="email" class="has-icon" placeholder="business@example.com" value="{{ form_data.email|default:'' }}" required>
+                            <svg class="lead-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 6 10-6"/></svg>
+                            <input type="email" name="email" class="reg-input" placeholder="business@example.com" value="{{ form_data.email|default:'' }}" required>
                         </div>
                     </div>
                     <div class="field">
-                        <label>Password <span class="required-star">*</span></label>
+                        <label class="field-label">Password <span class="req-star">*</span></label>
                         <div class="input-wrap">
-                            <span class="input-icon">🔒</span>
-                            <input type="password" name="password" id="pw" class="has-icon" placeholder="Min. 8 characters" required oninput="checkStrength(this.value)">
-                            <button type="button" class="show-pw" onclick="togglePw('pw')">👁</button>
+                            <svg class="lead-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            <input type="password" name="password" id="pw" class="reg-input" placeholder="Min. 8 characters" required oninput="checkStrength(this.value)">
+                            <button type="button" class="show-pw" onclick="togglePw('pw')" aria-label="Show or hide password">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
                         </div>
                         <div class="pw-strength">
                             <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
@@ -280,51 +465,55 @@
                         </div>
                     </div>
                     <div class="field">
-                        <label>Confirm Password <span class="required-star">*</span></label>
+                        <label class="field-label">Confirm password <span class="req-star">*</span></label>
                         <div class="input-wrap">
-                            <span class="input-icon">🔒</span>
-                            <input type="password" name="confirm_password" id="pw2" class="has-icon" placeholder="Re-enter password" required>
-                            <button type="button" class="show-pw" onclick="togglePw('pw2')">👁</button>
+                            <svg class="lead-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            <input type="password" name="confirm_password" id="pw2" class="reg-input" placeholder="Re-enter password" required>
+                            <button type="button" class="show-pw" onclick="togglePw('pw2')" aria-label="Show or hide password">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
                         </div>
                     </div>
                     <div class="field col-span-2">
-                        <label>Contact Number</label>
+                        <label class="field-label">Contact number</label>
                         <div class="input-wrap">
-                            <span class="input-icon">📞</span>
-                            <input type="tel" name="contact_number" class="has-icon" placeholder="+63 9XX XXX XXXX" value="{{ form_data.contact_number|default:'' }}">
+                            <svg class="lead-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.94.34 1.87.64 2.77a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.31-1.21a2 2 0 0 1 2.11-.45c.9.3 1.83.51 2.77.64A2 2 0 0 1 22 16.92z"/></svg>
+                            <input type="tel" name="contact_number" class="reg-input" placeholder="+63 9XX XXX XXXX" value="{{ form_data.contact_number|default:'' }}">
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- Section 2: Business Info -->
-            <div class="form-section" id="sec-business">
-                <div class="section-header">
-                    <span class="section-icon">🏢</span>
-                    <span class="section-title">Business Information</span>
+            <!-- Section 2: Business info -->
+            <section class="reg-section" id="sec-business">
+                <div class="section-head">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h1M9 13h1M9 17h1M14 9h1M14 13h1M14 17h1"/></svg>
+                    </div>
+                    <div class="section-title">Business information</div>
                 </div>
                 <div class="grid-2">
                     <div class="field">
-                        <label>Business Name <span class="required-star">*</span></label>
+                        <label class="field-label">Business name <span class="req-star">*</span></label>
                         <div class="input-wrap">
-                            <span class="input-icon">🏢</span>
-                            <input type="text" name="business_name" class="has-icon" placeholder="Registered company name" value="{{ form_data.business_name|default:'' }}" required>
+                            <svg class="lead-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg>
+                            <input type="text" name="business_name" class="reg-input" placeholder="Registered company name" value="{{ form_data.business_name|default:'' }}" required>
                         </div>
                     </div>
                     <div class="field">
-                        <label>Tax Identification Number (TIN) <span class="required-star">*</span></label>
+                        <label class="field-label">Tax identification number (TIN) <span class="req-star">*</span></label>
                         <div class="input-wrap">
-                            <span class="input-icon">#</span>
-                            <input type="text" name="tin" class="has-icon" placeholder="000-000-000-000" value="{{ form_data.tin|default:'' }}" required>
+                            <svg class="lead-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+                            <input type="text" name="tin" class="reg-input" placeholder="000-000-000-000" value="{{ form_data.tin|default:'' }}" required>
                         </div>
                     </div>
                     <div class="field col-span-2">
-                        <label>Business Address <span class="required-star">*</span></label>
-                        <textarea name="business_address" placeholder="Full registered business address" required>{{ form_data.business_address|default:'' }}</textarea>
+                        <label class="field-label">Business address <span class="req-star">*</span></label>
+                        <textarea name="business_address" class="reg-input no-icon" placeholder="Full registered business address" required>{{ form_data.business_address|default:'' }}</textarea>
                     </div>
                     <div class="field col-span-2">
-                        <label>Type of Business <span class="required-star">*</span></label>
-                        <select name="business_type" required>
+                        <label class="field-label">Type of business <span class="req-star">*</span></label>
+                        <select name="business_type" class="reg-input no-icon" required>
                             <option value="" disabled {% if not form_data.business_type %}selected{% endif %}>Select business type</option>
                             <option value="trading"       {% if form_data.business_type == 'trading' %}selected{% endif %}>Trading</option>
                             <option value="servicing"     {% if form_data.business_type == 'servicing' %}selected{% endif %}>Servicing</option>
@@ -333,102 +522,107 @@
                         </select>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Section 3: Representative -->
-            <div class="form-section" id="sec-rep">
-                <div class="section-header">
-                    <span class="section-icon">🤝</span>
-                    <span class="section-title">Authorized Representative</span>
+            <section class="reg-section" id="sec-rep">
+                <div class="section-head">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <div class="section-title">Authorized representative</div>
                 </div>
                 <div class="grid-3">
                     <div class="field">
-                        <label>Full Name <span class="required-star">*</span></label>
+                        <label class="field-label">Full name <span class="req-star">*</span></label>
                         <div class="input-wrap">
-                            <span class="input-icon">👤</span>
-                            <input type="text" name="rep_name" class="has-icon" placeholder="Representative's full name" value="{{ form_data.rep_name|default:'' }}" required>
+                            <svg class="lead-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <input type="text" name="rep_name" class="reg-input" placeholder="Representative's full name" value="{{ form_data.rep_name|default:'' }}" required>
                         </div>
                     </div>
                     <div class="field">
-                        <label>Position / Title <span class="required-star">*</span></label>
+                        <label class="field-label">Position / title <span class="req-star">*</span></label>
                         <div class="input-wrap">
-                            <span class="input-icon">💼</span>
-                            <input type="text" name="rep_position" class="has-icon" placeholder="e.g. CEO, Procurement Officer" value="{{ form_data.rep_position|default:'' }}" required>
+                            <svg class="lead-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                            <input type="text" name="rep_position" class="reg-input" placeholder="e.g. Procurement officer" value="{{ form_data.rep_position|default:'' }}" required>
                         </div>
                     </div>
                     <div class="field">
-                        <label>Contact Number <span class="required-star">*</span></label>
+                        <label class="field-label">Contact number <span class="req-star">*</span></label>
                         <div class="input-wrap">
-                            <span class="input-icon">📞</span>
-                            <input type="tel" name="rep_contact" class="has-icon" placeholder="+63 9XX XXX XXXX" value="{{ form_data.rep_contact|default:'' }}" required>
+                            <svg class="lead-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.94.34 1.87.64 2.77a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.31-1.21a2 2 0 0 1 2.11-.45c.9.3 1.83.51 2.77.64A2 2 0 0 1 22 16.92z"/></svg>
+                            <input type="tel" name="rep_contact" class="reg-input" placeholder="+63 9XX XXX XXXX" value="{{ form_data.rep_contact|default:'' }}" required>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Section 4: Documents -->
-            <div class="form-section" id="sec-docs">
-                <div class="section-header">
-                    <span class="section-icon">📄</span>
-                    <span class="section-title">Supporting Documents</span>
+            <section class="reg-section" id="sec-docs">
+                <div class="section-head">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </div>
+                    <div class="section-title">Supporting documents</div>
                     <span class="section-badge">PDF only</span>
                 </div>
                 <div class="docs-grid">
                     <div class="file-field">
-                        <div class="file-label-text">Mayor's Permit <span class="required-star">*</span></div>
+                        <label class="field-label">Mayor's permit <span class="req-star">*</span></label>
                         <div class="file-drop" id="drop-mayors">
                             <input type="file" name="mayors_permit" accept=".pdf,application/pdf" onchange="fileChosen(this,'drop-mayors')">
-                            <div class="file-icon">📋</div>
-                            <div class="file-text"><strong>Click to upload</strong> or drag & drop<br>PDF format</div>
-                            <div class="file-name" id="name-mayors"></div>
+                            <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <div class="file-text"><strong>Click to upload</strong> or drag and drop</div>
+                            <div class="file-name"></div>
                         </div>
                     </div>
                     <div class="file-field">
-                        <div class="file-label-text">SEC Certificate <span class="required-star">*</span></div>
+                        <label class="field-label">SEC certificate <span class="req-star">*</span></label>
                         <div class="file-drop" id="drop-sec">
                             <input type="file" name="sec_certificate" accept=".pdf,application/pdf" onchange="fileChosen(this,'drop-sec')">
-                            <div class="file-icon">🏛</div>
-                            <div class="file-text"><strong>Click to upload</strong> or drag & drop<br>PDF format</div>
-                            <div class="file-name" id="name-sec"></div>
+                            <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <div class="file-text"><strong>Click to upload</strong> or drag and drop</div>
+                            <div class="file-name"></div>
                         </div>
                     </div>
                     <div class="file-field">
-                        <div class="file-label-text">BIR Certificate <span class="required-star">*</span></div>
+                        <label class="field-label">BIR certificate <span class="req-star">*</span></label>
                         <div class="file-drop" id="drop-bir">
                             <input type="file" name="bir_certificate" accept=".pdf,application/pdf" onchange="fileChosen(this,'drop-bir')">
-                            <div class="file-icon">📑</div>
-                            <div class="file-text"><strong>Click to upload</strong> or drag & drop<br>PDF format</div>
-                            <div class="file-name" id="name-bir"></div>
+                            <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <div class="file-text"><strong>Click to upload</strong> or drag and drop</div>
+                            <div class="file-name"></div>
                         </div>
                     </div>
                     <div class="file-field">
-                        <div class="file-label-text">Tax Clearance <span class="required-star">*</span></div>
+                        <label class="field-label">Tax clearance <span class="req-star">*</span></label>
                         <div class="file-drop" id="drop-tax">
                             <input type="file" name="tax_clearance" accept=".pdf,application/pdf" onchange="fileChosen(this,'drop-tax')">
-                            <div class="file-icon">✅</div>
-                            <div class="file-text"><strong>Click to upload</strong> or drag & drop<br>PDF format</div>
-                            <div class="file-name" id="name-tax"></div>
+                            <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <div class="file-text"><strong>Click to upload</strong> or drag and drop</div>
+                            <div class="file-name"></div>
                         </div>
                     </div>
                     <div class="file-field" style="grid-column: span 2;">
-                        <div class="file-label-text">Other Supporting Documents <span style="color:var(--muted);font-style:italic;">(optional)</span></div>
+                        <label class="field-label">Other supporting documents <span style="color: var(--text-secondary); font-weight: 400; text-transform: none; letter-spacing: 0;">(optional)</span></label>
                         <div class="file-drop" id="drop-other">
                             <input type="file" name="other_documents" accept=".pdf,application/pdf" onchange="fileChosen(this,'drop-other')">
-                            <div class="file-icon">📎</div>
-                            <div class="file-text"><strong>Click to upload</strong> optional additional documents<br>PDF format</div>
-                            <div class="file-name" id="name-other"></div>
+                            <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <div class="file-text"><strong>Click to upload</strong> additional documents</div>
+                            <div class="file-name"></div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <div class="form-footer">
-                <p class="terms">By submitting, you confirm that all information and documents are accurate. Your account will be reviewed and activated by an administrator.</p>
-                <button type="submit" class="btn-submit">Submit Registration →</button>
+            <div class="reg-footer">
+                <p class="reg-terms">By submitting, you confirm that all information and documents are accurate. Your account will be reviewed and activated by an administrator.</p>
+                <button type="submit" class="btn btn-primary btn-lg">Submit registration</button>
             </div>
         </form>
     </main>
 </div>
+
 <script>
 function togglePw(id) {
     const inp = document.getElementById(id);
@@ -444,11 +638,11 @@ function checkStrength(pw) {
     if (/[0-9]/.test(pw)) score++;
     if (/[^A-Za-z0-9]/.test(pw)) score++;
     const levels = [
-        { pct: '0%',   color: 'transparent', label: '' },
-        { pct: '25%',  color: '#f87171', label: 'Weak' },
-        { pct: '50%',  color: '#fbbf24', label: 'Fair' },
-        { pct: '75%',  color: '#60a5fa', label: 'Good' },
-        { pct: '100%', color: '#34d399', label: 'Strong' },
+        { pct: '0%',   color: 'transparent',          label: '' },
+        { pct: '25%',  color: 'var(--danger)',        label: 'Weak' },
+        { pct: '50%',  color: 'var(--warning)',       label: 'Fair' },
+        { pct: '75%',  color: 'var(--text-secondary)',label: 'Good' },
+        { pct: '100%', color: 'var(--accent)',        label: 'Strong' },
     ];
     const l = levels[score];
     fill.style.width = l.pct;
@@ -462,7 +656,7 @@ function fileChosen(input, dropId) {
     const nameEl = drop.querySelector('.file-name');
     if (input.files && input.files[0]) {
         drop.classList.add('has-file');
-        nameEl.textContent = '✓ ' + input.files[0].name;
+        nameEl.textContent = input.files[0].name;
     } else {
         drop.classList.remove('has-file');
         nameEl.textContent = '';
@@ -477,18 +671,28 @@ window.addEventListener('scroll', () => {
         const sec = document.getElementById(secId);
         if (!sec) return;
         const rect = sec.getBoundingClientRect();
-        const stepEl = document.getElementById(steps[i]);
-        if (!stepEl) return;
-        if (rect.top < window.innerHeight * 0.6 && rect.bottom > 0) {
+        if (rect.top < window.innerHeight * 0.5 && rect.bottom > 0) {
             steps.forEach((s,j) => {
                 const el = document.getElementById(s);
-                if (j < i) { el.classList.remove('active'); el.classList.add('done'); el.querySelector('.step-num').textContent = '✓'; }
-                else if (j === i) { el.classList.add('active'); el.classList.remove('done'); }
-                else { el.classList.remove('active','done'); }
+                if (!el) return;
+                const num = el.querySelector('.step-num');
+                if (j < i) {
+                    el.classList.remove('active');
+                    el.classList.add('done');
+                    num.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+                } else if (j === i) {
+                    el.classList.add('active');
+                    el.classList.remove('done');
+                    num.textContent = (j + 2).toString();
+                } else {
+                    el.classList.remove('active','done');
+                    num.textContent = (j + 2).toString();
+                }
             });
         }
     });
 }, { passive: true });
 </script>
+
 </body>
 </html>

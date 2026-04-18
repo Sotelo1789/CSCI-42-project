@@ -1,112 +1,82 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}Response: {{ br.consumer_request.title }}{% endblock %}
+{% block title %}Response · {{ br.consumer_request.title }}{% endblock %}
 
 {% block extra_css %}
 <style>
-    .page-wrap { max-width: 760px; margin: 0 auto; }
+    .page-wrap { max-width: 800px; margin: 0 auto; }
 
     .back-link {
-        display: inline-flex; align-items: center; gap: 5px;
-        font-size: 0.85rem; color: var(--muted);
-        text-decoration: none; margin-bottom: 1rem;
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 13px; color: var(--text-secondary);
+        text-decoration: none; margin-bottom: 14px;
     }
-    .back-link:hover { color: var(--accent); }
-
-    .page-header { margin-bottom: 1.25rem; }
-    .page-title {
-        font-family: 'Syne', sans-serif;
-        font-size: 1.65rem; font-weight: 800;
-        margin-bottom: 0.3rem;
-    }
-    .page-sub { color: var(--muted); font-size: 0.9rem; }
+    .back-link:hover { color: var(--accent); text-decoration: none; }
 
     .status-banner {
-        padding: 0.85rem 1.15rem;
-        border-radius: 12px;
-        font-weight: 600;
-        font-size: 0.9rem;
-        margin-bottom: 1.25rem;
+        padding: 12px 16px;
+        border-radius: var(--radius);
+        font-weight: 500;
+        font-size: 14px;
+        margin-bottom: 16px;
         display: flex; align-items: center; gap: 8px;
     }
     .status-pending {
-        background: rgba(251,191,36,0.1);
-        border: 1px solid rgba(251,191,36,0.3);
-        color: #fbbf24;
+        background: var(--warning-bg);
+        border: 0.5px solid rgba(138,106,31,0.25);
+        color: var(--warning);
     }
     .status-accepted {
-        background: rgba(52,211,153,0.1);
-        border: 1px solid rgba(52,211,153,0.3);
-        color: #34d399;
+        background: var(--accent-bg);
+        border: 0.5px solid rgba(45,95,63,0.25);
+        color: var(--accent);
     }
 
-    .card {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 1.4rem 1.6rem;
-        margin-bottom: 1rem;
+    .section-title {
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 14px;
     }
-    .card-title {
-        font-family: 'Syne', sans-serif;
-        font-size: 0.78rem; font-weight: 700;
-        letter-spacing: 0.1em; text-transform: uppercase;
-        color: var(--muted);
-        margin-bottom: 1rem;
-    }
+
     .price-display {
-        font-family: 'Syne', sans-serif;
-        font-size: 2.1rem; font-weight: 800;
-        color: #34d399;
-        margin-bottom: 0.6rem;
+        font-size: 28px;
+        font-weight: 500;
+        letter-spacing: -0.015em;
+        color: var(--text-primary);
+        margin-bottom: 14px;
     }
+
     .info-row {
-        display: flex; justify-content: space-between; gap: 0.75rem;
-        font-size: 0.9rem;
-        padding: 0.7rem 0;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
+        display: flex; justify-content: space-between; gap: 12px;
+        font-size: 14px;
+        padding: 10px 0;
+        border-bottom: 0.5px solid var(--border-subtle);
     }
     .info-row:last-child { border-bottom: none; }
-    .info-label { color: var(--muted); }
-    .info-value { color: var(--white); font-weight: 500; text-align: right; }
+    .info-label { color: var(--text-secondary); font-size: 13px; }
+    .info-value { color: var(--text-primary); font-weight: 500; text-align: right; }
+
     .message-block {
-        background: rgba(255,255,255,0.03);
-        border-radius: 10px;
-        padding: 0.95rem 1.1rem;
-        color: var(--white);
-        line-height: 1.6;
-        font-size: 0.92rem;
+        background: var(--bg-faint);
+        border: 0.5px solid var(--border-subtle);
+        border-radius: var(--radius);
+        padding: 14px 16px;
+        color: var(--text-primary);
+        line-height: 1.65;
+        font-size: 14px;
         white-space: pre-wrap;
-        margin-bottom: 1rem;
+        margin-bottom: 14px;
     }
-    .action-btn {
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 0.75rem 1.4rem;
-        border-radius: 10px; border: none;
-        font-family: 'DM Sans', sans-serif;
-        font-size: 0.92rem; font-weight: 700;
-        cursor: pointer;
-        text-decoration: none;
-        transition: all 0.15s;
-    }
-    .action-primary {
-        background: linear-gradient(135deg, #34d399, #10b981);
-        color: #fff;
-        box-shadow: 0 4px 16px rgba(52,211,153,0.3);
-    }
-    .action-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
-    .action-secondary {
-        background: rgba(255,255,255,0.05);
-        border: 1px solid var(--border);
-        color: var(--white);
-    }
-    .action-secondary:hover { background: rgba(255,255,255,0.1); }
 
     .button-row {
-        display: flex; gap: 0.6rem; flex-wrap: wrap;
-        margin-top: 1rem;
+        display: flex; gap: 8px; flex-wrap: wrap;
     }
+
+    .card + .card { margin-top: 12px; }
 </style>
 {% endblock %}
 
@@ -115,27 +85,28 @@
     <a href="{% url 'marketplace:consumer_request_detail' pk=br.consumer_request.pk %}" class="back-link">← Back to request</a>
 
     <div class="page-header">
+        <div class="page-eyebrow">Offer details</div>
         <div class="page-title">Response to "{{ br.consumer_request.title }}"</div>
-        <div class="page-sub">Quotation details and delivery terms</div>
+        <div class="page-sub">Quotation details and delivery terms.</div>
     </div>
 
     {% if user.business_profile %}
         {% if is_accepted == True %}
-            <div class="status-banner status-accepted">🎉 Your offer has been accepted!</div>
+            <div class="status-banner status-accepted">Your offer has been accepted.</div>
         {% else %}
-            <div class="status-banner status-pending">⏳ Awaiting consumer's decision</div>
+            <div class="status-banner status-pending">Awaiting consumer's decision.</div>
         {% endif %}
     {% elif user.consumer_profile %}
         {% if is_accepted == True %}
-            <div class="status-banner status-accepted">✓ You have accepted this offer</div>
+            <div class="status-banner status-accepted">You have accepted this offer.</div>
         {% else %}
-            <div class="status-banner status-pending">⏳ Pending — review and accept this offer</div>
+            <div class="status-banner status-pending">Pending — review and accept this offer.</div>
         {% endif %}
     {% endif %}
 
     <div class="card">
-        <div class="card-title">Quotation</div>
-        <div class="price-display">₱{{ br.price|floatformat:2|intcomma }}</div>
+        <div class="section-title">Quotation</div>
+        <div class="price-display">₱{{ br.price|floatformat:0|intcomma }}</div>
 
         <div class="info-row">
             <span class="info-label">Earliest delivery</span>
@@ -148,13 +119,13 @@
     </div>
 
     <div class="card">
-        <div class="card-title">Message from Business</div>
+        <div class="section-title">Message from business</div>
         <div class="message-block">{{ br.message }}</div>
 
         <div class="button-row">
-            <a href="{% url 'marketplace:download_quotation' pk=br.pk %}" class="action-btn action-secondary">⬇ Download Quotation</a>
+            <a href="{% url 'marketplace:download_quotation' pk=br.pk %}" class="btn btn-secondary">Download quotation</a>
             {% if user.consumer_profile and is_accepted == False %}
-                <a href="{% url 'marketplace:pay_response' pk=br.pk %}" class="action-btn action-primary">Accept Offer →</a>
+                <a href="{% url 'marketplace:pay_response' pk=br.pk %}" class="btn btn-primary">Accept offer</a>
             {% endif %}
         </div>
     </div>

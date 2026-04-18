@@ -1,188 +1,137 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}{{ listing.title }}{% endblock %}
+{% block title %}{{ listing.title }} · PROC{% endblock %}
 
 {% block extra_css %}
 <style>
     .page-wrap { max-width: 1000px; margin: 0 auto; }
 
     .back-link {
-        display: inline-flex; align-items: center; gap: 5px;
-        font-size: 0.85rem; color: var(--muted);
-        text-decoration: none; margin-bottom: 1rem;
-        transition: color 0.15s;
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 13px; color: var(--text-secondary);
+        text-decoration: none; margin-bottom: 14px;
     }
-    .back-link:hover { color: var(--accent); }
+    .back-link:hover { color: var(--accent); text-decoration: none; }
 
     .detail-header {
         display: flex; justify-content: space-between;
-        align-items: flex-start; gap: 1rem;
-        margin-bottom: 1.25rem;
+        align-items: flex-start; gap: 12px;
+        margin-bottom: 20px;
     }
     .detail-title {
-        font-family: 'Syne', sans-serif;
-        font-size: 1.95rem; font-weight: 800;
-        line-height: 1.15;
-        margin-bottom: 0.4rem;
+        font-size: 28px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        margin-bottom: 10px;
+        color: var(--text-primary);
     }
     .detail-subline {
-        display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center;
-        font-size: 0.85rem; color: var(--muted);
+        display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+        font-size: 13px; color: var(--text-secondary);
     }
     .view-count {
-        display: inline-flex; align-items: center; gap: 4px;
-        background: rgba(255,255,255,0.05);
-        border: 1px solid var(--border);
-        padding: 3px 9px; border-radius: 999px;
-        font-size: 0.75rem;
-    }
-    .availability-pill {
-        display: inline-flex; align-items: center; gap: 5px;
-        padding: 4px 10px; border-radius: 999px;
-        font-size: 0.75rem; font-weight: 600;
-    }
-    .avail-yes {
-        background: rgba(52,211,153,0.12);
-        border: 1px solid rgba(52,211,153,0.3);
-        color: #34d399;
-    }
-    .avail-no {
-        background: rgba(248,113,113,0.12);
-        border: 1px solid rgba(248,113,113,0.3);
-        color: var(--danger);
+        font-size: 12px;
+        color: var(--text-secondary);
     }
 
-    .fav-btn {
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 0.55rem 1rem; border-radius: 9px;
-        background: rgba(251,191,36,0.1);
-        border: 1px solid rgba(251,191,36,0.3);
-        color: #fbbf24; text-decoration: none;
-        font-size: 0.85rem; font-weight: 600;
-        cursor: pointer; transition: all 0.15s;
-        white-space: nowrap;
-    }
-    .fav-btn:hover { background: rgba(251,191,36,0.2); }
-    .fav-btn.unfaved {
-        background: rgba(255,255,255,0.05);
-        border-color: var(--border);
-        color: var(--muted);
-    }
-    .fav-btn.unfaved:hover { color: #fbbf24; border-color: rgba(251,191,36,0.3); }
-
-    /* Image gallery */
+    /* Gallery */
     .gallery {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 0.5rem;
-        margin-bottom: 1.5rem;
+        gap: 8px;
+        margin-bottom: 20px;
     }
     .gallery-main {
         width: 100%; aspect-ratio: 16/9;
-        border-radius: 14px; overflow: hidden;
-        background: linear-gradient(135deg, rgba(26,86,219,0.12), rgba(56,189,248,0.05));
-        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        background: var(--accent-bg);
+        border: 0.5px solid var(--border);
         display: flex; align-items: center; justify-content: center;
     }
     .gallery-main img { width: 100%; height: 100%; object-fit: cover; }
-    .gallery-empty { font-size: 4rem; opacity: 0.4; }
+    .gallery-empty {
+        font-size: 13px; font-weight: 500;
+        color: var(--accent);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
     .gallery-thumbs {
-        display: flex; gap: 0.5rem; flex-wrap: wrap;
+        display: flex; gap: 8px; flex-wrap: wrap;
     }
     .gallery-thumb {
-        width: 80px; height: 80px;
-        border-radius: 9px; overflow: hidden;
-        border: 1px solid var(--border);
-        cursor: pointer; transition: all 0.15s;
+        width: 72px; height: 72px;
+        border-radius: var(--radius);
+        overflow: hidden;
+        border: 0.5px solid var(--border);
+        cursor: pointer;
+        transition: border-color 0.12s;
     }
-    .gallery-thumb:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .gallery-thumb:hover { border-color: var(--border-strong); }
     .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* Two-column layout */
+    /* Two-col */
     .detail-grid {
         display: grid;
         grid-template-columns: 1fr 320px;
-        gap: 1.25rem;
+        gap: 14px;
     }
 
-    .card {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 1.25rem 1.4rem;
-        margin-bottom: 1rem;
-    }
-    .card-title {
-        font-family: 'Syne', sans-serif;
-        font-size: 0.78rem; font-weight: 700;
-        letter-spacing: 0.1em; text-transform: uppercase;
-        color: var(--muted);
-        margin-bottom: 0.85rem;
+    .section-title {
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
     }
 
     .price-display {
-        font-family: 'Syne', sans-serif;
-        font-size: 1.85rem; font-weight: 800;
-        color: #34d399;
-        margin-bottom: 0.4rem;
+        font-size: 26px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        color: var(--text-primary);
+        margin-bottom: 4px;
     }
     .price-sub {
-        font-size: 0.85rem; color: var(--muted);
-        margin-bottom: 1rem;
+        font-size: 13px; color: var(--text-secondary);
+        margin-bottom: 16px;
     }
 
-    .info-list { display: flex; flex-direction: column; gap: 0.65rem; }
+    .info-list { display: flex; flex-direction: column; }
     .info-row {
-        display: flex; justify-content: space-between; gap: 0.75rem;
-        font-size: 0.875rem;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
+        display: flex; justify-content: space-between; gap: 12px;
+        font-size: 14px;
+        padding: 10px 0;
+        border-bottom: 0.5px solid var(--border-subtle);
     }
     .info-row:last-child { border-bottom: none; }
-    .info-label { color: var(--muted); font-size: 0.78rem; }
-    .info-value { color: var(--white); font-weight: 500; text-align: right; }
+    .info-label { color: var(--text-secondary); font-size: 13px; }
+    .info-value {
+        color: var(--text-primary);
+        font-weight: 500;
+        text-align: right;
+        font-size: 14px;
+    }
 
     .description {
-        color: var(--white);
+        color: var(--text-primary);
         line-height: 1.65;
-        font-size: 0.92rem;
+        font-size: 14px;
         white-space: pre-wrap;
     }
 
-    .cat-pill {
-        display: inline-flex; align-items: center;
-        padding: 3px 12px; border-radius: 999px;
-        font-size: 0.72rem; font-weight: 600;
-        background: rgba(56,189,248,0.1);
-        border: 1px solid rgba(56,189,248,0.2);
-        color: var(--accent);
-        text-transform: uppercase; letter-spacing: 0.05em;
+    .action-stack {
+        display: flex; flex-direction: column; gap: 8px;
+    }
+    .action-btn-full {
+        display: block; width: 100%;
+        text-align: center;
     }
 
-    .action-btn {
-        display: block; width: 100%;
-        padding: 0.85rem 1.25rem;
-        border-radius: 10px; border: none;
-        font-family: 'DM Sans', sans-serif;
-        font-size: 0.95rem; font-weight: 700;
-        cursor: pointer; text-align: center;
-        text-decoration: none;
-        transition: all 0.15s;
-        margin-bottom: 0.6rem;
-    }
-    .action-primary {
-        background: linear-gradient(135deg, #34d399, #10b981);
-        color: #fff;
-        box-shadow: 0 4px 16px rgba(52,211,153,0.3);
-    }
-    .action-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
-    .action-secondary {
-        background: rgba(255,255,255,0.05);
-        border: 1px solid var(--border);
-        color: var(--white);
-    }
-    .action-secondary:hover { background: rgba(255,255,255,0.1); border-color: var(--accent); }
+    .card + .card { margin-top: 12px; }
 
     @media (max-width: 860px) {
         .detail-grid { grid-template-columns: 1fr; }
@@ -198,26 +147,25 @@
         <div>
             <div class="detail-title">{{ listing.title }}</div>
             <div class="detail-subline">
-                <span class="cat-pill">{{ listing.category|upper }}</span>
+                <span class="pill">{{ listing.category }}</span>
                 {% if listing.availability == True %}
-                    <span class="availability-pill avail-yes">● Available</span>
+                    <span class="pill">Available</span>
                 {% else %}
-                    <span class="availability-pill avail-no">● Unavailable</span>
+                    <span class="pill pill-danger">Unavailable</span>
                 {% endif %}
-                <span class="view-count">👁 {{ listing.view_count }} view{{ listing.view_count|pluralize }}</span>
+                <span class="view-count">{{ listing.view_count|intcomma }} view{{ listing.view_count|pluralize }}</span>
             </div>
         </div>
 
         {% if user.consumer_profile %}
             {% if is_favorite == True %}
-                <a href="{% url 'marketplace:unfavorite_in_detail' pk=listing.pk %}" class="fav-btn">★ Saved</a>
+                <a href="{% url 'marketplace:unfavorite_in_detail' pk=listing.pk %}" class="btn btn-secondary btn-sm">★ Saved</a>
             {% else %}
-                <a href="{% url 'marketplace:set_favorite_in_detail' pk=listing.pk %}" class="fav-btn unfaved">☆ Save</a>
+                <a href="{% url 'marketplace:set_favorite_in_detail' pk=listing.pk %}" class="btn btn-secondary btn-sm">Save</a>
             {% endif %}
         {% endif %}
     </div>
 
-    <!-- Gallery -->
     <div class="gallery">
         <div class="gallery-main">
             {% if listing.images.exists %}
@@ -227,7 +175,7 @@
                     {% endif %}
                 {% endfor %}
             {% else %}
-                <span class="gallery-empty">🖼️</span>
+                <span class="gallery-empty">{{ listing.category|slice:":3" }}</span>
             {% endif %}
         </div>
         {% if listing.images.exists and listing.images.count > 1 %}
@@ -245,19 +193,17 @@
 
     <div class="detail-grid">
         <div>
-            <!-- Description -->
             <div class="card">
-                <div class="card-title">Description</div>
+                <div class="section-title">Description</div>
                 <div class="description">{{ listing.description }}</div>
             </div>
 
-            <!-- Logistics -->
             <div class="card">
-                <div class="card-title">Delivery & Logistics</div>
+                <div class="section-title">Delivery &amp; logistics</div>
                 <div class="info-list">
                     <div class="info-row">
                         <span class="info-label">Delivery option</span>
-                        <span class="info-value">{{ listing.delivery_option|upper }}</span>
+                        <span class="info-value">{{ listing.delivery_option|capfirst }}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Delivery area</span>
@@ -272,21 +218,21 @@
         </div>
 
         <div>
-            <!-- Price + Action card -->
             <div class="card">
-                <div class="card-title">Price Range</div>
+                <div class="section-title">Price range</div>
                 <div class="price-display">₱{{ listing.min_price|floatformat:0|intcomma }} – ₱{{ listing.max_price|floatformat:0|intcomma }}</div>
                 <div class="price-sub">{{ listing.quantity }} {{ listing.unit }} per transaction</div>
 
-                {% if user.consumer_profile and listing.availability == True %}
-                    <a href="{% url 'marketplace:pay_listing' pk=listing.pk %}" class="action-btn action-primary">Buy Now →</a>
-                {% endif %}
-                <a href="{% url 'marketplace:download_toc' pk=listing.pk %}" class="action-btn action-secondary">⬇ Download Terms</a>
+                <div class="action-stack">
+                    {% if user.consumer_profile and listing.availability == True %}
+                        <a href="{% url 'marketplace:pay_listing' pk=listing.pk %}" class="btn btn-primary action-btn-full">Buy now</a>
+                    {% endif %}
+                    <a href="{% url 'marketplace:download_toc' pk=listing.pk %}" class="btn btn-secondary action-btn-full">Download terms</a>
+                </div>
             </div>
 
-            <!-- Business -->
             <div class="card">
-                <div class="card-title">Business</div>
+                <div class="section-title">Business</div>
                 <div class="info-list">
                     <div class="info-row">
                         <span class="info-label">Name</span>

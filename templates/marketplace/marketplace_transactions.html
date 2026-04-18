@@ -1,170 +1,119 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}My Transactions{% endblock %}
+{% block title %}My transactions · PROC{% endblock %}
 
 {% block extra_css %}
 <style>
     .page-wrap { max-width: 1000px; margin: 0 auto; }
 
-    .page-header { margin-bottom: 1.5rem; }
-    .page-title {
-        font-family: 'Syne', sans-serif;
-        font-size: 1.75rem; font-weight: 800;
-        margin-bottom: 0.25rem;
-    }
-    .page-sub { color: var(--muted); font-size: 0.9rem; }
-
     .filter-panel {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 1.25rem 1.5rem;
-        margin-bottom: 1.5rem;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px 20px;
+        margin-bottom: 16px;
     }
     .filter-row {
         display: grid;
         grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
-        gap: 0.75rem;
+        gap: 10px;
         align-items: end;
-        margin-bottom: 0.75rem;
+        margin-bottom: 10px;
     }
     .filter-row-2 {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr 1fr;
-        gap: 0.75rem;
+        gap: 10px;
         align-items: end;
-        margin-bottom: 0.75rem;
     }
-    .filter-field { display: flex; flex-direction: column; gap: 5px; }
+    .filter-field { display: flex; flex-direction: column; gap: 6px; }
     .filter-label {
-        font-size: 0.7rem; font-weight: 600;
+        font-size: 11px; font-weight: 500;
         letter-spacing: 0.08em; text-transform: uppercase;
-        color: var(--muted);
+        color: var(--text-secondary);
     }
     .filter-panel input,
     .filter-panel select {
         width: 100%;
-        padding: 0.55rem 0.7rem;
-        background: rgba(255,255,255,0.05);
-        border: 1px solid var(--border);
-        border-radius: 9px;
-        color: var(--white);
-        font-family: 'DM Sans', sans-serif;
-        font-size: 0.875rem;
+        height: 36px;
+        padding: 8px 12px;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border-strong);
+        border-radius: var(--radius);
+        color: var(--text-primary);
+        font-family: var(--font);
+        font-size: 14px;
         outline: none;
         -webkit-appearance: none;
+        appearance: none;
     }
     .filter-panel input:focus,
     .filter-panel select:focus {
-        border-color: var(--blue);
-        background: rgba(26,86,219,0.08);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(45, 95, 63, 0.12);
     }
-    .filter-panel select option { background: #0f1a30; }
     .filter-actions {
-        display: flex; gap: 0.5rem;
+        display: flex; gap: 8px;
         align-items: center; justify-content: flex-end;
     }
-    .btn {
-        padding: 0.55rem 1.15rem;
-        border-radius: 9px;
-        font-family: 'DM Sans', sans-serif;
-        font-size: 0.85rem; font-weight: 600;
-        cursor: pointer; text-decoration: none;
-        border: 1px solid var(--border);
-        background: transparent; color: var(--white);
-    }
-    .btn:hover { background: rgba(255,255,255,0.06); }
-    .btn-primary {
-        background: linear-gradient(135deg, var(--blue), #2563eb);
-        border-color: transparent; color: #fff;
-        box-shadow: 0 3px 14px rgba(26,86,219,0.35);
-    }
 
-    /* Transaction tabs (kind selector) */
+    /* Kind tabs */
     .kind-tabs {
         display: inline-flex;
-        background: rgba(255,255,255,0.04);
-        border: 1px solid var(--border);
-        border-radius: 10px;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
         padding: 3px;
-        margin-bottom: 1rem;
+        margin-bottom: 14px;
     }
     .kind-tab {
-        padding: 0.45rem 1rem;
-        border-radius: 8px;
-        font-size: 0.82rem; font-weight: 600;
-        color: var(--muted); cursor: pointer;
-        transition: all 0.15s;
+        padding: 7px 14px;
+        border-radius: var(--radius-sm);
+        font-size: 13px; font-weight: 500;
+        color: var(--text-secondary); cursor: pointer;
+        transition: background 0.12s, color 0.12s;
         border: none; background: transparent;
-        font-family: 'DM Sans', sans-serif;
+        font-family: var(--font);
     }
-    .kind-tab:hover { color: var(--white); }
+    .kind-tab:hover { color: var(--text-primary); }
     .kind-tab.active {
-        background: rgba(26,86,219,0.25);
-        color: var(--white);
-        box-shadow: inset 0 0 0 1px rgba(26,86,219,0.4);
+        background: var(--accent-bg);
+        color: var(--accent);
     }
 
     /* Transaction cards */
-    .tx-list { display: flex; flex-direction: column; gap: 0.7rem; }
+    .tx-list { display: flex; flex-direction: column; gap: 8px; }
     .tx-card {
         display: grid;
-        grid-template-columns: 44px 1fr auto;
-        gap: 1rem;
+        grid-template-columns: 1fr auto;
+        gap: 16px;
         align-items: center;
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 1rem 1.25rem;
-        transition: all 0.15s;
-        animation: fadeUp 0.4s ease both;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px 20px;
+        transition: border-color 0.12s;
     }
-    .tx-card:hover {
-        border-color: rgba(26,86,219,0.4);
-        transform: translateY(-1px);
-    }
-    .tx-icon {
-        width: 44px; height: 44px;
-        border-radius: 10px;
-        background: linear-gradient(135deg, rgba(52,211,153,0.15), rgba(16,185,129,0.05));
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.3rem;
-        border: 1px solid rgba(52,211,153,0.2);
-    }
+    .tx-card:hover { border-color: var(--border-strong); }
     .tx-body { min-width: 0; }
     .tx-title {
-        font-family: 'Syne', sans-serif;
-        font-size: 0.98rem; font-weight: 700;
-        color: var(--white);
-        margin-bottom: 0.2rem;
+        font-size: 15px; font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+        letter-spacing: -0.005em;
     }
     .tx-title a { color: inherit; text-decoration: none; }
-    .tx-title a:hover { color: var(--accent); }
+    .tx-title a:hover { color: var(--accent); text-decoration: none; }
     .tx-date {
-        font-size: 0.78rem;
-        color: var(--muted);
+        font-size: 12px;
+        color: var(--text-secondary);
     }
     .tx-amount {
-        font-family: 'Syne', sans-serif;
-        font-size: 1.1rem; font-weight: 800;
-        color: #34d399;
+        font-size: 16px; font-weight: 500;
+        color: var(--text-primary);
+        letter-spacing: -0.005em;
         white-space: nowrap;
-    }
-
-    /* Empty state */
-    .empty-state {
-        text-align: center; padding: 4rem 2rem;
-        background: var(--panel); border: 1px dashed var(--border);
-        border-radius: 16px; color: var(--muted);
-    }
-    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
-    .empty-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--white); margin-bottom: 0.4rem; }
-    .empty-sub { font-size: 0.875rem; }
-
-    @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(10px); }
-        to   { opacity: 1; transform: translateY(0); }
     }
 
     @media (max-width: 760px) {
@@ -176,57 +125,55 @@
 {% block content %}
 <div class="page-wrap">
     <div class="page-header">
-        <div class="page-title">My Transactions</div>
+        <div class="page-eyebrow">Marketplace</div>
+        <div class="page-title">My transactions</div>
         <div class="page-sub">Every deal you have completed in the marketplace.</div>
     </div>
 
-    <!-- Tabs / Kind selector -->
     <form method="get" id="kindForm">
         <div class="kind-tabs">
-            <button type="submit" name="transaction" value="listing" class="kind-tab {% if tk == 'listing' %}active{% endif %}">From Listings</button>
-            <button type="submit" name="transaction" value="consumer_request" class="kind-tab {% if tk == 'consumer_request' %}active{% endif %}">From Requests</button>
+            <button type="submit" name="transaction" value="listing" class="kind-tab {% if tk == 'listing' %}active{% endif %}">From listings</button>
+            <button type="submit" name="transaction" value="consumer_request" class="kind-tab {% if tk == 'consumer_request' %}active{% endif %}">From requests</button>
         </div>
     </form>
 
     <div class="filter-panel">
-        <form method="get">
+        <form method="get" class="form">
             <input type="hidden" name="transaction" value="{{ tk }}">
             <div class="filter-row">
                 <div class="filter-field">
-                    <label class="filter-label">🔍 Keyword</label>
+                    <label class="filter-label">Keyword</label>
                     {{ filter_form.keyword }}
                 </div>
                 <div class="filter-field">
-                    <label class="filter-label">📂 Category</label>
+                    <label class="filter-label">Category</label>
                     {{ filter_form.category }}
                 </div>
                 <div class="filter-field">
-                    <label class="filter-label">
-                        {% if user.business_profile %}Consumer{% else %}Business{% endif %}
-                    </label>
+                    <label class="filter-label">{% if user.business_profile %}Consumer{% else %}Business{% endif %}</label>
                     {{ filter_form.person }}
                 </div>
                 <div class="filter-field">
-                    <label class="filter-label">💰 Min price</label>
+                    <label class="filter-label">Min price</label>
                     {{ filter_form.min_price }}
                 </div>
                 <div class="filter-field">
-                    <label class="filter-label">💰 Max price</label>
+                    <label class="filter-label">Max price</label>
                     {{ filter_form.max_price }}
                 </div>
             </div>
             <div class="filter-row-2">
                 <div class="filter-field">
-                    <label class="filter-label">📅 From</label>
+                    <label class="filter-label">From</label>
                     {{ filter_form.earliest_date }}
                 </div>
                 <div class="filter-field">
-                    <label class="filter-label">📅 To</label>
+                    <label class="filter-label">To</label>
                     {{ filter_form.latest_date }}
                 </div>
                 <div></div>
                 <div class="filter-actions">
-                    <button type="submit" class="btn btn-primary">Search →</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Search</button>
                 </div>
             </div>
         </form>
@@ -236,7 +183,6 @@
     <div class="tx-list">
         {% for transaction in transactions %}
         <div class="tx-card">
-            <div class="tx-icon">{% if tk == 'listing' %}🛍️{% else %}📋{% endif %}</div>
             <div class="tx-body">
                 <div class="tx-title">
                     {% if tk == 'listing' %}
@@ -245,16 +191,15 @@
                         <a href="{% url 'marketplace:consumer_request_detail' pk=transaction.consumer_request.pk %}">{{ transaction.consumer_request.title }}</a>
                     {% endif %}
                 </div>
-                <div class="tx-date">📅 {{ transaction.created_at|date:"M d, Y" }} · {{ transaction.created_at|time:"h:i A" }}</div>
+                <div class="tx-date">{{ transaction.created_at|date:"M d, Y" }} · {{ transaction.created_at|time:"h:i A" }}</div>
             </div>
-            <div class="tx-amount">₱{{ transaction.price|floatformat:2|intcomma }}</div>
+            <div class="tx-amount">₱{{ transaction.price|floatformat:0|intcomma }}</div>
         </div>
         {% endfor %}
     </div>
 
     {% else %}
-    <div class="empty-state">
-        <div class="empty-icon">💳</div>
+    <div class="empty">
         <div class="empty-title">No transactions yet</div>
         <div class="empty-sub">
             {% if user.consumer_profile %}

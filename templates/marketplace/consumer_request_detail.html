@@ -1,165 +1,125 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}Request: {{ cr.title }}{% endblock %}
+{% block title %}{{ cr.title }} · PROC{% endblock %}
 
 {% block extra_css %}
 <style>
     .page-wrap { max-width: 1000px; margin: 0 auto; }
 
     .back-link {
-        display: inline-flex; align-items: center; gap: 5px;
-        font-size: 0.85rem; color: var(--muted);
-        text-decoration: none; margin-bottom: 1rem;
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 13px; color: var(--text-secondary);
+        text-decoration: none; margin-bottom: 14px;
     }
-    .back-link:hover { color: var(--accent); }
+    .back-link:hover { color: var(--accent); text-decoration: none; }
 
-    .detail-header { margin-bottom: 1.25rem; }
+    .detail-header { margin-bottom: 20px; }
     .detail-title {
-        font-family: 'Syne', sans-serif;
-        font-size: 1.95rem; font-weight: 800;
-        line-height: 1.15;
-        margin-bottom: 0.5rem;
+        font-size: 28px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        margin-bottom: 10px;
+        color: var(--text-primary);
     }
     .detail-subline {
-        display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center;
-        font-size: 0.85rem; color: var(--muted);
-    }
-    .resp-count-pill {
-        display: inline-flex; align-items: center; gap: 4px;
-        background: rgba(255,255,255,0.05);
-        border: 1px solid var(--border);
-        padding: 3px 9px; border-radius: 999px;
-        font-size: 0.75rem;
-    }
-    .cat-pill {
-        display: inline-flex; align-items: center;
-        padding: 3px 12px; border-radius: 999px;
-        font-size: 0.72rem; font-weight: 600;
-        background: rgba(56,189,248,0.1);
-        border: 1px solid rgba(56,189,248,0.2);
-        color: var(--accent);
-        text-transform: uppercase; letter-spacing: 0.05em;
+        display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+        font-size: 13px; color: var(--text-secondary);
     }
 
-    /* Image gallery */
     .gallery-main {
         width: 100%; aspect-ratio: 16/9;
-        border-radius: 14px; overflow: hidden;
-        background: linear-gradient(135deg, rgba(167,139,250,0.12), rgba(139,92,246,0.05));
-        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        background: var(--accent-bg);
+        border: 0.5px solid var(--border);
         display: flex; align-items: center; justify-content: center;
-        margin-bottom: 1.5rem;
+        margin-bottom: 20px;
     }
     .gallery-main img { width: 100%; height: 100%; object-fit: cover; }
-    .gallery-empty { font-size: 4rem; opacity: 0.4; }
+    .gallery-empty {
+        font-size: 13px; font-weight: 500;
+        color: var(--accent);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
 
     .detail-grid {
         display: grid;
         grid-template-columns: 1fr 320px;
-        gap: 1.25rem;
+        gap: 14px;
     }
 
-    .card {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 1.25rem 1.4rem;
-        margin-bottom: 1rem;
+    .section-title {
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
     }
-    .card-title {
-        font-family: 'Syne', sans-serif;
-        font-size: 0.78rem; font-weight: 700;
-        letter-spacing: 0.1em; text-transform: uppercase;
-        color: var(--muted);
-        margin-bottom: 0.85rem;
-    }
+
     .price-display {
-        font-family: 'Syne', sans-serif;
-        font-size: 1.7rem; font-weight: 800;
-        color: #34d399;
-        margin-bottom: 1rem;
+        font-size: 24px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        color: var(--text-primary);
+        margin-bottom: 16px;
     }
     .description {
-        color: var(--white);
+        color: var(--text-primary);
         line-height: 1.65;
-        font-size: 0.92rem;
+        font-size: 14px;
         white-space: pre-wrap;
     }
     .info-row {
-        display: flex; justify-content: space-between; gap: 0.75rem;
-        font-size: 0.875rem;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
+        display: flex; justify-content: space-between; gap: 12px;
+        font-size: 14px;
+        padding: 10px 0;
+        border-bottom: 0.5px solid var(--border-subtle);
     }
     .info-row:last-child { border-bottom: none; }
-    .info-label { color: var(--muted); font-size: 0.78rem; }
-    .info-value { color: var(--white); font-weight: 500; text-align: right; }
+    .info-label { color: var(--text-secondary); font-size: 13px; }
+    .info-value { color: var(--text-primary); font-weight: 500; text-align: right; }
 
-    .action-btn {
-        display: block; width: 100%;
-        padding: 0.85rem 1.25rem;
-        border-radius: 10px; border: none;
-        font-family: 'DM Sans', sans-serif;
-        font-size: 0.95rem; font-weight: 700;
-        cursor: pointer; text-align: center;
-        text-decoration: none;
-        transition: all 0.15s;
-        margin-bottom: 0.6rem;
-    }
-    .action-primary {
-        background: linear-gradient(135deg, var(--blue), #2563eb);
-        color: #fff;
-        box-shadow: 0 4px 16px rgba(26,86,219,0.3);
-    }
-    .action-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
-    .action-secondary {
-        background: rgba(255,255,255,0.05);
-        border: 1px solid var(--border);
-        color: var(--white);
-    }
-    .action-secondary:hover { background: rgba(255,255,255,0.1); }
+    .action-stack { display: flex; flex-direction: column; gap: 8px; }
+    .action-btn-full { display: block; width: 100%; text-align: center; }
 
-    .responded-banner {
-        background: rgba(52,211,153,0.1);
-        border: 1px solid rgba(52,211,153,0.3);
-        border-radius: 10px;
-        padding: 0.7rem 1rem;
-        font-size: 0.85rem;
-        color: #34d399;
-        margin-bottom: 0.6rem;
+    .status-banner {
+        padding: 10px 14px;
+        border-radius: var(--radius);
+        font-size: 13px;
+        font-weight: 500;
         text-align: center;
-        font-weight: 600;
+        background: var(--accent-bg);
+        border: 0.5px solid rgba(45,95,63,0.25);
+        color: var(--accent);
     }
-    .accepted-banner {
-        background: rgba(251,191,36,0.1);
-        border: 1px solid rgba(251,191,36,0.3);
-        border-radius: 10px;
-        padding: 0.7rem 1rem;
-        font-size: 0.85rem;
-        color: #fbbf24;
-        margin-bottom: 0.6rem;
-        text-align: center;
-        font-weight: 600;
+    .status-banner.warn {
+        background: var(--warning-bg);
+        border-color: rgba(138,106,31,0.25);
+        color: var(--warning);
     }
 
-    /* Response list (consumer side) */
-    .response-list { display: flex; flex-direction: column; gap: 0.6rem; }
+    .response-list { display: flex; flex-direction: column; gap: 8px; }
     .response-row {
         display: flex; justify-content: space-between; align-items: center;
-        padding: 0.85rem 1rem;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        transition: all 0.15s;
+        padding: 12px 14px;
+        background: var(--bg-faint);
+        border: 0.5px solid var(--border-subtle);
+        border-radius: var(--radius);
+        transition: border-color 0.12s;
     }
-    .response-row:hover { border-color: rgba(26,86,219,0.4); }
-    .response-from { font-size: 0.88rem; font-weight: 600; }
+    .response-row:hover { border-color: var(--border-strong); }
+    .response-from { font-size: 14px; font-weight: 500; color: var(--text-primary); }
     .response-link {
         color: var(--accent); text-decoration: none;
-        font-size: 0.82rem; font-weight: 600;
+        font-size: 13px; font-weight: 500;
     }
     .response-link:hover { text-decoration: underline; }
+
+    .card + .card { margin-top: 12px; }
 
     @media (max-width: 860px) {
         .detail-grid { grid-template-columns: 1fr; }
@@ -178,8 +138,8 @@
     <div class="detail-header">
         <div class="detail-title">{{ cr.title }}</div>
         <div class="detail-subline">
-            <span class="cat-pill">{{ cr.category|upper }}</span>
-            <span class="resp-count-pill">📨 {{ cr.response_count }} response{{ cr.response_count|pluralize }}</span>
+            <span class="pill">{{ cr.category }}</span>
+            <span>{{ cr.response_count|intcomma }} response{{ cr.response_count|pluralize }}</span>
         </div>
     </div>
 
@@ -191,37 +151,37 @@
                 {% endif %}
             {% endfor %}
         {% else %}
-            <span class="gallery-empty">📋</span>
+            <span class="gallery-empty">{{ cr.category|slice:":3" }}</span>
         {% endif %}
     </div>
 
     <div class="detail-grid">
         <div>
             <div class="card">
-                <div class="card-title">Description</div>
+                <div class="section-title">Description</div>
                 <div class="description">{{ cr.description }}</div>
             </div>
 
             {% if user.consumer_profile %}
                 {% if cr.responses.exists and not crt %}
                 <div class="card">
-                    <div class="card-title">Current Responses ({{ cr.responses.count }})</div>
+                    <div class="section-title">Responses ({{ cr.responses.count|intcomma }})</div>
                     <div class="response-list">
                         {% for response in cr.responses.all %}
                         <div class="response-row">
                             <div class="response-from">{{ response.business.business_profile.business_name|default:response.business.username }}</div>
-                            <a href="{% url 'marketplace:business_response_detail' pk=response.pk %}" class="response-link">View →</a>
+                            <a href="{% url 'marketplace:business_response_detail' pk=response.pk %}" class="response-link">View</a>
                         </div>
                         {% endfor %}
                     </div>
                 </div>
                 {% elif crt %}
                 <div class="card">
-                    <div class="card-title">Chosen Response</div>
+                    <div class="section-title">Chosen response</div>
                     <div class="response-list">
                         <div class="response-row">
-                            <div class="response-from">✓ {{ crt.0.business_response.business.business_profile.business_name|default:crt.0.business_response.business.username }}</div>
-                            <a href="{% url 'marketplace:business_response_detail' pk=crt.0.business_response.pk %}" class="response-link">See details →</a>
+                            <div class="response-from">{{ crt.0.business_response.business.business_profile.business_name|default:crt.0.business_response.business.username }}</div>
+                            <a href="{% url 'marketplace:business_response_detail' pk=crt.0.business_response.pk %}" class="response-link">See details</a>
                         </div>
                     </div>
                 </div>
@@ -231,27 +191,29 @@
 
         <div>
             <div class="card">
-                <div class="card-title">Budget</div>
+                <div class="section-title">Budget</div>
                 <div class="price-display">₱{{ cr.min_price|floatformat:0|intcomma }} – ₱{{ cr.max_price|floatformat:0|intcomma }}</div>
 
-                {% if user.business_profile %}
-                    {% if has_responded == True %}
-                        <div class="responded-banner">✓ You have responded</div>
-                        {% if has_chosen_you == False %}
-                            <a href="{% url 'marketplace:business_response_detail' pk=br.pk %}" class="action-btn action-secondary">Check My Response</a>
+                <div class="action-stack">
+                    {% if user.business_profile %}
+                        {% if has_responded == True %}
+                            <div class="status-banner">You have responded</div>
+                            {% if has_chosen_you == False %}
+                                <a href="{% url 'marketplace:business_response_detail' pk=br.pk %}" class="btn btn-secondary action-btn-full">Check my response</a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'marketplace:respond_to_request' pk=cr.pk %}" class="btn btn-primary action-btn-full">Submit response</a>
                         {% endif %}
-                    {% else %}
-                        <a href="{% url 'marketplace:respond_to_request' pk=cr.pk %}" class="action-btn action-primary">Submit Response →</a>
+                        {% if has_chosen_you == True and cr.status != "open" %}
+                            <div class="status-banner warn">Customer chose you</div>
+                            <a href="{% url 'marketplace:business_response_detail' pk=crt.0.business_response.pk %}" class="btn btn-secondary action-btn-full">See deal details</a>
+                        {% endif %}
                     {% endif %}
-                    {% if has_chosen_you == True and cr.status != "open" %}
-                        <div class="accepted-banner">🎉 Customer chose you!</div>
-                        <a href="{% url 'marketplace:business_response_detail' pk=crt.0.business_response.pk %}" class="action-btn action-secondary">See Deal Details</a>
-                    {% endif %}
-                {% endif %}
+                </div>
             </div>
 
             <div class="card">
-                <div class="card-title">Consumer</div>
+                <div class="section-title">Consumer</div>
                 <div class="info-row">
                     <span class="info-label">Name</span>
                     <span class="info-value">{{ cr.consumer.consumer_profile.full_name|default:cr.consumer.username }}</span>

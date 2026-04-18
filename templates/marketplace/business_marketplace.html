@@ -1,109 +1,87 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}Business Marketplace{% endblock %}
+{% block title %}Business marketplace · PROC{% endblock %}
 
 {% block extra_css %}
 <style>
     .page-wrap { max-width: 1100px; margin: 0 auto; }
 
-    .page-header { margin-bottom: 1.75rem; }
-    .page-title {
-        font-family: 'Syne', sans-serif;
-        font-size: 1.85rem; font-weight: 800;
-        margin-bottom: 0.25rem;
-    }
-    .page-sub { color: var(--muted); font-size: 0.9rem; }
-
     .hub-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1.25rem;
+        gap: 16px;
     }
     .hub-card {
-        position: relative;
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 1.5rem 1.5rem 1.4rem;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 22px 24px;
         text-decoration: none;
         color: inherit;
-        transition: all 0.2s;
-        overflow: hidden;
-        animation: fadeUp 0.4s ease both;
+        display: flex;
+        flex-direction: column;
+        transition: border-color 0.12s, background 0.12s;
     }
-    .hub-card::before {
-        content: ''; position: absolute; top: 0; left: 0; right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, var(--blue), var(--accent));
-        opacity: 0.85;
-    }
-    .hub-card:nth-child(2)::before { background: linear-gradient(90deg, #34d399, #10b981); }
-    .hub-card:nth-child(3)::before { background: linear-gradient(90deg, #a78bfa, #8b5cf6); }
     .hub-card:hover {
-        border-color: rgba(26,86,219,0.45);
-        transform: translateY(-3px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+        border-color: var(--border-strong);
+        background: var(--bg-faint);
+        text-decoration: none;
     }
-    .hub-card:nth-child(2):hover { border-color: rgba(52,211,153,0.45); }
-    .hub-card:nth-child(3):hover { border-color: rgba(167,139,250,0.45); }
-
-    .hub-icon {
-        font-size: 2.2rem;
-        margin-bottom: 0.6rem;
-        display: block;
+    .hub-eyebrow {
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 14px;
     }
     .hub-title {
-        font-family: 'Syne', sans-serif;
-        font-size: 1.15rem; font-weight: 700;
-        color: var(--white);
-        margin-bottom: 0.4rem;
+        font-size: 17px; font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+        letter-spacing: -0.005em;
     }
     .hub-desc {
-        font-size: 0.875rem; color: var(--muted);
-        line-height: 1.5;
-        margin-bottom: 1rem;
+        font-size: 13px; color: var(--text-secondary);
+        line-height: 1.55;
+        margin-bottom: 16px;
+        flex: 1;
     }
     .hub-cta {
-        display: inline-flex; align-items: center; gap: 5px;
-        font-size: 0.82rem; font-weight: 600;
+        display: inline-flex; align-items: center; gap: 4px;
+        font-size: 13px; font-weight: 500;
         color: var(--accent);
     }
-
-    @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(12px); }
-        to   { opacity: 1; transform: translateY(0); }
-    }
-    .hub-card:nth-child(2) { animation-delay: 0.08s; }
-    .hub-card:nth-child(3) { animation-delay: 0.16s; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="page-wrap">
     <div class="page-header">
-        <div class="page-title">Marketplace · Business</div>
+        <div class="page-eyebrow">Business</div>
+        <div class="page-title">Marketplace</div>
         <div class="page-sub">Sell your products and services to consumers, or respond to their requests.</div>
     </div>
 
     <div class="hub-grid">
         <a href="{% url 'marketplace:marketplace_requests' %}" class="hub-card">
-            <span class="hub-icon">📥</span>
-            <div class="hub-title">Browse Consumer Requests</div>
+            <div class="hub-eyebrow">Demand</div>
+            <div class="hub-title">Browse consumer requests</div>
             <div class="hub-desc">See what consumers are looking for and respond with your offer.</div>
             <div class="hub-cta">View requests →</div>
         </a>
 
         <a href="{% url 'marketplace:create_listing' %}" class="hub-card">
-            <span class="hub-icon">🏷️</span>
-            <div class="hub-title">Create a Listing</div>
+            <div class="hub-eyebrow">Supply</div>
+            <div class="hub-title">Create a listing</div>
             <div class="hub-desc">Got something to sell? Post a listing for consumers to discover.</div>
             <div class="hub-cta">Post listing →</div>
         </a>
 
         <a href="{% url 'marketplace:transactions' %}" class="hub-card">
-            <span class="hub-icon">💳</span>
-            <div class="hub-title">My Transactions</div>
+            <div class="hub-eyebrow">History</div>
+            <div class="hub-title">My transactions</div>
             <div class="hub-desc">Review every deal you have completed in the marketplace.</div>
             <div class="hub-cta">View history →</div>
         </a>

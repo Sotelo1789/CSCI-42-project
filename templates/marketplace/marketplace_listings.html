@@ -1,249 +1,157 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}Marketplace Listings{% endblock %}
+{% block title %}Marketplace listings · PROC{% endblock %}
 
 {% block extra_css %}
 <style>
-    .page-wrap { max-width: 1100px; margin: 0 auto; }
-
-    .page-header { margin-bottom: 1.5rem; }
-    .page-title {
-        font-family: 'Syne', sans-serif;
-        font-size: 1.75rem; font-weight: 800;
-        margin-bottom: 0.25rem;
-    }
-    .page-sub { color: var(--muted); font-size: 0.9rem; }
+    .page-wrap { max-width: 1200px; margin: 0 auto; }
 
     /* Filter panel */
     .filter-panel {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 1.25rem 1.5rem;
-        margin-bottom: 1.5rem;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px 20px;
+        margin-bottom: 16px;
     }
     .filter-row {
         display: grid;
         grid-template-columns: 2fr 1fr 1fr 1fr 1.2fr 1fr 1fr;
-        gap: 0.75rem;
+        gap: 10px;
         align-items: end;
-        margin-bottom: 0.75rem;
+        margin-bottom: 12px;
     }
-    .filter-field { display: flex; flex-direction: column; gap: 5px; }
+    .filter-field { display: flex; flex-direction: column; gap: 6px; }
     .filter-label {
-        font-size: 0.7rem; font-weight: 600;
+        font-size: 11px; font-weight: 500;
         letter-spacing: 0.08em; text-transform: uppercase;
-        color: var(--muted);
+        color: var(--text-secondary);
     }
     .filter-panel input,
     .filter-panel select {
         width: 100%;
-        padding: 0.55rem 0.7rem;
-        background: rgba(255,255,255,0.05);
-        border: 1px solid var(--border);
-        border-radius: 9px;
-        color: var(--white);
-        font-family: 'DM Sans', sans-serif;
-        font-size: 0.875rem;
+        height: 36px;
+        padding: 8px 12px;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border-strong);
+        border-radius: var(--radius);
+        color: var(--text-primary);
+        font-family: var(--font);
+        font-size: 14px;
         outline: none;
         -webkit-appearance: none;
-        transition: border-color 0.2s, background 0.2s;
+        appearance: none;
     }
     .filter-panel input:focus,
     .filter-panel select:focus {
-        border-color: var(--blue);
-        background: rgba(26,86,219,0.08);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(45, 95, 63, 0.12);
     }
-    .filter-panel input::placeholder { color: rgba(136,153,187,0.45); }
-    .filter-panel select option { background: #0f1a30; }
+    .filter-panel input::placeholder { color: rgba(90,90,85,0.55); }
     .filter-actions {
-        display: flex; gap: 0.5rem;
+        display: flex; gap: 8px;
         align-items: center; justify-content: flex-end;
     }
-    .btn {
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 0.55rem 1.15rem;
-        border-radius: 9px; border: 1px solid var(--border);
-        font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
-        font-weight: 600; cursor: pointer; text-decoration: none;
-        background: transparent; color: var(--white);
-        transition: all 0.15s; white-space: nowrap;
-    }
-    .btn:hover { background: rgba(255,255,255,0.06); }
-    .btn-primary {
-        background: linear-gradient(135deg, var(--blue), #2563eb);
-        border-color: transparent; color: #fff;
-        box-shadow: 0 3px 14px rgba(26,86,219,0.35);
-    }
-    .btn-primary:hover { filter: brightness(1.1); }
-    .btn-ghost { color: var(--muted); }
-    .btn-ghost:hover { color: var(--white); }
 
     /* Results bar */
     .results-bar {
         display: flex; align-items: center; justify-content: space-between;
-        margin-bottom: 1rem;
+        margin-bottom: 12px; padding: 0 4px;
     }
-    .results-count { font-size: 0.85rem; color: var(--muted); }
-    .results-count strong { color: var(--white); }
+    .results-count { font-size: 13px; color: var(--text-secondary); }
+    .results-count strong { color: var(--text-primary); font-weight: 500; }
 
     .per-page-form { display: flex; align-items: center; gap: 8px; }
-    .per-page-form label { font-size: 0.8rem; color: var(--muted); }
+    .per-page-form label { font-size: 12px; color: var(--text-secondary); }
     .per-page-form input {
-        width: 56px; padding: 0.4rem 0.6rem;
-        background: rgba(255,255,255,0.05);
-        border: 1px solid var(--border); border-radius: 8px;
-        color: var(--white); font-size: 0.85rem;
+        width: 56px; height: 30px;
+        padding: 4px 8px;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border-strong);
+        border-radius: var(--radius);
+        color: var(--text-primary); font-size: 13px;
         text-align: center; outline: none;
-        font-family: 'DM Sans', sans-serif; font-weight: 600;
+        font-family: var(--font); font-weight: 500;
         -moz-appearance: textfield;
     }
     .per-page-form input::-webkit-inner-spin-button,
     .per-page-form input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-    .per-page-form input:focus { border-color: var(--blue); }
-    .per-page-btn {
-        padding: 0.4rem 0.75rem;
-        background: rgba(255,255,255,0.05);
-        border: 1px solid var(--border); border-radius: 8px;
-        color: var(--muted); font-size: 0.8rem;
-        font-weight: 600; cursor: pointer;
-        transition: all 0.15s;
-    }
-    .per-page-btn:hover { background: rgba(255,255,255,0.1); color: var(--white); }
 
-    /* Listing cards */
+    /* Listing grid */
     .listing-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 14px;
     }
     .listing-card {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 14px;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
         overflow: hidden;
-        transition: all 0.2s;
-        animation: fadeUp 0.4s ease both;
+        transition: border-color 0.12s;
         display: flex; flex-direction: column;
     }
-    .listing-card:hover {
-        border-color: rgba(26,86,219,0.4);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 26px rgba(0,0,0,0.3);
-    }
+    .listing-card:hover { border-color: var(--border-strong); }
 
     .listing-thumb {
-        width: 100%; height: 170px;
-        background: linear-gradient(135deg, rgba(26,86,219,0.12), rgba(56,189,248,0.05));
+        width: 100%; height: 160px;
+        background: var(--bg-secondary);
         display: flex; align-items: center; justify-content: center;
         position: relative;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 0.5px solid var(--border-subtle);
         overflow: hidden;
     }
     .listing-thumb img {
         width: 100%; height: 100%;
         object-fit: cover;
     }
-    .listing-thumb-empty { font-size: 2.4rem; opacity: 0.4; }
 
     .fav-pill {
         position: absolute; top: 10px; right: 10px;
-        background: rgba(15,26,48,0.85);
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 999px;
-        padding: 5px 10px;
-        font-size: 0.78rem; font-weight: 600;
-        color: var(--white); text-decoration: none;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border-strong);
+        border-radius: var(--radius-sm);
+        padding: 4px 10px;
+        font-size: 11px; font-weight: 500;
+        color: var(--text-secondary); text-decoration: none;
         display: inline-flex; align-items: center; gap: 4px;
-        transition: all 0.15s;
+        transition: background 0.12s, color 0.12s;
     }
-    .fav-pill:hover { background: rgba(15,26,48,0.95); transform: scale(1.05); }
-    .fav-pill.faved { color: #fbbf24; }
+    .fav-pill:hover { background: var(--bg-faint); color: var(--text-primary); text-decoration: none; }
+    .fav-pill.faved { color: var(--accent); border-color: rgba(45,95,63,0.25); background: var(--accent-bg); }
 
-    .listing-body { padding: 1rem 1.15rem 1.15rem; flex: 1; display: flex; flex-direction: column; }
+    .listing-body { padding: 14px 16px 16px; flex: 1; display: flex; flex-direction: column; }
     .listing-title {
-        font-family: 'Syne', sans-serif;
-        font-size: 1rem; font-weight: 700;
-        color: var(--white); text-decoration: none;
-        line-height: 1.3;
-        margin-bottom: 0.35rem;
+        font-size: 14px; font-weight: 500;
+        color: var(--text-primary); text-decoration: none;
+        line-height: 1.35;
+        margin-bottom: 4px;
+        letter-spacing: -0.005em;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
-    .listing-title:hover { color: var(--accent); }
+    .listing-title:hover { color: var(--accent); text-decoration: none; }
     .listing-business {
-        font-size: 0.78rem; color: var(--muted);
-        margin-bottom: 0.6rem;
+        font-size: 12px; color: var(--text-secondary);
+        margin-bottom: 8px;
         display: flex; align-items: center; gap: 6px;
-    }
-    .rating-pill {
-        display: inline-flex; align-items: center; gap: 3px;
-        font-size: 0.72rem; font-weight: 600;
-        padding: 2px 8px; border-radius: 999px;
-        background: rgba(251,191,36,0.12);
-        border: 1px solid rgba(251,191,36,0.3);
-        color: #fbbf24;
-    }
-    .rating-unrated {
-        background: rgba(136,153,187,0.1);
-        border-color: rgba(136,153,187,0.25);
-        color: var(--muted);
+        flex-wrap: wrap;
     }
     .listing-price {
-        font-family: 'Syne', sans-serif;
-        font-size: 1.05rem; font-weight: 700;
-        color: #34d399;
-        margin-bottom: 0.6rem;
+        font-size: 14px; font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 8px;
     }
     .listing-meta {
-        display: flex; flex-wrap: wrap; gap: 0.4rem;
+        display: flex; flex-wrap: wrap; gap: 6px;
         margin-top: auto;
-        padding-top: 0.7rem;
-        border-top: 1px solid rgba(255,255,255,0.05);
-        font-size: 0.78rem;
-        color: var(--muted);
-    }
-    .listing-meta-item { display: inline-flex; align-items: center; gap: 4px; }
-
-    /* Empty state */
-    .empty-state {
-        text-align: center; padding: 4rem 2rem;
-        background: var(--panel); border: 1px dashed var(--border);
-        border-radius: 16px; color: var(--muted);
-    }
-    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
-    .empty-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--white); margin-bottom: 0.4rem; }
-    .empty-sub { font-size: 0.875rem; }
-
-    /* Pagination */
-    .pagination {
-        display: flex; align-items: center; justify-content: space-between;
-        margin-top: 1.5rem; padding-top: 1rem;
-        border-top: 1px solid var(--border);
-    }
-    .page-links { display: flex; gap: 0.4rem; }
-    .page-link {
-        padding: 0.45rem 0.85rem;
-        border-radius: 8px; border: 1px solid var(--border);
-        color: var(--muted); text-decoration: none;
-        font-size: 0.825rem; font-weight: 500;
-        transition: all 0.15s;
-    }
-    .page-link:hover { background: rgba(255,255,255,0.06); color: var(--white); }
-    .page-link.current {
-        background: rgba(26,86,219,0.2);
-        border-color: rgba(26,86,219,0.4);
-        color: var(--white);
-    }
-    .page-info { font-size: 0.82rem; color: var(--muted); }
-
-    @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(12px); }
-        to   { opacity: 1; transform: translateY(0); }
+        padding-top: 10px;
+        border-top: 0.5px solid var(--border-subtle);
+        font-size: 12px;
+        color: var(--text-secondary);
     }
 
     @media (max-width: 860px) { .filter-row { grid-template-columns: 1fr 1fr; } }
@@ -254,87 +162,83 @@
 {% block content %}
 <div class="page-wrap">
     <div class="page-header">
-        <div class="page-title">Marketplace · Listings</div>
+        <div class="page-eyebrow">Marketplace</div>
+        <div class="page-title">Listings</div>
         <div class="page-sub">Browse products and services offered by approved businesses.</div>
     </div>
 
-    <!-- Filter panel -->
     <div class="filter-panel">
         <form method="get">
             <div class="filter-row">
                 <div class="filter-field">
-                    <label class="filter-label">🔍 Keyword</label>
+                    <label class="filter-label">Keyword</label>
                     {{ filter_form.keyword }}
                 </div>
                 <div class="filter-field">
-                    <label class="filter-label">📂 Category</label>
+                    <label class="filter-label">Category</label>
                     {{ filter_form.category }}
                 </div>
                 <div class="filter-field">
-                    <label class="filter-label">💰 Min price</label>
+                    <label class="filter-label">Min price</label>
                     {{ filter_form.min_price }}
                 </div>
                 <div class="filter-field">
-                    <label class="filter-label">💰 Max price</label>
+                    <label class="filter-label">Max price</label>
                     {{ filter_form.max_price }}
                 </div>
                 <div class="filter-field">
-                    <label class="filter-label">📍 Area</label>
+                    <label class="filter-label">Area</label>
                     {{ filter_form.area }}
                 </div>
                 <div class="filter-field">
-                    <label class="filter-label">⭐ Min rating</label>
+                    <label class="filter-label">Min rating</label>
                     {{ filter_form.rating }}
                 </div>
                 <div class="filter-field">
-                    <label class="filter-label">📦 Availability</label>
+                    <label class="filter-label">Availability</label>
                     {{ filter_form.availability }}
                 </div>
             </div>
             <input type="hidden" name="dictate" value="{{ page_item_count }}">
             <div class="filter-actions">
-                <a href="{% url 'marketplace:marketplace_listings' %}" class="btn btn-ghost">✕ Clear</a>
-                <button type="submit" class="btn btn-primary">Filter →</button>
+                <a href="{% url 'marketplace:marketplace_listings' %}" class="btn btn-ghost btn-sm">Clear</a>
+                <button type="submit" class="btn btn-primary btn-sm">Filter</button>
             </div>
         </form>
     </div>
 
-    <!-- Results bar -->
     {% if listings %}
     <div class="results-bar">
         <div class="results-count">
             Showing <strong>{{ page_listings.start_index }}–{{ page_listings.end_index }}</strong>
-            of <strong>{{ listings|length }}</strong> listing{{ listings|length|pluralize }}
+            of <strong>{{ listings|length|intcomma }}</strong> listing{{ listings|length|pluralize }}
         </div>
         <form method="get" class="per-page-form">
             {% for k, v in request.GET.items %}{% if k != 'dictate' and k != 'page' %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}{% endfor %}
-            <label>Per page:</label>
+            <label>Per page</label>
             <input type="number" name="dictate" min="1" max="100" value="{{ page_item_count }}">
-            <button type="submit" class="per-page-btn">Apply</button>
+            <button type="submit" class="btn btn-secondary btn-sm">Apply</button>
         </form>
     </div>
 
-    <!-- Listing grid -->
     <div class="listing-grid">
         {% for listing in page_listings %}
         <div class="listing-card">
             <div class="listing-thumb">
-                {% with primary=None %}
                 {% for image in listing.images.all %}
                     {% if image.is_primary %}
                         <img src="{{ image.image.url }}" alt="{{ listing.title }}">
                     {% endif %}
                 {% endfor %}
                 {% if not listing.images.exists %}
-                    <span class="listing-thumb-empty">🖼️</span>
+                    <span class="category-monogram">{{ listing.category|slice:":3"|default:"IMG" }}</span>
                 {% endif %}
-                {% endwith %}
                 {% for favedlisting in page_favedlistings %}
                     {% if forloop.counter == forloop.parentloop.counter %}
                         {% if favedlisting.0 == True %}
-                            <a href="{% url 'marketplace:unfavorite' pk=favedlisting.1 %}" class="fav-pill faved">★ Faved</a>
+                            <a href="{% url 'marketplace:unfavorite' pk=favedlisting.1 %}" class="fav-pill faved">Saved</a>
                         {% else %}
-                            <a href="{% url 'marketplace:set_favorite' pk=favedlisting.1 %}" class="fav-pill">☆ Save</a>
+                            <a href="{% url 'marketplace:set_favorite' pk=favedlisting.1 %}" class="fav-pill">Save</a>
                         {% endif %}
                     {% endif %}
                 {% endfor %}
@@ -344,14 +248,14 @@
                 <div class="listing-business">
                     {{ listing.business.business_profile.business_name|default:listing.business.username }}
                     {% if listing.business.business_profile.rating != 0 %}
-                        <span class="rating-pill">★ {{ listing.business.business_profile.rating }}</span>
+                        <span class="pill">{{ listing.business.business_profile.rating }} ★</span>
                     {% else %}
-                        <span class="rating-pill rating-unrated">Unrated</span>
+                        <span class="pill pill-neutral">Unrated</span>
                     {% endif %}
                 </div>
                 <div class="listing-price">₱{{ listing.min_price|floatformat:0|intcomma }} – ₱{{ listing.max_price|floatformat:0|intcomma }}</div>
                 <div class="listing-meta">
-                    <span class="listing-meta-item">📍 {{ listing.delivery_area|truncatechars:24 }}</span>
+                    <span>{{ listing.delivery_area|truncatechars:30 }}</span>
                 </div>
             </div>
         </div>
@@ -362,26 +266,24 @@
     <div class="pagination">
         <div class="page-links">
             {% if page_listings.has_previous %}
-                <a class="page-link" href="?page=1&{{ request_get }}">« First</a>
-                <a class="page-link" href="?page={{ page_listings.previous_page_number }}&{{ request_get }}">‹ Prev</a>
+                <a class="page-link" href="?page=1&{{ request_get }}">First</a>
+                <a class="page-link" href="?page={{ page_listings.previous_page_number }}&{{ request_get }}">Prev</a>
             {% endif %}
             <span class="page-link current">{{ page_listings.number }}</span>
             {% if page_listings.has_next %}
-                <a class="page-link" href="?page={{ page_listings.next_page_number }}&{{ request_get }}">Next ›</a>
-                <a class="page-link" href="?page={{ page_listings.paginator.num_pages }}&{{ request_get }}">Last »</a>
+                <a class="page-link" href="?page={{ page_listings.next_page_number }}&{{ request_get }}">Next</a>
+                <a class="page-link" href="?page={{ page_listings.paginator.num_pages }}&{{ request_get }}">Last</a>
             {% endif %}
         </div>
         <div class="page-info">
             Page {{ page_listings.number }} of {{ page_listings.paginator.num_pages }}
-            &nbsp;·&nbsp;
-            {{ listings|length }} result{{ listings|length|pluralize }}
+            · {{ listings|length|intcomma }} result{{ listings|length|pluralize }}
         </div>
     </div>
     {% endif %}
 
     {% else %}
-    <div class="empty-state">
-        <div class="empty-icon">🛍️</div>
+    <div class="empty">
         <div class="empty-title">No listings available</div>
         <div class="empty-sub">Check back later — new listings are posted regularly.</div>
     </div>
