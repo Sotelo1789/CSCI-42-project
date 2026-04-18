@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Consumer Request: {{ cr.title }}{% endblock %}
+
+{% block content %}
+<h1>{{ cr.title }}</h1>
+<p>Responded: {{ cr.response_count }}</p>
+{% if user.business_profile %}
+    {% if has_responded == True %}
+        <p>You have responded</p>
+        {% if has_chosen_you == False %}
+            <button><a href="{% url 'marketplace:business_response_detail' pk=br.pk %}">Check Response?</a></button>
+        {% endif %}
+    {% else %}
+        <p>You have not responded</p>
+        <button><a href="{% url 'marketplace:respond_to_request' pk=cr.pk %}">Write Response?</a></button>
+    {% endif %}
+    {% if has_chosen_you == True and cr.status != "open" %}
+        <p>Customer bought from you!</p>
+        <p><a href="{% url 'marketplace:business_response_detail' pk=crt.0.business_response.pk %}">See details</a></p>
+    {% endif %}
+{% endif %}
+<div>
+    <p>Category: {{ cr.category|upper }}</p>
+    <p>Pricing: {{ cr.min_price }} - {{ cr.max_price }}</p>
+</div>
+<p>Consumer: {{ cr.consumer.consumer_profile.full_name }}</p>
+<p>{{ cr.description }}</p>
+{% if cr.images.exists %}
+    {% for image in cr.images.all %}
+        <img src="{{ image.image.url }}" alt="Image {{ forloop.counter }}">
+    {% endfor %}
+{% endif %}
+{% if user.consumer_profile %}
+    {% if cr.responses.exists and not crt %}
+        <h1>Current Responses:</h1>
+        {% for response in cr.responses.all %}
+            <p>From: {{ response.business.business_profile }} <a href="{% url 'marketplace:business_response_detail' pk=response.pk %}">View?</a></p>
+        {% endfor %}
+    {% elif crt %}
+        <h1>Chosen Response</h1>
+        <p>Addressed by {{ crt.0.business_response.business.business_profile }} <a href="{% url 'marketplace:business_response_detail' pk=crt.0.business_response.pk %}">See details</a></p>
+    {% endif %}
+{% endif %}
+
+{% endblock %}

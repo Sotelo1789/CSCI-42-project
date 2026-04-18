@@ -248,12 +248,18 @@
             <a href="{% url 'dashboard:dashboard' %}" class="nav-link active">
                 <span class="nav-icon">🏠</span> Dashboard
             </a>
-            <a href="{% url 'marketplace:marketplace' %}" class="nav-link">
+            {% if user.business_profile %}
+            <a href="{% url 'marketplace:business_marketplace' %}" class="nav-link">
                 <span class="nav-icon">🛒</span> Marketplace
             </a>
+            {% else %}
+            <a href="{% url 'marketplace:consumer_marketplace' %}" class="nav-link">
+                <span class="nav-icon">🛒</span> Marketplace
+            </a>
+            {% endif %}
         </div>
 
-        {% if user.is_business %}
+        {% if user.business_profile %}
         <div class="nav-section">
             <div class="nav-label">As Seller</div>
             <a href="{% url 'purchase_requests:available_list' %}" class="nav-link">
@@ -305,7 +311,7 @@
             <div class="subheading">Here's what's happening with your account.</div>
         </div>
 
-        {% if user.is_business %}
+        {% if user.business_profile %}
 
         <!-- Stats -->
         <div class="stats-grid">
@@ -415,7 +421,11 @@
             </div>
         </div>
         <div class="actions-grid" style="grid-template-columns: 1fr 1fr;">
-            <a href="{% url 'marketplace:marketplace' %}" class="action-card">
+            {% if user.business_profile %}
+            <a href="{% url 'marketplace:business_marketplace' %}" class="action-card">
+            {% else %}
+            <a href="{% url 'marketplace:consumer_marketplace' %}" class="action-card">
+            {% endif %}
                 <div class="action-icon">🛒</div>
                 <div class="action-title">Marketplace</div>
                 <div class="action-desc">Browse and post listings</div>

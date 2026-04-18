@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Marketplace Listings{% endblock %}
+
+{% block extra_css %}
+<!--TODO in iter4-->
+{% endblock %}
+
+{% block content %}
+<h1>Marketplace Listings</h1>
+<form method="get" style="margin-bottom: 1rem;">
+    <p>{{ filter_form.keyword.label }}: {{ filter_form.keyword }}</p>
+    <p>{{ filter_form.category.label }}: {{ filter_form.category }}</p>
+    <p> Price Range: {{ filter_form.min_price }} to {{ filter_form.max_price }}</p>
+    <p>{{ filter_form.area.label }}: {{ filter_form.area }}</p>
+	<p>{{ filter_form.rating.label }} (If filled, unrated businesses will not show): {{ filter_form.rating }}</p>
+    <p>{{ filter_form.availability.label }}: {{ filter_form.availability }}</p>
+	<button type="submit">Filter</button>
+</form>
+{% if listings %}
+    {% for listing in page_listings %}
+        <div>
+            <p>Title: <a href="{% url 'marketplace:listing_detail' pk=listing.pk %}">{{ listing.title }}</a></p>
+            <p>Business: {{ listing.business.business_profile }}</p>
+            {% if listing.business.business_profile.rating != 0 %}
+                <p>Business Rating: {{ listing.business.business_profile.rating }}</p>
+            {% else %}
+                <p>Unrated Business</p>
+            {% endif %}
+            <p>Price Range: {{ listing.min_price }} - {{ listing.max_price}}</p>
+            <p>Location/Delivery Area: {{ listing.delivery_area }}</p>
+            <p>Business Contact: {{ listing.business.business_profile.rep_contact }}</p>
+            {% for favedlisting in page_favedlistings %}
+                {% if forloop.counter == forloop.parentloop.counter %}
+                    {% if favedlisting.0 == True %}
+                        <p style="color: yellow">Favorited</p>
+                        <button><a href="{% url 'marketplace:unfavorite' pk=favedlisting.1 %}">Unfavorite?</a></button>
+                    {% else %}
+                        <p style="color:grey">Not Favorite</p>
+                        <button><a href="{% url 'marketplace:set_favorite' pk=favedlisting.1 %}">Set Favorite?</a></button>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+            {% if listing.images.exists %}
+                {% for image in listing.images.all %}
+                    {% if image.is_primary == True %}
+                        <img src="{{ image.image.url }}" alt="Thumbnail">
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        </div>
+        <br>
+    {% endfor %}
+
+    {% if page_listings.paginator.num_pages %}
+    <div class="pagination">
+        <div class="page-links">
+            {% if page_listings.has_previous %}
+                <a class="page-link" href="?page=1&{{ request_get }}">« First</a>
+                <a class="page-link" href="?page={{ page_listings.previous_page_number }}&{{ request_get }}">‹ Prev</a>
+            {% endif %}
+            <span class="page-link current">{{ page_listings.number }}</span>
+            {% if page_listings.has_next %}
+                <a class="page-link" href="?page={{ page_listings.next_page_number }}&{{ request_get }}">Next ›</a>
+                <a class="page-link" href="?page={{ page_listings.paginator.num_pages }}&{{ request_get }}">Last »</a>
+            {% endif %}
+        </div>
+        <div class="page-info">
+            Page {{ page_listings.number }} of {{ page_listings.paginator.num_pages }}
+            &nbsp;·&nbsp;
+            {{ listings|length }} result{{ listings|length|pluralize }}
+        </div>
+    </div>
+    <div>
+        <p>There 
+        {% if is_one_per_page %}
+            is 1 item 
+        {% else %}
+            are {{ page_item_count }} items
+        {% endif %}
+        per page </p>
+        <form method="get" style="margin-bottom: 1rem;">
+            {{ dictate_form.dictate }}
+            <button type="submit">Change Item Count</button>
+        </form>
+    </div>
+    {% endif %}
+
+{% else %}
+    <p>No Listings Available. Come back at a different time!</p>
+{% endif %}
+
+{% endblock %}
