@@ -7,7 +7,7 @@ class CreateListing(forms.ModelForm):
     class Meta:
         model = Listing
         exclude = ['business', 'created_at', 'updated_at', 'availability', 'view_count']
-    
+
     def clean_toc(self):
         toc = self.cleaned_data.get('terms_conditions')
 
@@ -82,13 +82,13 @@ class CreateConsumerRequest(forms.ModelForm):
 
     def clean_needed_by(self):
         needed_by = self.cleaned_data.get('needed_by')
-        
+
         if needed_by <= timezone.now():
             raise forms.ValidationError(
                 'The needed date and time must be in the future.'
             )
         return needed_by
-    
+
     def clean(self):
         cleaned_data = super().clean()
         min_price = cleaned_data.get('min_price')
@@ -117,8 +117,8 @@ class RespondToRequest(forms.ModelForm):
         }
 
     def clean_earliest_delivery(self):
-        earliest_delivery = self.cleaned_data.get('earliest_delivery')  
-        
+        earliest_delivery = self.cleaned_data.get('earliest_delivery')
+
         if earliest_delivery <= timezone.now():
             raise forms.ValidationError(
                 'The needed date and time must be in the future.'
@@ -128,7 +128,7 @@ class RespondToRequest(forms.ModelForm):
 
     def clean_latest_delivery(self):
         latest_delivery = self.cleaned_data.get('latest_delivery')
-        
+
         if latest_delivery <= timezone.now():
             raise forms.ValidationError(
                 'The needed date and time must be in the future.'
@@ -146,7 +146,7 @@ class RespondToRequest(forms.ModelForm):
                 raise forms.ValidationError(
                     'Rearrange the dates and times'
                 )
-        
+
         return cleaned_data
 
     def clean_quotation(self):

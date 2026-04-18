@@ -64,7 +64,7 @@ def marketplace_listings_view(request):
                 listings = listings.filter(availability=False)
 
     print(listings)
-    
+
     paginatorl = Paginator(listings, page_item_count)
     page_number = request.GET.get("page")
     page_listings = paginatorl.get_page(page_number)
@@ -85,7 +85,7 @@ def marketplace_listings_view(request):
         list_order += 1
 
     print(page_favedlistings)
-    
+
     ctx = {
         "listings": listings,
         "page_listings": page_listings,
@@ -110,14 +110,14 @@ def business_marketplace_view(request):
 def marketplace_consumer_requests_view(request):
     if not hasattr(request.user,"business_profile"):
         return redirect('dashboard:dashboard')
-    
+
     page_item_count = 15
     dictate_form = AmountInPage(request.GET or None)
     if dictate_form.is_valid():
         page_item_count = dictate_form.cleaned_data['dictate'] or 15
 
     crs = ConsumerRequest.objects.filter(status='open')
-    
+
     filter_form = RequestSearchFilterForm(request.GET or None)
     if filter_form.is_valid():
         kw = filter_form.cleaned_data.get('keyword')
@@ -125,7 +125,7 @@ def marketplace_consumer_requests_view(request):
         bmin = filter_form.cleaned_data.get('min_price')
         bmax = filter_form.cleaned_data.get('max_price')
         area = filter_form.cleaned_data.get('delivery_area')
-        
+
         if kw:
             from django.db.models import Q
             crs = crs.filter(
@@ -139,7 +139,7 @@ def marketplace_consumer_requests_view(request):
             crs = crs.filter(max_price__lte=bmax)
         if area:
             crs = crs.filter(delivery_area__icontains=area)
-        
+
     paginator = Paginator(crs, page_item_count)
     page_number = request.GET.get("page")
     page_consumer_requests = paginator.get_page(page_number)
@@ -169,7 +169,7 @@ def marketplace_consumer_requests_view(request):
         "is_one_per_page": is_one_per_page,
         "request_get": "&".join(f"{k}={v}" for k, v in request.GET.items() if k != "page"),
     }
-    
+
     return render(request, 'marketplace/marketplace_requests.html', ctx)
 
 @login_required
@@ -189,10 +189,10 @@ def create_listing_view(request):
             listing = form.save(commit=False)
             listing.business = request.user
             listing.save()
-            
+
             is_primary = True
             listimages = [None]*5
-            
+
             for order, image in enumerate(images, start=0):
                 listimages[order] = ListingImage.objects.create(
                     listing=listing,
@@ -234,9 +234,9 @@ def listing_detail_view(request, pk):
 def respond_to_request_view(request, pk):
     if not hasattr(request.user,"business_profile"):
         return redirect('dashboard:dashboard')
-    
+
     cr = get_object_or_404(ConsumerRequest, pk=pk)
-    if cr.status != "open": 
+    if cr.status != "open":
         messages.error(request, "That Consumer Request is no longer open")
         return redirect('dashboard:dashboard')
 
@@ -244,7 +244,7 @@ def respond_to_request_view(request, pk):
         form = RespondToRequest(request.POST, request.FILES)
 
         if form.is_valid():
-            
+
             br = form.save(commit=False)
             br.business = request.user
             br.consumer_request = cr
@@ -252,12 +252,12 @@ def respond_to_request_view(request, pk):
 
             cr.response_count = cr.response_count + 1
             cr.save()
-            
+
             messages.success(request, 'You have successfully created a business response.')
             return redirect('marketplace:consumer_request_detail', pk=cr.pk)
     else:
         form = RespondToRequest()
-    
+
     # TODO: implement business response creation
     return render(request, 'marketplace/respond_to_request.html', {'form': form, 'cr': cr})
 
@@ -285,7 +285,7 @@ def business_response_view(request, pk):
 def create_consumer_request_view(request):
     if not hasattr(request.user,"consumer_profile"):
         return redirect('dashboard:dashboard')
-    
+
     if request.method == 'POST':
         form = CreateConsumerRequest(request.POST, request.FILES)
 
@@ -294,13 +294,13 @@ def create_consumer_request_view(request):
             if len(images) > 5:
                 messages.error(request, "You may only upload up to 5 images.")
                 return redirect('marketplace:create_consumer_request')
-            
+
             cr = form.save(commit=False)
             cr.consumer = request.user
             cr.save()
-            
+
             crimages = [None]*5
-            
+
             for order, image in enumerate(images, start=0):
                 crimages[order] = ConsumerRequestImage.objects.create(
                     consumer_request=cr,
@@ -311,7 +311,7 @@ def create_consumer_request_view(request):
             return redirect('marketplace:consumer_request_detail', pk=cr.pk)
     else:
         form = CreateConsumerRequest()
-    
+
     # TODO: implement consumer request creation
     return render(request, 'marketplace/create_consumer_request.html', {'form': form})
 
@@ -344,7 +344,7 @@ def consumer_request_detail_view(request, pk):
         crt = None
 
     has_chosen_you = ConsumerRequestTransaction.objects.filter(consumer_request=cr, business_response__business=request.user).exists()
-    
+
     ctx = {
         'cr': cr,
         'br': br,
@@ -382,7 +382,7 @@ def set_favorite(request, pk):
             consumer=consumer,
             listing=listing,
         )
-    
+
     return redirect('marketplace:marketplace_listings')
 
 @login_required
@@ -395,7 +395,7 @@ def unfavorite(request, pk):
 
     if favlisting.exists():
         favlisting.delete()
-    
+
     return redirect('marketplace:marketplace_listings')
 
 @login_required
@@ -411,7 +411,7 @@ def set_favorite_in_detail(request, pk):
             consumer=consumer,
             listing=listing,
         )
-    
+
     return redirect('marketplace:listing_detail',pk=pk)
 
 @login_required
@@ -424,14 +424,14 @@ def unfavorite_in_detail(request, pk):
 
     if favlisting.exists():
         favlisting.delete()
-    
+
     return redirect('marketplace:listing_detail',pk=pk)
 
 @login_required
 def pay_listing_view(request, pk):
     if not hasattr(request.user,"consumer_profile"):
         return redirect('dashboard:dashboard')
-    
+
     listing = get_object_or_404(Listing,pk=pk)
 
     if listing.availability == False:
@@ -445,7 +445,7 @@ def pay_listing_view(request, pk):
             lt.consumer = request.user
             lt.listing = listing
             lt.save()
-            
+
             messages.success(request, 'You have successfully bought something. For smoother proceedings, have the decided amount ready to give to the business')
             return redirect('marketplace:listing_detail', pk=pk)
     else:
@@ -462,12 +462,12 @@ def pay_listing_view(request, pk):
 def pay_response(request, pk):
     if not hasattr(request.user,"consumer_profile"):
         return redirect('dashboard:dashboard')
-    
+
     business_response = get_object_or_404(BusinessResponse,pk=pk)
 
     if business_response.consumer_request.needed_by <= timezone.now():
         return redirect('marketplace:business_response_detail', pk=pk)
-    
+
     ConsumerRequestTransaction.objects.create(
         business_response=business_response,
         consumer_request=business_response.consumer_request,
@@ -477,7 +477,7 @@ def pay_response(request, pk):
     consumer_request = business_response.consumer_request
     consumer_request.status = 'closed'
     consumer_request.save()
-            
+
     messages.success(request, 'You have successfully bought something. For smoother proceedings, have the decided amount ready to give to the business')
     return redirect('marketplace:business_response_detail', pk=pk)
 
@@ -489,7 +489,7 @@ def my_transactions_view(request):
     elif hasattr(request.user,"business_profile"):
         tk = "consumer_request"
         transactions = ConsumerRequestTransaction.objects.filter(business_response__business=request.user)
-    
+
     filter_form = ChooseTransactionKind(request.GET or None)
     if filter_form.is_valid():
         print(filter_form.cleaned_data.get('transaction'))
@@ -504,7 +504,7 @@ def my_transactions_view(request):
                 transactions = ListingTransaction.objects.filter(listing__business=request.user)
             elif tk == 'consumer_request':
                 transactions = ConsumerRequestTransaction.objects.filter(business_response__business=request.user)
-            
+
         kw = filter_form.cleaned_data.get('keyword')
         cat = filter_form.cleaned_data.get('category')
         min_price = filter_form.cleaned_data.get('min_price')
@@ -536,7 +536,7 @@ def my_transactions_view(request):
             transactions = transactions.filter(created_at__gte=edate)
         if ldate is not None:
             transactions = transactions.filter(created_at__lte=ldate)
-    
+
     ctx = {
         'transactions': transactions,
         'tk': tk,

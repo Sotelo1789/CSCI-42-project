@@ -40,5 +40,4 @@ urlpatterns = [
     path('response/<int:pk>/download/quotation', views.download_quotation, name='download_quotation'), #DONE
     # potential TODO path('chat/listing/<int:pk>', views.chat_over_listing_view, name='chat_over_listing),
     # potential TODO path('chat/response/<int:pk>', views.chat_over_response_view, name='chat_over_response),
-    
 ]
