@@ -192,6 +192,13 @@ a:hover { text-decoration: underline; }
     font-weight: 500;
     flex-shrink: 0;
     text-transform: uppercase;
+    overflow: hidden;
+}
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 .user-info { overflow: hidden; min-width: 0; }
 .user-name {

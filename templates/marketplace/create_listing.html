@@ -72,6 +72,33 @@
     .form-fields input::placeholder,
     .form-fields textarea::placeholder { color: rgba(136,153,187,0.45); }
     .form-fields select option { background: #0f1a30; }
+    .form-fields input[type="file"] {
+        padding: 0.5rem;
+        background: var(--bg-faint);
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        cursor: pointer;
+    }
+    .form-fields input[type="file"]::file-selector-button,
+    .file-upload input[type="file"]::file-selector-button {
+        margin-right: 0.8rem;
+        padding: 0.7rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--bg-surface);
+        color: var(--text-primary);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    }
+    .form-fields input[type="file"]::file-selector-button:hover,
+    .file-upload input[type="file"]::file-selector-button:hover {
+        background: var(--accent-bg);
+        border-color: rgba(45, 95, 63, 0.25);
+        transform: translateY(-1px);
+    }
     .form-fields ul.errorlist {
         list-style: none; padding: 0; margin: 6px 0 0;
         color: var(--danger); font-size: 0.8rem;
@@ -93,11 +120,16 @@
     }
     .file-upload-hint { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.85rem; }
     .file-upload input[type="file"] {
-        background: transparent !important;
-        border: none !important;
-        padding: 0 !important;
-        color: var(--muted) !important;
-        font-size: 0.85rem !important;
+        width: 100%;
+        max-width: 440px;
+        margin: 0 auto;
+        background: var(--bg-faint) !important;
+        border: 1px solid var(--border) !important;
+        padding: 0.5rem !important;
+        color: var(--text-secondary) !important;
+        font-size: 0.9rem !important;
+        border-radius: 14px;
+        cursor: pointer;
     }
 
     .button-row {

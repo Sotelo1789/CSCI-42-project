@@ -32,6 +32,7 @@ class Client(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     account_type = models.CharField(max_length=20, choices=ACCOUNT_TYPE_CHOICES)
     contact_number = models.CharField(max_length=20, blank=True)
+    profile_image = models.ImageField(upload_to='uploads/profile_pictures/', null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)

@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
@@ -26,6 +27,17 @@ def edit_profile_view(request):
         # ── Account fields (both types) ──
         contact_number = request.POST.get('contact_number', '').strip()
         user.contact_number = contact_number
+
+        uploaded_profile_image = request.FILES.get('profile_image')
+        if uploaded_profile_image:
+            max_upload_size = getattr(settings, 'MAX_UPLOAD_SIZE_MB', 10) * 1024 * 1024
+            if not uploaded_profile_image.content_type.startswith('image/'):
+                messages.error(request, 'Profile picture must be an image file.')
+                return render(request, 'profiles/edit_profile.html', {'profile': profile})
+            if uploaded_profile_image.size > max_upload_size:
+                messages.error(request, f'Profile picture must be smaller than {getattr(settings, "MAX_UPLOAD_SIZE_MB", 10)} MB.')
+                return render(request, 'profiles/edit_profile.html', {'profile': profile})
+            user.profile_image = uploaded_profile_image
 
         if user.is_business and profile:
             profile.business_name    = request.POST.get('business_name', '').strip()
