@@ -115,7 +115,7 @@ class BusinessProfile(models.Model):
         final_rating = 0
         for ltransaction in listing_transactions:
             try:
-                review = Review.objects.get(listing_transaction=ltransaction)
+                review = Review.objects.get(transaction__listingtransaction=ltransaction)
             except Review.DoesNotExist:
                 review = None
             if review is not None:
@@ -123,7 +123,7 @@ class BusinessProfile(models.Model):
                 total_reviewed_transactions += 1
         for crtransaction in consumer_request_transactions:
             try:
-                review = Review.objects.get(consumer_request_transaction=crtransaction)
+                review = Review.objects.get(transaction__consumerrequesttransaction=crtransaction)
             except Review.DoesNotExist:
                 review = None
             if review is not None:

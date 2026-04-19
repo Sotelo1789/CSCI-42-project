@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}
+Make Review over 
+{% if transaction.transaction_type == "C" %}
+    {{ transaction.business_response.business.business_profile.business_name }} on my "{{ transaction.customer_request.title }}" Request
+{% elif transaction.transaction_type == "L" %}
+    the Listing "{{ transaction.listing.title }}" of {{ transaction.listing.business.business_profile.business_name }}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if transaction %}
+<h1>Make Review over 
+{% if transaction.transaction_type == "C" %}
+    {{ transaction.business_response.business.business_profile.business_name }} on my "{{ transaction.consumer_request.title }}" Request
+{% elif transaction.transaction_type == "L" %}
+    the Listing "{{ transaction.listing.title }}" of {{ transaction.listing.business.business_profile.business_name }}
+{% endif %}
+</h1>
+<p>Rating is 1 to 10</p>
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Create Review</button>
+</form>
+
+{% endif %}
+{% endblock %}

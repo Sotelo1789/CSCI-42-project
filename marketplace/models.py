@@ -6,9 +6,11 @@ def validate_nonnegative(value):
     if not value>=0:
         raise ValidationError("Value can't be below 0")
 
+
 def validate_rating(value):
     if not (value>=1 and value<=10):
         raise ValidationError("Scale of 1-10 only")
+
 
 class Listing(models.Model):
     CATEGORY_CHOICES = [
@@ -138,7 +140,13 @@ class ConsumerRequestImage(models.Model):
     image = models.ImageField(upload_to='uploads/consumer_requests/images/')
 
 
-class ListingTransaction(models.Model):
+class Transaction(models.Model):
+    price = models.DecimalField(max_digits=15, decimal_places=2, validators=[validate_nonnegative])
+    created_at = models.DateTimeField(auto_now_add=True)
+    transaction_type = models.CharField(max_length=1)
+
+
+class ListingTransaction(Transaction):
     listing = models.ForeignKey(
         Listing,
         on_delete=models.CASCADE,
@@ -149,11 +157,9 @@ class ListingTransaction(models.Model):
         on_delete=models.CASCADE,
         related_name='listing_transaction'
     )
-    price = models.DecimalField(max_digits=15, decimal_places=2, validators=[validate_nonnegative])
-    created_at = models.DateTimeField(auto_now_add=True)
 
 
-class ConsumerRequestTransaction(models.Model):
+class ConsumerRequestTransaction(Transaction):
     consumer_request = models.ForeignKey(
         ConsumerRequest,
         on_delete=models.CASCADE,
@@ -164,8 +170,6 @@ class ConsumerRequestTransaction(models.Model):
         on_delete=models.CASCADE,
         related_name='consumer_request_transaction'
     )
-    price = models.DecimalField(max_digits=15, decimal_places=2, validators=[validate_nonnegative])
-    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class FavoriteListing(models.Model):
@@ -183,15 +187,8 @@ class FavoriteListing(models.Model):
 
 
 class Review(models.Model):
-    listing_transaction = models.ForeignKey(
-        ListingTransaction,
-        on_delete=models.CASCADE,
-        related_name='review',
-        blank=True,
-        null=True
-    )
-    consumer_request_transaction = models.ForeignKey(
-        ConsumerRequestTransaction,
+    transaction = models.ForeignKey(
+        Transaction,
         on_delete=models.CASCADE,
         related_name='review',
         blank=True,

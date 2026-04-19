@@ -33,7 +33,14 @@
     <p>Delivery Areas: {{ listing.delivery_area }}</p>
     <p>Delivery Time (in Days): {{ listing.delivery_time }}</p>
 </div>
+{% if listing.business.business_profile.rating > 0 %}
+    <p>Business Rating: {{ listing.business.business_profile.rating }}</p>
+{% else %}
+    <p>Unrated Business</p>
+{% endif %}
+
 <p>Business Contact: {{ listing.business.business_profile.rep_contact }}</p>
+<p>Description:</p>
 <p>{{ listing.description }}</p>
 {% if listing.images.exists %}
     {% for image in listing.images.all %}
@@ -41,4 +48,35 @@
     {% endfor %}
 {% endif %}
 <button><a href="{% url 'marketplace:download_toc' pk=listing.pk %}">⬇ Download Terms and Conditions</a></button>
+{% if listing.listing_transaction.exists %}
+    {% if user.business_profile %}
+        <h2>Existing Reviews:</h2>
+    {% elif user.consumer_profile %}
+        <h2>Your Transactions:</h2>
+    {% endif %}
+    {% for lt in listing.listing_transaction.all|dictsortreversed:"created_at" %}
+        {% if user.business_profile %}
+            {% if lt.review.exists %}    
+                <p>Review of {{ lt.consumer }} </p>
+                <p>Rating: {{ lt.review.all.0.rating }}</p>
+                <p>Comment: </p>
+                <p>{{ lt.review.all.0.text }}</p>
+                <br>
+            {% endif %}
+        {% elif user.consumer_profile %}
+            {% if lt.consumer == user %}
+                <p>{{ lt.created_at }}</p>
+                <p>{{ lt.price }}</p>
+                {% if lt.review.all.exists %}
+                    <p>You have reviewed this transaction</p>
+                    <p>Transaction Rated as: {{ lt.review.all.0.rating }} out of 10</p>
+                    <p>Comment of Review: {{ lt.review.all.0.text }}</p>
+                {% else %}
+                    <p><a href="{% url 'marketplace:create_review' pk=lt.pk %}">Make a Review?</a></p>
+                {% endif %}
+                <br>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
 {% endblock %}

@@ -10,7 +10,6 @@
 {% block content %}
 <h1>My Transactions</h1>
 <br>
-<!--insert form for filtering-->
 <form>
     <p>{{ filter_form.keyword.label }}: {{ filter_form.keyword }}</p>
     <p>{{ filter_form.category.label }}: {{ filter_form.category }}</p>
@@ -32,36 +31,40 @@
 </form>
 <br>
 {% if transactions %}
-    {% for transaction in transactions %}
+    {% for transaction in page_transactions %}
         <div>  
             {% if tk == 'listing' %}
                 <p><a href="{% url 'marketplace:listing_detail' pk=transaction.listing.pk %}">{{ transaction.listing.title }}</a> made on {{ transaction.created_at }}</p>
             {% elif tk == 'consumer_request' %}
-                <!--To change into response view-->
-                <p><a href="{% url 'marketplace:consumer_request_detail' pk=transaction.consumer_request.pk %}">{{ transaction.consumer_request.title }}</a> made on {{ transaction.created_at }}</p>
+                <p><a href="{% url 'marketplace:business_response_detail' pk=transaction.business_response.pk %}">Response on {{ transaction.consumer_request.title }}</a> made on {{ transaction.created_at }}</p>
             {% endif %}
             <p>Paid: {{ transaction.price }}</p>
+            {% if not transaction.review.exists %}
+                <p><a href="{% url 'marketplace:create_review' pk=transaction.pk %}">Make a Review</a></p>
+            {% else %}
+                <!--TODO make it editable-->
+                <p> Review Made Over Transaction</p>
+            {% endif %}
         </div>
         <br>
     {% endfor %}
-    <!--
     {% if page_transactions.paginator.num_pages %}
     <div class="pagination">
         <div class="page-links">
-            {% if page_listings.has_previous %}
+            {% if page_transactions.has_previous %}
                 <a class="page-link" href="?page=1&{{ request_get }}">« First</a>
-                <a class="page-link" href="?page={{ page_listings.previous_page_number }}&{{ request_get }}">‹ Prev</a>
+                <a class="page-link" href="?page={{ page_transactions.previous_page_number }}&{{ request_get }}">‹ Prev</a>
             {% endif %}
-            <span class="page-link current">{{ page_listings.number }}</span>
-            {% if page_listings.has_next %}
-                <a class="page-link" href="?page={{ page_listings.next_page_number }}&{{ request_get }}">Next ›</a>
-                <a class="page-link" href="?page={{ page_listings.paginator.num_pages }}&{{ request_get }}">Last »</a>
+            <span class="page-link current">{{ page_transactions.number }}</span>
+            {% if page_transactions.has_next %}
+                <a class="page-link" href="?page={{ page_transactions.next_page_number }}&{{ request_get }}">Next ›</a>
+                <a class="page-link" href="?page={{ page_transactions.paginator.num_pages }}&{{ request_get }}">Last »</a>
             {% endif %}
         </div>
         <div class="page-info">
-            Page {{ page_listings.number }} of {{ page_listings.paginator.num_pages }}
+            Page {{ page_transactions.number }} of {{ page_transactions.paginator.num_pages }}
             &nbsp;·&nbsp;
-            {{ listings|length }} result{{ listings|length|pluralize }}
+            {{ transactions|length }} result{{ transactions|length|pluralize }}
         </div>
     </div>
     <div>
@@ -78,7 +81,6 @@
         </form>
     </div>
     {% endif %}
-    -->
 
 {% else %}
     {% if user.consumer_profile %}

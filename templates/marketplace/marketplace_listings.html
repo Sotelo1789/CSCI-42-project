@@ -24,7 +24,7 @@
             <p>Title: <a href="{% url 'marketplace:listing_detail' pk=listing.pk %}">{{ listing.title }}</a></p>
             <p>Business: {{ listing.business.business_profile }}</p>
             {% if listing.business.business_profile.rating != 0 %}
-                <p>Business Rating: {{ listing.business.business_profile.rating }}</p>
+                <p>Business Rating: {{ listing.business.business_profile.rating }} out of 10.0</p>
             {% else %}
                 <p>Unrated Business</p>
             {% endif %}
@@ -42,6 +42,7 @@
                     {% endif %}
                 {% endif %}
             {% endfor %}
+            <br>
             {% if listing.images.exists %}
                 {% for image in listing.images.all %}
                     {% if image.is_primary == True %}

@@ -32,7 +32,6 @@
                         <p style="color:grey">Not responded by user</p>
                         <button><a href="{% url 'marketplace:respond_to_request' pk=respondedrequest.1 %}">Respond?</a></button>
                     {% endif %}
-                    <p>{{respondedrequest.1}}</p>
                 {% endif %}
             {% endfor %}
             {% if cr.images.exists %}
@@ -53,7 +52,7 @@
                 <a class="page-link" href="?page=1&{{ request_get }}">« First</a>
                 <a class="page-link" href="?page={{ page_consumer_requests.previous_page_number }}&{{ request_get }}">‹ Prev</a>
             {% endif %}
-            <span class="page-link current">{{ page_listings.number }}</span>
+            <span class="page-link current">{{ page_consumer_requests.number }}</span>
             {% if page_listings.has_next %}
                 <a class="page-link" href="?page={{ page_consumer_requests.next_page_number }}&{{ request_get }}">Next ›</a>
                 <a class="page-link" href="?page={{ page_consumer_requests.paginator.num_pages }}&{{ request_get }}">Last »</a>

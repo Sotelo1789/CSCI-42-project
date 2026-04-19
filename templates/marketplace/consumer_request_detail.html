@@ -19,6 +19,9 @@
     {% if has_chosen_you == True and cr.status != "open" %}
         <p>Customer bought from you!</p>
         <p><a href="{% url 'marketplace:business_response_detail' pk=crt.0.business_response.pk %}">See details</a></p>
+        {% if crt.0.review.exists %}
+            <p>You have been rated with a score of {{ cr.consumer_request_transaction.all.0.review.all.0.rating }} out of 10</p>
+        {% endif %}
     {% endif %}
 {% endif %}
 <div>
@@ -35,12 +38,17 @@
 {% if user.consumer_profile %}
     {% if cr.responses.exists and not crt %}
         <h1>Current Responses:</h1>
-        {% for response in cr.responses.all %}
+        {% for response in cr.responses.all|dictsortreversed:"updated_at" %}
             <p>From: {{ response.business.business_profile }} <a href="{% url 'marketplace:business_response_detail' pk=response.pk %}">View?</a></p>
         {% endfor %}
     {% elif crt %}
         <h1>Chosen Response</h1>
         <p>Addressed by {{ crt.0.business_response.business.business_profile }} <a href="{% url 'marketplace:business_response_detail' pk=crt.0.business_response.pk %}">See details</a></p>
+        {% if crt.0.review.exists %}
+            <p>You have rated them with a score of {{ cr.consumer_request_transaction.all.0.review.all.0.rating }} out of 10</p>
+        {% else %}
+            <p><a href="{% url 'marketplace:create_review' pk=crt.0.pk %}">Make a Review?</a></p>
+        {% endif %}
     {% endif %}
 {% endif %}
 

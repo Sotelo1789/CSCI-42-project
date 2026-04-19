@@ -5,6 +5,7 @@
 
 {% block content %}
 <h1>Responding to {{ cr.title }}</h1>
+<p>Price Range: {{ cr.min_price }} to {{ cr.max_price }}</p>
 <form method="POST" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}

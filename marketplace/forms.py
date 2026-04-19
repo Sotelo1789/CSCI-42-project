@@ -1,6 +1,6 @@
 from django import forms
 from django.utils import timezone
-from .models import Listing, ConsumerRequest, BusinessResponse, ListingTransaction
+from .models import Listing, ConsumerRequest, BusinessResponse, ListingTransaction, Review
 
 
 class CreateListing(forms.ModelForm):
@@ -45,7 +45,7 @@ class CreateListing(forms.ModelForm):
 class CreateListingTransaction(forms.ModelForm):
     class Meta:
         model = ListingTransaction
-        exclude = ['listing', 'consumer', 'created_at']
+        exclude = ['listing', 'consumer', 'created_at', 'transaction_type']
 
 class ChooseTransactionKind(forms.Form):
     TRANSACTION_KIND = [('listing','From Listings'),('consumer_request','From Consumer Request')]
@@ -101,7 +101,6 @@ class CreateConsumerRequest(forms.ModelForm):
                 )
 
         return cleaned_data
-
 
 class RespondToRequest(forms.ModelForm):
     class Meta:
@@ -169,6 +168,11 @@ class RespondToRequest(forms.ModelForm):
             raise forms.ValidationError('Your uploaded quotation file must be a PDF.')
 
         return quotation
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        exclude = ['transaction','created_at','updated_at']
 
 class ListingSearchFilterForm(forms.Form):
     CATEGORY_CHOICES = [('', 'All Categories')] + Listing.CATEGORY_CHOICES
