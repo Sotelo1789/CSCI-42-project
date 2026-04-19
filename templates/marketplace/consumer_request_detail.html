@@ -1,55 +1,237 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}Consumer Request: {{ cr.title }}{% endblock %}
+{% block title %}{{ cr.title }} · PROC{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-wrap { max-width: 1000px; margin: 0 auto; }
+
+    .back-link {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 13px; color: var(--text-secondary);
+        text-decoration: none; margin-bottom: 14px;
+    }
+    .back-link:hover { color: var(--accent); text-decoration: none; }
+
+    .detail-header { margin-bottom: 20px; }
+    .detail-title {
+        font-size: 28px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        margin-bottom: 10px;
+        color: var(--text-primary);
+    }
+    .detail-subline {
+        display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+        font-size: 13px; color: var(--text-secondary);
+    }
+
+    .gallery-main {
+        width: 100%; aspect-ratio: 16/9;
+        border-radius: var(--radius);
+        overflow: hidden;
+        background: var(--accent-bg);
+        border: 0.5px solid var(--border);
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 20px;
+    }
+    .gallery-main img { width: 100%; height: 100%; object-fit: cover; }
+    .gallery-empty {
+        font-size: 13px; font-weight: 500;
+        color: var(--accent);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 14px;
+    }
+
+    .section-title {
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+    }
+
+    .price-display {
+        font-size: 24px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+    }
+    .description {
+        color: var(--text-primary);
+        line-height: 1.65;
+        font-size: 14px;
+        white-space: pre-wrap;
+    }
+    .info-row {
+        display: flex; justify-content: space-between; gap: 12px;
+        font-size: 14px;
+        padding: 10px 0;
+        border-bottom: 0.5px solid var(--border-subtle);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: var(--text-secondary); font-size: 13px; }
+    .info-value { color: var(--text-primary); font-weight: 500; text-align: right; }
+
+    .action-stack { display: flex; flex-direction: column; gap: 8px; }
+    .action-btn-full { display: block; width: 100%; text-align: center; }
+
+    .status-banner {
+        padding: 10px 14px;
+        border-radius: var(--radius);
+        font-size: 13px;
+        font-weight: 500;
+        text-align: center;
+        background: var(--accent-bg);
+        border: 0.5px solid rgba(45,95,63,0.25);
+        color: var(--accent);
+    }
+    .status-banner.warn {
+        background: var(--warning-bg);
+        border-color: rgba(138,106,31,0.25);
+        color: var(--warning);
+    }
+
+    .response-list { display: flex; flex-direction: column; gap: 8px; }
+    .response-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 12px 14px;
+        background: var(--bg-faint);
+        border: 0.5px solid var(--border-subtle);
+        border-radius: var(--radius);
+        transition: border-color 0.12s;
+    }
+    .response-row:hover { border-color: var(--border-strong); }
+    .response-from { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+    .response-link {
+        color: var(--accent); text-decoration: none;
+        font-size: 13px; font-weight: 500;
+    }
+    .response-link:hover { text-decoration: underline; }
+
+    .card + .card { margin-top: 12px; }
+
+    @media (max-width: 860px) {
+        .detail-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<h1>{{ cr.title }}</h1>
-<p>Responded: {{ cr.response_count }}</p>
-{% if user.business_profile %}
-    {% if has_responded == True %}
-        <p>You have responded</p>
-        {% if has_chosen_you == False %}
-            <button><a href="{% url 'marketplace:business_response_detail' pk=br.pk %}">Check Response?</a></button>
-        {% endif %}
+<div class="page-wrap">
+    {% if user.business_profile %}
+        <a href="{% url 'marketplace:marketplace_requests' %}" class="back-link">← Back to requests</a>
     {% else %}
-        <p>You have not responded</p>
-        <button><a href="{% url 'marketplace:respond_to_request' pk=cr.pk %}">Write Response?</a></button>
+        <a href="{% url 'marketplace:consumer_marketplace' %}" class="back-link">← Back to marketplace</a>
     {% endif %}
-    {% if has_chosen_you == True and cr.status != "open" %}
-        <p>Customer bought from you!</p>
-        <p><a href="{% url 'marketplace:business_response_detail' pk=crt.0.business_response.pk %}">See details</a></p>
-        {% if crt.0.review.exists %}
-            <p>You have been rated with a score of {{ cr.consumer_request_transaction.all.0.review.all.0.rating }} out of 10</p>
-        {% endif %}
-    {% endif %}
-{% endif %}
-<div>
-    <p>Category: {{ cr.category|upper }}</p>
-    <p>Pricing: {{ cr.min_price }} - {{ cr.max_price }}</p>
-</div>
-<p>Consumer: {{ cr.consumer.consumer_profile.full_name }}</p>
-<p>{{ cr.description }}</p>
-{% if cr.images.exists %}
-    {% for image in cr.images.all %}
-        <img src="{{ image.image.url }}" alt="Image {{ forloop.counter }}">
-    {% endfor %}
-{% endif %}
-{% if user.consumer_profile %}
-    {% if cr.responses.exists and not crt %}
-        <h1>Current Responses:</h1>
-        {% for response in cr.responses.all|dictsortreversed:"updated_at" %}
-            <p>From: {{ response.business.business_profile }} <a href="{% url 'marketplace:business_response_detail' pk=response.pk %}">View?</a></p>
-        {% endfor %}
-    {% elif crt %}
-        <h1>Chosen Response</h1>
-        <p>Addressed by {{ crt.0.business_response.business.business_profile }} <a href="{% url 'marketplace:business_response_detail' pk=crt.0.business_response.pk %}">See details</a></p>
-        {% if crt.0.review.exists %}
-            <p>You have rated them with a score of {{ cr.consumer_request_transaction.all.0.review.all.0.rating }} out of 10</p>
-        {% else %}
-            <p><a href="{% url 'marketplace:create_review' pk=crt.0.pk %}">Make a Review?</a></p>
-        {% endif %}
-    {% endif %}
-{% endif %}
 
+    <div class="detail-header">
+        <div class="detail-title">{{ cr.title }}</div>
+        <div class="detail-subline">
+            <span class="pill">{{ cr.category }}</span>
+            <span>{{ cr.response_count|intcomma }} response{{ cr.response_count|pluralize }}</span>
+        </div>
+    </div>
+
+    <div class="gallery-main">
+        {% if cr.images.exists %}
+            {% for image in cr.images.all %}
+                {% if forloop.counter == 1 %}
+                    <img src="{{ image.image.url }}" alt="{{ cr.title }}">
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <span class="gallery-empty">{{ cr.category|slice:":3" }}</span>
+        {% endif %}
+    </div>
+
+    <div class="detail-grid">
+        <div>
+            <div class="card">
+                <div class="section-title">Description</div>
+                <div class="description">{{ cr.description }}</div>
+            </div>
+
+            {% if user.consumer_profile %}
+                {% if cr.responses.exists and not crt %}
+                <div class="card">
+                    <div class="section-title">Responses ({{ cr.responses.count|intcomma }})</div>
+                    <div class="response-list">
+                        {% for response in cr.responses.all|dictsortreversed:"updated_at" %}
+                        <div class="response-row">
+                            <div class="response-from">{{ response.business.business_profile.business_name|default:response.business.username }}</div>
+                            <a href="{% url 'marketplace:business_response_detail' pk=response.pk %}" class="response-link">View</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% elif crt %}
+                <div class="card">
+                    <div class="section-title">Chosen response</div>
+                    <div class="response-list">
+                        <div class="response-row">
+                            <div class="response-from">{{ crt.0.business_response.business.business_profile.business_name|default:crt.0.business_response.business.username }}</div>
+                            <a href="{% url 'marketplace:business_response_detail' pk=crt.0.business_response.pk %}" class="response-link">See details</a>
+                            {% if crt.0.review.exists %}
+                                <p>You have rated them with a score of {{ cr.consumer_request_transaction.all.0.review.all.0.rating }} out of 10</p>
+                            {% else %}
+                                <a href="{% url 'marketplace:create_review' pk=crt.0.pk %}">Make a Review?</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <div>
+            <div class="card">
+                <div class="section-title">Budget</div>
+                <div class="price-display">₱{{ cr.min_price|floatformat:0|intcomma }} – ₱{{ cr.max_price|floatformat:0|intcomma }}</div>
+
+                <div class="action-stack">
+                    {% if user.business_profile %}
+                        {% if has_responded == True %}
+                            <div class="status-banner">You have responded</div>
+                            {% if has_chosen_you == False %}
+                                <a href="{% url 'marketplace:business_response_detail' pk=br.pk %}" class="btn btn-secondary action-btn-full">Check my response</a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'marketplace:respond_to_request' pk=cr.pk %}" class="btn btn-primary action-btn-full">Submit response</a>
+                        {% endif %}
+                        {% if has_chosen_you == True and cr.status != "open" %}
+                            <div class="status-banner warn">Customer chose you</div>
+                            <a href="{% url 'marketplace:business_response_detail' pk=crt.0.business_response.pk %}" class="btn btn-secondary action-btn-full">See deal details</a>
+                            {% if crt.0.review.exists %}
+                                <p>You have been rated with a score of {{ cr.consumer_request_transaction.all.0.review.all.0.rating }} out of 10</p>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-title">Consumer</div>
+                <div class="info-row">
+                    <span class="info-label">Name</span>
+                    <span class="info-value">{{ cr.consumer.consumer_profile.full_name|default:cr.consumer.username }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">E-mail</span>
+                    <span class="info-value">{{ cr.consumer.email }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

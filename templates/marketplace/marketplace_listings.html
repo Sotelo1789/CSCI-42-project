@@ -1,95 +1,292 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}Marketplace Listings{% endblock %}
+{% block title %}Marketplace listings · PROC{% endblock %}
 
 {% block extra_css %}
-<!--TODO in iter4-->
+<style>
+    .page-wrap { max-width: 1200px; margin: 0 auto; }
+
+    /* Filter panel */
+    .filter-panel {
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px 20px;
+        margin-bottom: 16px;
+    }
+    .filter-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 1.2fr 1fr 1fr;
+        gap: 10px;
+        align-items: end;
+        margin-bottom: 12px;
+    }
+    .filter-field { display: flex; flex-direction: column; gap: 6px; }
+    .filter-label {
+        font-size: 11px; font-weight: 500;
+        letter-spacing: 0.08em; text-transform: uppercase;
+        color: var(--text-secondary);
+    }
+    .filter-panel input,
+    .filter-panel select {
+        width: 100%;
+        height: 36px;
+        padding: 8px 12px;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border-strong);
+        border-radius: var(--radius);
+        color: var(--text-primary);
+        font-family: var(--font);
+        font-size: 14px;
+        outline: none;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    .filter-panel input:focus,
+    .filter-panel select:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(45, 95, 63, 0.12);
+    }
+    .filter-panel input::placeholder { color: rgba(90,90,85,0.55); }
+    .filter-actions {
+        display: flex; gap: 8px;
+        align-items: center; justify-content: flex-end;
+    }
+
+    /* Results bar */
+    .results-bar {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 12px; padding: 0 4px;
+    }
+    .results-count { font-size: 13px; color: var(--text-secondary); }
+    .results-count strong { color: var(--text-primary); font-weight: 500; }
+
+    .per-page-form { display: flex; align-items: center; gap: 8px; }
+    .per-page-form label { font-size: 12px; color: var(--text-secondary); }
+    .per-page-form input {
+        width: 56px; height: 30px;
+        padding: 4px 8px;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border-strong);
+        border-radius: var(--radius);
+        color: var(--text-primary); font-size: 13px;
+        text-align: center; outline: none;
+        font-family: var(--font); font-weight: 500;
+        -moz-appearance: textfield;
+    }
+    .per-page-form input::-webkit-inner-spin-button,
+    .per-page-form input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+    /* Listing grid */
+    .listing-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 14px;
+    }
+    .listing-card {
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        transition: border-color 0.12s;
+        display: flex; flex-direction: column;
+    }
+    .listing-card:hover { border-color: var(--border-strong); }
+
+    .listing-thumb {
+        width: 100%; height: 160px;
+        background: var(--bg-secondary);
+        display: flex; align-items: center; justify-content: center;
+        position: relative;
+        border-bottom: 0.5px solid var(--border-subtle);
+        overflow: hidden;
+    }
+    .listing-thumb img {
+        width: 100%; height: 100%;
+        object-fit: cover;
+    }
+
+    .fav-pill {
+        position: absolute; top: 10px; right: 10px;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border-strong);
+        border-radius: var(--radius-sm);
+        padding: 4px 10px;
+        font-size: 11px; font-weight: 500;
+        color: var(--text-secondary); text-decoration: none;
+        display: inline-flex; align-items: center; gap: 4px;
+        transition: background 0.12s, color 0.12s;
+    }
+    .fav-pill:hover { background: var(--bg-faint); color: var(--text-primary); text-decoration: none; }
+    .fav-pill.faved { color: var(--accent); border-color: rgba(45,95,63,0.25); background: var(--accent-bg); }
+
+    .listing-body { padding: 14px 16px 16px; flex: 1; display: flex; flex-direction: column; }
+    .listing-title {
+        font-size: 14px; font-weight: 500;
+        color: var(--text-primary); text-decoration: none;
+        line-height: 1.35;
+        margin-bottom: 4px;
+        letter-spacing: -0.005em;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .listing-title:hover { color: var(--accent); text-decoration: none; }
+    .listing-business {
+        font-size: 12px; color: var(--text-secondary);
+        margin-bottom: 8px;
+        display: flex; align-items: center; gap: 6px;
+        flex-wrap: wrap;
+    }
+    .listing-price {
+        font-size: 14px; font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+    .listing-meta {
+        display: flex; flex-wrap: wrap; gap: 6px;
+        margin-top: auto;
+        padding-top: 10px;
+        border-top: 0.5px solid var(--border-subtle);
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    @media (max-width: 860px) { .filter-row { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 560px) { .filter-row { grid-template-columns: 1fr; } }
+</style>
 {% endblock %}
 
 {% block content %}
-<h1>Marketplace Listings</h1>
-<form method="get" style="margin-bottom: 1rem;">
-    <p>{{ filter_form.keyword.label }}: {{ filter_form.keyword }}</p>
-    <p>{{ filter_form.category.label }}: {{ filter_form.category }}</p>
-    <p> Price Range: {{ filter_form.min_price }} to {{ filter_form.max_price }}</p>
-    <p>{{ filter_form.area.label }}: {{ filter_form.area }}</p>
-	<p>{{ filter_form.rating.label }} (If filled, unrated businesses will not show): {{ filter_form.rating }}</p>
-    <p>{{ filter_form.availability.label }}: {{ filter_form.availability }}</p>
-	<button type="submit">Filter</button>
-</form>
-{% if listings %}
-    {% for listing in page_listings %}
-        <div>
-            <p>Title: <a href="{% url 'marketplace:listing_detail' pk=listing.pk %}">{{ listing.title }}</a></p>
-            <p>Business: {{ listing.business.business_profile }}</p>
-            {% if listing.business.business_profile.rating != 0 %}
-                <p>Business Rating: {{ listing.business.business_profile.rating }} out of 10.0</p>
-            {% else %}
-                <p>Unrated Business</p>
-            {% endif %}
-            <p>Price Range: {{ listing.min_price }} - {{ listing.max_price}}</p>
-            <p>Location/Delivery Area: {{ listing.delivery_area }}</p>
-            <p>Business Contact: {{ listing.business.business_profile.rep_contact }}</p>
-            {% for favedlisting in page_favedlistings %}
-                {% if forloop.counter == forloop.parentloop.counter %}
-                    {% if favedlisting.0 == True %}
-                        <p style="color: yellow">Favorited</p>
-                        <button><a href="{% url 'marketplace:unfavorite' pk=favedlisting.1 %}">Unfavorite?</a></button>
-                    {% else %}
-                        <p style="color:grey">Not Favorite</p>
-                        <button><a href="{% url 'marketplace:set_favorite' pk=favedlisting.1 %}">Set Favorite?</a></button>
-                    {% endif %}
-                {% endif %}
-            {% endfor %}
-            <br>
-            {% if listing.images.exists %}
+<div class="page-wrap">
+    <div class="page-header">
+        <div class="page-eyebrow">Marketplace</div>
+        <div class="page-title">Listings</div>
+        <div class="page-sub">Browse products and services offered by approved businesses.</div>
+    </div>
+
+    <div class="filter-panel">
+        <form method="get">
+            <div class="filter-row">
+                <div class="filter-field">
+                    <label class="filter-label">Keyword</label>
+                    {{ filter_form.keyword }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">Category</label>
+                    {{ filter_form.category }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">Min price</label>
+                    {{ filter_form.min_price }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">Max price</label>
+                    {{ filter_form.max_price }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">Area</label>
+                    {{ filter_form.area }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">Min rating</label>
+                    {{ filter_form.rating }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">Availability</label>
+                    {{ filter_form.availability }}
+                </div>
+            </div>
+            <input type="hidden" name="dictate" value="{{ page_item_count }}">
+            <div class="filter-actions">
+                <a href="{% url 'marketplace:marketplace_listings' %}" class="btn btn-ghost btn-sm">Clear</a>
+                <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+            </div>
+        </form>
+    </div>
+
+    {% if listings %}
+    <div class="results-bar">
+        <div class="results-count">
+            Showing <strong>{{ page_listings.start_index }}–{{ page_listings.end_index }}</strong>
+            of <strong>{{ listings|length|intcomma }}</strong> listing{{ listings|length|pluralize }}
+        </div>
+        <form method="get" class="per-page-form">
+            {% for k, v in request.GET.items %}{% if k != 'dictate' and k != 'page' %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}{% endfor %}
+            <label>Per page</label>
+            <input type="number" name="dictate" min="1" max="100" value="{{ page_item_count }}">
+            <button type="submit" class="btn btn-secondary btn-sm">Apply</button>
+        </form>
+    </div>
+
+    <div class="listing-grid">
+        {% for listing in page_listings %}
+        <div class="listing-card">
+            <div class="listing-thumb">
                 {% for image in listing.images.all %}
-                    {% if image.is_primary == True %}
-                        <img src="{{ image.image.url }}" alt="Thumbnail">
+                    {% if image.is_primary %}
+                        <img src="{{ image.image.url }}" alt="{{ listing.title }}">
                     {% endif %}
                 {% endfor %}
-            {% endif %}
+                {% if not listing.images.exists %}
+                    <span class="category-monogram">{{ listing.category|slice:":3"|default:"IMG" }}</span>
+                {% endif %}
+                {% for favedlisting in page_favedlistings %}
+                    {% if forloop.counter == forloop.parentloop.counter %}
+                        {% if favedlisting.0 == True %}
+                            <a href="{% url 'marketplace:unfavorite' pk=favedlisting.1 %}" class="fav-pill faved">Saved</a>
+                        {% else %}
+                            <a href="{% url 'marketplace:set_favorite' pk=favedlisting.1 %}" class="fav-pill">Save</a>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div class="listing-body">
+                <a href="{% url 'marketplace:listing_detail' pk=listing.pk %}" class="listing-title">{{ listing.title }}</a>
+                <div class="listing-business">
+                    {{ listing.business.business_profile.business_name|default:listing.business.username }}
+                    {% if listing.business.business_profile.rating != 0 %}
+                        <span class="pill">{{ listing.business.business_profile.rating }} ★</span>
+                    {% else %}
+                        <span class="pill pill-neutral">Unrated</span>
+                    {% endif %}
+                </div>
+                <div class="listing-price">₱{{ listing.min_price|floatformat:0|intcomma }} – ₱{{ listing.max_price|floatformat:0|intcomma }}</div>
+                <div class="listing-meta">
+                    <span>{{ listing.delivery_area|truncatechars:30 }}</span>
+                </div>
+            </div>
         </div>
-        <br>
-    {% endfor %}
+        {% endfor %}
+    </div>
 
-    {% if page_listings.paginator.num_pages %}
+    {% if page_listings.paginator.num_pages > 1 %}
     <div class="pagination">
         <div class="page-links">
             {% if page_listings.has_previous %}
-                <a class="page-link" href="?page=1&{{ request_get }}">« First</a>
-                <a class="page-link" href="?page={{ page_listings.previous_page_number }}&{{ request_get }}">‹ Prev</a>
+                <a class="page-link" href="?page=1&{{ request_get }}">First</a>
+                <a class="page-link" href="?page={{ page_listings.previous_page_number }}&{{ request_get }}">Prev</a>
             {% endif %}
             <span class="page-link current">{{ page_listings.number }}</span>
             {% if page_listings.has_next %}
-                <a class="page-link" href="?page={{ page_listings.next_page_number }}&{{ request_get }}">Next ›</a>
-                <a class="page-link" href="?page={{ page_listings.paginator.num_pages }}&{{ request_get }}">Last »</a>
+                <a class="page-link" href="?page={{ page_listings.next_page_number }}&{{ request_get }}">Next</a>
+                <a class="page-link" href="?page={{ page_listings.paginator.num_pages }}&{{ request_get }}">Last</a>
             {% endif %}
         </div>
         <div class="page-info">
             Page {{ page_listings.number }} of {{ page_listings.paginator.num_pages }}
-            &nbsp;·&nbsp;
-            {{ listings|length }} result{{ listings|length|pluralize }}
+            · {{ listings|length|intcomma }} result{{ listings|length|pluralize }}
         </div>
-    </div>
-    <div>
-        <p>There 
-        {% if is_one_per_page %}
-            is 1 item 
-        {% else %}
-            are {{ page_item_count }} items
-        {% endif %}
-        per page </p>
-        <form method="get" style="margin-bottom: 1rem;">
-            {{ dictate_form.dictate }}
-            <button type="submit">Change Item Count</button>
-        </form>
     </div>
     {% endif %}
 
-{% else %}
-    <p>No Listings Available. Come back at a different time!</p>
-{% endif %}
-
+    {% else %}
+    <div class="empty">
+        <div class="empty-title">No listings available</div>
+        <div class="empty-sub">Check back later — new listings are posted regularly.</div>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}

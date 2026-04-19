@@ -18,7 +18,7 @@ urlpatterns = [
     # potential TODO path('request/<int:pk>/edit', views.edit_consumer_request_view, name='edit_consumer_request'),
     path('listing/<int:pk>/pay', views.pay_listing_view, name='pay_listing'), #DONE
     path('response/<int:pk>/pay', views.pay_response, name='pay_response'), #DONE
-    path('review/<int:pk>/', views.create_review_view, name='create_review'),
+    path('review/<int:pk>', views.create_review_view, name='create_review'),
     # potential TODO path('response/<int:pk>/review', views.review_response_view, name='review_response'),
 
     # Business-specific
@@ -40,5 +40,4 @@ urlpatterns = [
     path('response/<int:pk>/download/quotation', views.download_quotation, name='download_quotation'), #DONE
     # potential TODO path('chat/listing/<int:pk>', views.chat_over_listing_view, name='chat_over_listing),
     # potential TODO path('chat/response/<int:pk>', views.chat_over_response_view, name='chat_over_response),
-    
 ]

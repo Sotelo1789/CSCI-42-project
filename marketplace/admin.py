@@ -1,3 +1,4 @@
+# admin.py
 from django.contrib import admin
 from .models import Listing, ListingImage, ConsumerRequest, ConsumerRequestImage, BusinessResponse, ListingTransaction, ConsumerRequestTransaction, FavoriteListing, Review
 

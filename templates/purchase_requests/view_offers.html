@@ -1,163 +1,120 @@
 {% extends "base.html" %}
+{% load humanize %}
 
-{% block title %}Offers — {{ pr.title }}{% endblock %}
+{% block title %}Offers · {{ pr.title }}{% endblock %}
 
 {% block extra_css %}
 <style>
-    .page-wrap { max-width: 860px; margin: 0 auto; }
+    .page-wrap { max-width: 900px; margin: 0 auto; }
 
     .back-link {
         display: inline-flex; align-items: center; gap: 6px;
-        font-size: 0.82rem; font-weight: 600; color: var(--muted);
-        text-decoration: none; margin-bottom: 1rem;
-        transition: color 0.15s;
+        font-size: 13px; color: var(--text-secondary);
+        text-decoration: none; margin-bottom: 14px;
     }
-    .back-link:hover { color: var(--white); }
+    .back-link:hover { color: var(--accent); text-decoration: none; }
 
-    /* ── Header ── */
-    .page-header { margin-bottom: 1.75rem; }
-    .page-title {
-        font-family: 'Syne', sans-serif;
-        font-size: 1.75rem; font-weight: 800;
-        margin-bottom: 0.25rem;
-    }
-    .page-sub { color: var(--muted); font-size: 0.9rem; }
-
-    /* ── PR summary ── */
     .pr-summary {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 1.1rem 1.4rem;
-        margin-bottom: 1.75rem;
-        display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;
+        display: flex; flex-wrap: wrap; gap: 16px;
+        align-items: center;
+        padding: 16px 20px;
+        margin-bottom: 20px;
     }
     .pr-summary-main { flex: 1; min-width: 0; }
     .pr-summary-title {
-        font-family: 'Syne', sans-serif;
-        font-size: 0.95rem; font-weight: 700;
-        margin-bottom: 0.35rem;
+        font-size: 15px; font-weight: 500;
+        margin-bottom: 4px;
+        color: var(--text-primary);
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .pr-summary-meta {
-        display: flex; flex-wrap: wrap; gap: 1rem;
-        font-size: 0.78rem; color: var(--muted);
+        display: flex; flex-wrap: wrap; gap: 16px;
+        font-size: 13px; color: var(--text-secondary);
     }
-    .pr-summary-meta .val { color: var(--white); font-weight: 600; }
-    .badge {
-        font-size: 0.68rem; font-weight: 700;
-        padding: 0.2rem 0.65rem; border-radius: 6px;
-        letter-spacing: 0.05em; text-transform: uppercase;
-        white-space: nowrap; flex-shrink: 0;
-    }
-    .badge-open     { background: rgba(52,211,153,0.15); color: #34d399;        border: 1px solid rgba(52,211,153,0.25); }
-    .badge-closed   { background: rgba(255,255,255,0.06); color: var(--muted);  border: 1px solid var(--border); }
-    .badge-submitted { background: rgba(56,189,248,0.12); color: var(--accent); border: 1px solid rgba(56,189,248,0.25); }
-    .badge-accepted  { background: rgba(52,211,153,0.12); color: #34d399;       border: 1px solid rgba(52,211,153,0.25); }
-    .badge-rejected  { background: rgba(248,113,113,0.12); color: var(--danger); border: 1px solid rgba(248,113,113,0.25); }
+    .pr-summary-meta .val { color: var(--text-primary); font-weight: 500; }
 
-    /* ── Offer count ── */
     .offer-count {
-        font-size: 0.82rem; color: var(--muted);
-        margin-bottom: 1rem;
+        font-size: 13px; color: var(--text-secondary);
+        margin-bottom: 12px;
     }
-    .offer-count strong { color: var(--white); }
+    .offer-count strong { color: var(--text-primary); font-weight: 500; }
 
-    /* ── Offer card ── */
     .offer-card {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        padding: 1.3rem 1.5rem;
-        margin-bottom: 1rem;
-        display: flex; align-items: center; gap: 1.25rem;
-        transition: border-color 0.15s;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px 22px;
+        margin-bottom: 10px;
+        display: flex; align-items: center; gap: 16px;
+        transition: border-color 0.12s;
     }
-    .offer-card:hover { border-color: rgba(255,255,255,0.15); }
-    .offer-card.accepted { border-left: 3px solid #34d399; }
-    .offer-card.rejected { border-left: 3px solid var(--danger); opacity: 0.7; }
+    .offer-card:hover { border-color: var(--border-strong); }
+    .offer-card.accepted { border-left: 3px solid var(--accent); }
+    .offer-card.rejected { opacity: 0.65; }
 
-    /* seller avatar */
     .seller-avatar {
-        width: 42px; height: 42px; flex-shrink: 0;
-        background: linear-gradient(135deg, var(--blue), var(--accent));
+        width: 36px; height: 36px; flex-shrink: 0;
+        background: var(--accent);
+        color: var(--text-on-accent);
         border-radius: 50%;
         display: grid; place-items: center;
-        font-family: 'Syne', sans-serif;
-        font-weight: 800; font-size: 1rem;
+        font-size: 13px;
+        font-weight: 500;
+        text-transform: uppercase;
     }
 
     .offer-main { flex: 1; min-width: 0; }
     .offer-seller {
-        font-family: 'Syne', sans-serif;
-        font-size: 0.95rem; font-weight: 700;
-        margin-bottom: 0.3rem;
+        font-size: 14px; font-weight: 500;
+        margin-bottom: 3px;
+        color: var(--text-primary);
     }
     .offer-meta {
-        display: flex; flex-wrap: wrap; gap: 1rem;
-        font-size: 0.78rem; color: var(--muted);
+        display: flex; flex-wrap: wrap; gap: 14px;
+        font-size: 12px; color: var(--text-secondary);
     }
-    .offer-meta .val { color: var(--white); font-weight: 600; }
+    .offer-meta .val { color: var(--text-primary); font-weight: 400; }
 
-    /* actions */
-    .offer-actions { display: flex; gap: 0.5rem; flex-shrink: 0; flex-wrap: wrap; align-items: center; }
-
-    .btn-sm {
-        display: inline-flex; align-items: center; gap: 5px;
-        padding: 0.45rem 0.9rem; border-radius: 9px;
-        font-family: 'DM Sans', sans-serif;
-        font-size: 0.8rem; font-weight: 600;
-        cursor: pointer; text-decoration: none;
-        border: 1px solid var(--border);
-        background: transparent; color: var(--muted);
-        transition: all 0.15s; white-space: nowrap;
+    .offer-actions {
+        display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; align-items: center;
     }
-    .btn-sm:hover { background: rgba(255,255,255,0.07); color: var(--white); border-color: rgba(255,255,255,0.2); }
-    .btn-sm.green  { color: #34d399; border-color: rgba(52,211,153,0.3); }
-    .btn-sm.green:hover  { background: rgba(52,211,153,0.1); border-color: #34d399; }
-    .btn-sm.danger { color: var(--danger); border-color: rgba(248,113,113,0.3); }
-    .btn-sm.danger:hover { background: rgba(248,113,113,0.1); border-color: var(--danger); }
-    .btn-sm.accent { color: var(--accent); border-color: rgba(56,189,248,0.3); }
-    .btn-sm.accent:hover { background: rgba(56,189,248,0.1); border-color: var(--accent); }
-    .btn-sm[disabled] { opacity: 0.35; pointer-events: none; cursor: default; }
-    .btn-sm.disabled {background: #2a344a; color: #7f8ca3; border: 1px solid #3b4a66; cursor: not-allowed; opacity: 0.7;}
-    
-    /* ── Empty state ── */
-    .empty-state {
-        text-align: center; padding: 3.5rem 2rem;
-        background: var(--panel); border: 1px solid var(--border);
-        border-radius: 18px;
-    }
-    .empty-icon  { font-size: 2.75rem; margin-bottom: 1rem; }
-    .empty-title { font-family: 'Syne', sans-serif; font-size: 1.15rem; font-weight: 700; margin-bottom: 0.4rem; }
-    .empty-sub   { color: var(--muted); font-size: 0.88rem; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="page-wrap">
 
-    <a href="{% url 'purchase_requests:my_requests' %}" class="back-link">← Back to My Requests</a>
+    <a href="{% url 'purchase_requests:my_requests' %}" class="back-link">← Back to my requests</a>
 
     <div class="page-header">
-        <div class="page-title">Offers Received</div>
+        <div class="page-eyebrow">Buyer</div>
+        <div class="page-title">Offers received</div>
         <div class="page-sub">Review and manage offers submitted for your purchase request.</div>
     </div>
 
-    <!-- PR summary -->
-    <div class="pr-summary">
+    <div class="card pr-summary">
         <div class="pr-summary-main">
             <div class="pr-summary-title">{{ pr.title }}</div>
             <div class="pr-summary-meta">
-                <span>Budget:&nbsp;<span class="val">₱{{ pr.budget|floatformat:2 }}</span></span>
-                <span>Deadline:&nbsp;<span class="val">{{ pr.closing_deadline|date:"M d, Y · g:i A" }}</span></span>
+                <span>Budget · <span class="val">₱{{ pr.budget|floatformat:0|intcomma }}</span></span>
+                <span>Deadline · <span class="val">{{ pr.closing_deadline|date:"M d, Y · h:i A" }}</span></span>
             </div>
         </div>
-        <span class="badge badge-{{ pr.status }}">{{ pr.status|capfirst }}</span>
+        {% if pr.status == "open" %}
+            <span class="pill">Open</span>
+        {% elif pr.status == "closed" %}
+            <span class="pill pill-neutral">Closed</span>
+        {% elif pr.status == "completed" %}
+            <span class="pill">Completed</span>
+        {% elif pr.status == "cancelled" %}
+            <span class="pill pill-danger">Cancelled</span>
+        {% else %}
+            <span class="pill pill-neutral">{{ pr.status|capfirst }}</span>
+        {% endif %}
     </div>
 
     {% if offers %}
-        <div class="offer-count"><strong>{{ offers.count }}</strong> offer{{ offers.count|pluralize }} received</div>
+        <div class="offer-count"><strong>{{ offers.count|intcomma }}</strong> offer{{ offers.count|pluralize }} received</div>
 
         {% for offer in offers %}
         <div class="offer-card {{ offer.status }}">
@@ -167,47 +124,36 @@
             <div class="offer-main">
                 <div class="offer-seller">{{ offer.seller.username }}</div>
                 <div class="offer-meta">
-                    <span>Submitted:&nbsp;<span class="val">{{ offer.submitted_at|date:"M d, Y · g:i A" }}</span></span>
+                    <span>Submitted · <span class="val">{{ offer.submitted_at|date:"M d, Y · h:i A" }}</span></span>
                     {% if offer.updated_at != offer.submitted_at %}
-                        <span>Updated:&nbsp;<span class="val">{{ offer.updated_at|date:"M d, Y · g:i A" }}</span></span>
+                        <span>Updated · <span class="val">{{ offer.updated_at|date:"M d, Y · h:i A" }}</span></span>
                     {% endif %}
                 </div>
             </div>
 
-            <!-- Status badge -->
-            <span class="badge badge-{{ offer.status }}">{{ offer.status|capfirst }}</span>
+            {% if offer.status == 'accepted' %}
+                <span class="pill">Accepted</span>
+            {% elif offer.status == 'rejected' %}
+                <span class="pill pill-danger">Rejected</span>
+            {% else %}
+                <span class="pill pill-neutral">Submitted</span>
+            {% endif %}
 
-            <!-- Actions -->
             <div class="offer-actions">
-                <a href="{{ offer.offer_file.url }}" target="_blank"
-                   class="btn-sm accent">⬇ Download</a>
+                <a href="{{ offer.offer_file.url }}" target="_blank" class="btn btn-secondary btn-sm">Download</a>
 
                 {% if offer.status == 'submitted' %}
-
                     {% if deadline_passed %}
-                        <!--ENABLED after deadline-->
                         <a href="{% url 'purchase_requests:accept_offer' pk=pr.pk offer_pk=offer.pk %}"
-                            class="btn-sm green"
-                            onclick="return confirm('Accept this offer from {{ offer.seller.username }}?')">✓ Accept</a>
-
+                           class="btn btn-primary btn-sm"
+                           onclick="return confirm('Accept this offer from {{ offer.seller.username }}?')">Accept</a>
                         <a href="{% url 'purchase_requests:reject_offer' pk=pr.pk offer_pk=offer.pk %}"
-                            class="btn-sm danger"
-                            onclick="return confirm('Reject this offer from {{ offer.seller.username }}?')">✕ Reject</a>
-                    
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Reject this offer from {{ offer.seller.username }}?')">Reject</a>
                     {% else %}
-                        <!--DISABLED before deadline-->
-                        <button class="btn-sm disabled" disabled title="Available after deadline">
-                            ✓ Accept
-                        </button>
-                        <button class="btn-sm disabled" disabled title="Available after deadline">
-                            ✕ Reject
-                        </button>
+                        <button class="btn btn-secondary btn-sm" disabled title="Available after deadline">Accept</button>
+                        <button class="btn btn-secondary btn-sm" disabled title="Available after deadline">Reject</button>
                     {% endif %}
-
-                {% elif offer.status == 'accepted' %}
-                    <span class="btn-sm green" disabled>✓ Accepted</span>
-                {% elif offer.status == 'rejected' %}
-                    <span class="btn-sm danger" disabled>✕ Rejected</span>
                 {% endif %}
             </div>
 
@@ -215,8 +161,7 @@
         {% endfor %}
 
     {% else %}
-        <div class="empty-state">
-            <div class="empty-icon">📭</div>
+        <div class="empty">
             <div class="empty-title">No offers yet</div>
             <div class="empty-sub">Sellers who join and participate in your request will submit offers here.</div>
         </div>

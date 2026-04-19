@@ -32,6 +32,7 @@ class Client(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     account_type = models.CharField(max_length=20, choices=ACCOUNT_TYPE_CHOICES)
     contact_number = models.CharField(max_length=20, blank=True)
+    profile_image = models.ImageField(upload_to='uploads/profile_pictures/', null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
@@ -151,29 +152,3 @@ class ConsumerProfile(models.Model):
 
     def __str__(self):
         return self.full_name
-
-
-class OTP(models.Model):
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='otps')
-    code = models.CharField(max_length=6)
-    created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField()
-    is_used = models.BooleanField(default=False)
-    attempts = models.IntegerField(default=0)
-
-    class Meta:
-        db_table = 'otp'
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f'OTP for {self.client.email}'
-
-    @property
-    def is_expired(self):
-        return timezone.now() > self.expires_at
-
-    @property
-    def is_valid(self):
-        from django.conf import settings
-        max_attempts = getattr(settings, 'OTP_MAX_ATTEMPTS', 5)
-        return not self.is_used and not self.is_expired and self.attempts < max_attempts

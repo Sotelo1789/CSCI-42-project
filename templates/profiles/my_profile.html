@@ -29,6 +29,14 @@
         display: grid; place-items: center;
         font-family: 'Syne', sans-serif;
         font-size: 1.8rem; font-weight: 800;
+        color: var(--text-on-accent);
+        overflow: hidden;
+    }
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
     }
     .profile-meta { flex: 1; min-width: 0; }
     .profile-name {
@@ -115,7 +123,13 @@
 
     <!-- Header -->
     <div class="profile-header">
-        <div class="profile-avatar">{{ user.username|first|upper }}</div>
+        <div class="profile-avatar">
+            {% if user.profile_image %}
+                <img src="{{ user.profile_image.url }}" alt="{{ user.username }} profile picture">
+            {% else %}
+                {{ user.username|first|upper }}
+            {% endif %}
+        </div>
         <div class="profile-meta">
             <div class="profile-name">{{ user.username }}</div>
             <div class="profile-email">{{ user.email }}</div>

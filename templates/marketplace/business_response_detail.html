@@ -1,42 +1,152 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}Business Response to {{ br.consumer_request.title }}{% endblock %}
+{% block title %}Response · {{ br.consumer_request.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-wrap { max-width: 800px; margin: 0 auto; }
+
+    .back-link {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 13px; color: var(--text-secondary);
+        text-decoration: none; margin-bottom: 14px;
+    }
+    .back-link:hover { color: var(--accent); text-decoration: none; }
+
+    .status-banner {
+        padding: 12px 16px;
+        border-radius: var(--radius);
+        font-weight: 500;
+        font-size: 14px;
+        margin-bottom: 16px;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .status-pending {
+        background: var(--warning-bg);
+        border: 0.5px solid rgba(138,106,31,0.25);
+        color: var(--warning);
+    }
+    .status-accepted {
+        background: var(--accent-bg);
+        border: 0.5px solid rgba(45,95,63,0.25);
+        color: var(--accent);
+    }
+
+    .section-title {
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 14px;
+    }
+
+    .price-display {
+        font-size: 28px;
+        font-weight: 500;
+        letter-spacing: -0.015em;
+        color: var(--text-primary);
+        margin-bottom: 14px;
+    }
+
+    .info-row {
+        display: flex; justify-content: space-between; gap: 12px;
+        font-size: 14px;
+        padding: 10px 0;
+        border-bottom: 0.5px solid var(--border-subtle);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: var(--text-secondary); font-size: 13px; }
+    .info-value { color: var(--text-primary); font-weight: 500; text-align: right; }
+
+    .message-block {
+        background: var(--bg-faint);
+        border: 0.5px solid var(--border-subtle);
+        border-radius: var(--radius);
+        padding: 14px 16px;
+        color: var(--text-primary);
+        line-height: 1.65;
+        font-size: 14px;
+        white-space: pre-wrap;
+        margin-bottom: 14px;
+    }
+
+    .button-row {
+        display: flex; gap: 8px; flex-wrap: wrap;
+    }
+
+    .card + .card { margin-top: 12px; }
+</style>
+{% endblock %}
 
 {% block content %}
-<h1>Response to {{ br.consumer_request.title }}</h1>
-{% if user.business_profile %}
-    {% if is_accepted == True %}
-        <p>Your offer has been accepted</p>
-    {% else %}
-        <p>Your offer hasn't been accepted</p>
+<div class="page-wrap">
+    <a href="{% url 'marketplace:consumer_request_detail' pk=br.consumer_request.pk %}" class="back-link">← Back to request</a>
+
+    <div class="page-header">
+        <div class="page-eyebrow">Offer details</div>
+        <div class="page-title">Response to "{{ br.consumer_request.title }}"</div>
+        <div class="page-sub">Quotation details and delivery terms.</div>
+    </div>
+
+    {% if user.business_profile %}
+        {% if is_accepted == True %}
+            <div class="status-banner status-accepted">Your offer has been accepted.</div>
+        {% else %}
+            <div class="status-banner status-pending">Awaiting consumer's decision.</div>
+        {% endif %}
+    {% elif user.consumer_profile %}
+        {% if br.business.business_profile.rating > 0 %}
+            <div class="page-sub">Business Rating: {{ br.business.business_profile.rating }}</div>
+        {% else %}
+            <div class="page-sub">Unrated Business</div>
+        {% endif %}
+        {% if is_accepted == True %}
+            <div class="status-banner status-accepted">You have accepted this offer.</div>
+        {% else %}
+            <div class="status-banner status-pending">
+                <a href="{% url 'marketplace:pay_response' pk=br.pk %}">Accept Deal</a>
+            </div>
+        {% endif %}
     {% endif %}
-{% elif user.consumer_profile %}
-    {% if br.business.business_profile.rating > 0 %}
-        <p>Business Rating: {{ br.business.business_profile.rating }}</p>
-    {% else %}
-        <p>Unrated Business</p>
+    {% if user.consumer_profile and is_accepted == True %}
+        {% if is_reviewed == False %}    
+            <div><a href="{% url 'marketplace:create_review' pk=br.consumer_request_transaction.all.0.pk %}">Make a Review?</a></div>
+        {% elif is_reviewed == True %} 
+            <div class="status-banner status-accepted">
+                <p>You've reviewed this response already</p>
+                <p>{{ br.consumer_request_transaction.all.0.review.all.0.created_at }}</p>
+                <p>{{ br.consumer_request_transaction.all.0.review.all.0.rating }}</p>
+                <p>{{ br.consumer_request_transaction.all.0.review.all.0.text }}</p>
+            </div>
+        {% endif %}
     {% endif %}
-    {% if is_accepted == False %}
-        <a href="{% url 'marketplace:pay_response' pk=br.pk %}">Accept Deal</a>
-    {% else %}
-        <p>You've accepted this </p>
-    {% endif %}
-{% endif %}
-{% if user.consumer_profile and is_accepted == True %}
-    {% if is_reviewed == False %}    
-        <a href="{% url 'marketplace:create_review' pk=br.consumer_request_transaction.all.0.pk %}">Make a Review?</a>
-    {% elif is_reviewed == True %} 
-        <!--MAKE VIEW REVIEW-->
-        <p>You've reviewed this response already</p>
-    {% endif %}
-{% endif %}
-<div>
-    <p>Pricing: {{ br.price }}</p>
-    <p>Message: {{ br.message }}</p>
-    <p>Earliest Delivery Date: {{ br.earliest_delivery }}</p>
-    <p>Latest Delivery Date: {{ br.latest_delivery }}</p>
-    <button><a href="{% url 'marketplace:download_quotation' pk=br.pk %}">⬇ Download Quotation</a></button>
+
+    <div class="card">
+        <div class="section-title">Quotation</div>
+        <div class="price-display">₱{{ br.price|floatformat:0|intcomma }}</div>
+
+        <div class="info-row">
+            <span class="info-label">Earliest delivery</span>
+            <span class="info-value">{{ br.earliest_delivery|date:"M d, Y" }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Latest delivery</span>
+            <span class="info-value">{{ br.latest_delivery|date:"M d, Y" }}</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-title">Message from business</div>
+        <div class="message-block">{{ br.message }}</div>
+
+        <div class="button-row">
+            <a href="{% url 'marketplace:download_quotation' pk=br.pk %}" class="btn btn-secondary">Download quotation</a>
+            {% if user.consumer_profile and is_accepted == False %}
+                <a href="{% url 'marketplace:pay_response' pk=br.pk %}" class="btn btn-primary">Accept offer</a>
+            {% endif %}
+        </div>
+    </div>
 </div>
-<p><a href="{% url 'marketplace:consumer_request_detail' pk=br.consumer_request.pk %}">To Consumer Request...</a></p>
 {% endblock %}

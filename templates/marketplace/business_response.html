@@ -1,7 +1,6 @@
 {% extends "base.html" %}
-{% load humanize %}
 
-{% block title %}Respond to {{ cr.title }}{% endblock %}
+{% block title %}Respond to Request{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -66,10 +65,6 @@
         background: rgba(26,86,219,0.06);
     }
     .form-fields select option { background: #0f1a30; }
-    .form-fields ul.errorlist {
-        list-style: none; padding: 0; margin: 6px 0 0;
-        color: var(--danger); font-size: 0.8rem;
-    }
 
     .button-row { display: flex; gap: 0.6rem; justify-content: flex-end; }
     .btn {
@@ -93,31 +88,26 @@
 
 {% block content %}
 <div class="page-wrap">
-    {% if cr %}
-    <a href="{% url 'marketplace:consumer_request_detail' pk=cr.pk %}" class="back-link">← Back to request</a>
-    {% else %}
     <a href="{% url 'marketplace:business_marketplace' %}" class="back-link">← Back to marketplace</a>
-    {% endif %}
 
     <div class="page-header">
-        <div class="page-title">Submit a Response</div>
-        <div class="page-sub">Responding to "{{ cr.title }}"</div>
-        <div class="page-sub">Price Range: {{ cr.min_price }} to {{ cr.max_price }}</div>
+        <div class="page-title">Respond to Request</div>
+        <div class="page-sub">{{ req.title }}</div>
     </div>
 
     <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
 
         <div class="card">
-            <div class="card-title">Your Quotation</div>
+            <div class="card-title">Your Response</div>
             <div class="form-fields">
                 {{ form.as_p }}
             </div>
         </div>
 
         <div class="button-row">
-            <a href="{% url 'marketplace:consumer_request_detail' pk=cr.pk %}" class="btn">Cancel</a>
-            <button type="submit" class="btn btn-primary">Submit Response →</button>
+            <a href="{% url 'marketplace:business_marketplace' %}" class="btn">Cancel</a>
+            <button type="submit" class="btn btn-primary">Submit →</button>
         </div>
     </form>
 </div>

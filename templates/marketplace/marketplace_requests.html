@@ -1,86 +1,268 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}Marketplace Consumer Requests{% endblock %}
+{% block title %}Consumer requests · PROC{% endblock %}
 
 {% block extra_css %}
-<!--TODO in iter4-->
+<style>
+    .page-wrap { max-width: 1100px; margin: 0 auto; }
+    .back-link {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-size: 0.85rem; color: var(--muted);
+        text-decoration: none; margin-bottom: 1rem;
+    }
+    .back-link:hover { color: var(--accent); }
+
+    .filter-panel {
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px 20px;
+        margin-bottom: 16px;
+    }
+    .filter-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 1.4fr;
+        gap: 10px;
+        align-items: end;
+        margin-bottom: 12px;
+    }
+    .filter-field { display: flex; flex-direction: column; gap: 6px; }
+    .filter-label {
+        font-size: 11px; font-weight: 500;
+        letter-spacing: 0.08em; text-transform: uppercase;
+        color: var(--text-secondary);
+    }
+    .filter-panel input,
+    .filter-panel select {
+        width: 100%;
+        height: 36px;
+        padding: 8px 12px;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border-strong);
+        border-radius: var(--radius);
+        color: var(--text-primary);
+        font-family: var(--font);
+        font-size: 14px;
+        outline: none;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    .filter-panel input:focus,
+    .filter-panel select:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(45, 95, 63, 0.12);
+    }
+    .filter-actions {
+        display: flex; gap: 8px;
+        align-items: center; justify-content: flex-end;
+    }
+
+    .results-bar {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 12px; padding: 0 4px;
+    }
+    .results-count { font-size: 13px; color: var(--text-secondary); }
+    .results-count strong { color: var(--text-primary); font-weight: 500; }
+
+    .per-page-form { display: flex; align-items: center; gap: 8px; }
+    .per-page-form label { font-size: 12px; color: var(--text-secondary); }
+    .per-page-form input {
+        width: 56px; height: 30px;
+        padding: 4px 8px;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border-strong);
+        border-radius: var(--radius);
+        color: var(--text-primary); font-size: 13px;
+        text-align: center; outline: none;
+        font-family: var(--font); font-weight: 500;
+        -moz-appearance: textfield;
+    }
+    .per-page-form input::-webkit-inner-spin-button,
+    .per-page-form input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+    .req-list { display: flex; flex-direction: column; gap: 10px; }
+    .req-card {
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px 20px;
+        display: grid;
+        grid-template-columns: 80px 1fr auto;
+        gap: 18px;
+        align-items: center;
+        transition: border-color 0.12s;
+    }
+    .req-card:hover { border-color: var(--border-strong); }
+
+    .req-thumb {
+        width: 80px; height: 80px;
+        border-radius: var(--radius);
+        background: var(--accent-bg);
+        display: flex; align-items: center; justify-content: center;
+        overflow: hidden;
+        border: 0.5px solid var(--border-subtle);
+    }
+    .req-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .req-thumb-empty {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--accent);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .req-body { min-width: 0; }
+    .req-title {
+        font-size: 16px; font-weight: 500;
+        color: var(--text-primary); text-decoration: none;
+        display: block; margin-bottom: 6px;
+        letter-spacing: -0.005em;
+    }
+    .req-title:hover { color: var(--accent); text-decoration: none; }
+    .req-meta-row {
+        display: flex; flex-wrap: wrap; gap: 14px;
+        font-size: 13px; color: var(--text-secondary);
+        align-items: center;
+    }
+    .req-price {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-primary);
+        letter-spacing: -0.005em;
+    }
+
+    .req-action {
+        display: flex; flex-direction: column;
+        align-items: flex-end; gap: 6px;
+        min-width: 130px;
+    }
+
+    @media (max-width: 760px) {
+        .filter-row { grid-template-columns: 1fr 1fr; }
+        .req-card { grid-template-columns: 1fr; }
+        .req-thumb { width: 100%; height: 120px; }
+        .req-action { flex-direction: row; align-items: center; justify-content: flex-end; }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<h1>Marketplace Consumer Requests</h1>
-<form method="get" style="margin-bottom: 1rem;">
-    <p>{{ filter_form.keyword.label }}: {{ filter_form.keyword }}</p>
-    <p>{{ filter_form.category.label }}: {{ filter_form.category }}</p>
-    <p> Price Range: {{ filter_form.min_price }} to {{ filter_form.max_price }}</p>
-    <p>{{ filter_form.delivery_area.label }}: {{ filter_form.delivery_area }}</p>
-    <button type="submit">Filter</button>
-</form>
-{% if crs %}
-    {% for cr in page_consumer_requests %}
-        <div>
-            <p>Title: <a href="{% url 'marketplace:consumer_request_detail' pk=cr.pk %}"> {{ cr.title }}</a></p>
-            <p>Category: {{ cr.category }}</p>
-            <p>Price Range: {{ cr.min_price }} - {{ cr.max_price}}</p>
-            <p>Consumer: {{ cr.consumer.consumer_profile.full_name }}</p>
-            {% for respondedrequest in page_respondedrequests %}
-                {% if forloop.counter == forloop.parentloop.counter %}
-                    {% if respondedrequest.0 == True %}
-                        <p style="color: yellow">You have responded to this request</p>
-                        <button>TODO enter chat/edit response</button>
-                    {% else %}
-                        <p style="color:grey">Not responded by user</p>
-                        <button><a href="{% url 'marketplace:respond_to_request' pk=respondedrequest.1 %}">Respond?</a></button>
-                    {% endif %}
+<div class="page-wrap">
+    <a href="{% url 'marketplace:business_marketplace' %}" class="back-link">← Back to marketplace</a>
+
+    <div class="page-header">
+        <div class="page-eyebrow">Marketplace</div>
+        <div class="page-title">Consumer requests</div>
+        <div class="page-sub">Find what consumers are looking for and respond with your offer.</div>
+    </div>
+
+    <div class="filter-panel">
+        <form method="get" class="form">
+            <div class="filter-row">
+                <div class="filter-field">
+                    <label class="filter-label">Keyword</label>
+                    {{ filter_form.keyword }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">Category</label>
+                    {{ filter_form.category }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">Min price</label>
+                    {{ filter_form.min_price }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">Max price</label>
+                    {{ filter_form.max_price }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">Delivery area</label>
+                    {{ filter_form.delivery_area }}
+                </div>
+            </div>
+            <div class="filter-actions">
+                <a href="{% url 'marketplace:marketplace_requests' %}" class="btn btn-ghost btn-sm">Clear</a>
+                <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+            </div>
+        </form>
+    </div>
+
+    {% if crs %}
+    <div class="results-bar">
+        <div class="results-count">
+            Showing <strong>{{ page_consumer_requests.start_index }}–{{ page_consumer_requests.end_index }}</strong>
+            of <strong>{{ crs|length|intcomma }}</strong> consumer requests{{ crs|length|pluralize }}
+        </div>
+        <form method="get" class="per-page-form">
+            {% for k, v in request.GET.items %}{% if k != 'dictate' and k != 'page' %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}{% endfor %}
+            <label>Per page</label>
+            <input type="number" name="dictate" min="1" max="100" value="{{ page_item_count }}">
+            <button type="submit" class="btn btn-secondary btn-sm">Apply</button>
+        </form>
+    </div>
+
+    <div class="req-list">
+        {% for cr in page_consumer_requests %}
+        <div class="req-card">
+            <div class="req-thumb">
+                {% if cr.images.exists %}
+                    {% for image in cr.images.all %}
+                        {% if forloop.counter == 1 %}
+                            <img src="{{ image.image.url }}" alt="{{ cr.title }}">
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <span class="req-thumb-empty">{{ cr.category|slice:":3" }}</span>
                 {% endif %}
-            {% endfor %}
-            {% if cr.images.exists %}
-                {% for image in cr.images.all %}
-                    {% if forloop.counter == 1 %}
-                        <img src="{{ image.image.url }}" alt="Main Picture">
+            </div>
+            <div class="req-body">
+                <a href="{% url 'marketplace:consumer_request_detail' pk=cr.pk %}" class="req-title">{{ cr.title }}</a>
+                <div class="req-meta-row">
+                    <span class="pill">{{ cr.category }}</span>
+                    <span class="req-price">₱{{ cr.min_price|floatformat:0|intcomma }} – ₱{{ cr.max_price|floatformat:0|intcomma }}</span>
+                    <span>{{ cr.consumer.consumer_profile.full_name|default:cr.consumer.username }}</span>
+                </div>
+            </div>
+            <div class="req-action">
+                {% for respondedrequest in page_respondedrequests %}
+                    {% if forloop.counter == forloop.parentloop.counter %}
+                        {% if respondedrequest.0 == True %}
+                            <span class="pill">Responded</span>
+                        {% else %}
+                            <a href="{% url 'marketplace:respond_to_request' pk=respondedrequest.1 %}" class="btn btn-secondary btn-sm">Respond</a>
+                        {% endif %}
                     {% endif %}
                 {% endfor %}
-            {% endif %}
+            </div>
         </div>
-        <br>
-    {% endfor %}
+        {% endfor %}
+    </div>
 
-    {% if page_consumer_requests.paginator.num_pages %}
+    {% if page_consumer_requests.paginator.num_pages > 1 %}
     <div class="pagination">
         <div class="page-links">
             {% if page_consumer_requests.has_previous %}
-                <a class="page-link" href="?page=1&{{ request_get }}">« First</a>
-                <a class="page-link" href="?page={{ page_consumer_requests.previous_page_number }}&{{ request_get }}">‹ Prev</a>
+                <a class="page-link" href="?page=1&{{ request_get }}">First</a>
+                <a class="page-link" href="?page={{ page_consumer_requests.previous_page_number }}&{{ request_get }}">Prev</a>
             {% endif %}
             <span class="page-link current">{{ page_consumer_requests.number }}</span>
-            {% if page_listings.has_next %}
-                <a class="page-link" href="?page={{ page_consumer_requests.next_page_number }}&{{ request_get }}">Next ›</a>
-                <a class="page-link" href="?page={{ page_consumer_requests.paginator.num_pages }}&{{ request_get }}">Last »</a>
+            {% if page_consumer_requests.has_next %}
+                <a class="page-link" href="?page={{ page_consumer_requests.next_page_number }}&{{ request_get }}">Next</a>
+                <a class="page-link" href="?page={{ page_consumer_requests.paginator.num_pages }}&{{ request_get }}">Last</a>
             {% endif %}
         </div>
         <div class="page-info">
             Page {{ page_consumer_requests.number }} of {{ page_consumer_requests.paginator.num_pages }}
-            &nbsp;·&nbsp;
-            {{ crs|length }} result{{ crs|length|pluralize }}
         </div>
-    </div>
-    <div>
-        <p>There 
-        {% if is_one_per_page %}
-            is 1 item 
-        {% else %}
-            are {{ page_item_count }} items
-        {% endif %}
-        per page </p>
-        <form method="get" style="margin-bottom: 1rem;">
-            {{ dictate_form.dictate }}
-            <button type="submit">Change Item Count</button>
-        </form>
     </div>
     {% endif %}
 
-{% else %}
-    <p>No Consumer Requests Available. Come back at a different time!</p>
-{% endif %}
-
+    {% else %}
+    <div class="empty">
+        <div class="empty-title">No consumer requests available</div>
+        <div class="empty-sub">Come back at a different time — new requests are posted regularly.</div>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}

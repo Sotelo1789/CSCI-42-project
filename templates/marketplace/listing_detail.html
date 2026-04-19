@@ -1,82 +1,354 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}Listing: {{ listing.title }}{% endblock %}
+{% block title %}{{ listing.title }} · PROC{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-wrap { max-width: 1000px; margin: 0 auto; }
+
+    .back-link {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 13px; color: var(--text-secondary);
+        text-decoration: none; margin-bottom: 14px;
+    }
+    .back-link:hover { color: var(--accent); text-decoration: none; }
+
+    .detail-header {
+        display: flex; justify-content: space-between;
+        align-items: flex-start; gap: 12px;
+        margin-bottom: 20px;
+    }
+    .detail-title {
+        font-size: 28px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        margin-bottom: 10px;
+        color: var(--text-primary);
+    }
+    .detail-subline {
+        display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+        font-size: 13px; color: var(--text-secondary);
+    }
+    .view-count {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    /* Gallery */
+    .gallery {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+    .gallery-main {
+        width: 100%; aspect-ratio: 16/9;
+        border-radius: var(--radius);
+        overflow: hidden;
+        background: var(--accent-bg);
+        border: 0.5px solid var(--border);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .gallery-main img { width: 100%; height: 100%; object-fit: cover; }
+    .gallery-empty {
+        font-size: 13px; font-weight: 500;
+        color: var(--accent);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+    .gallery-thumbs {
+        display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .gallery-thumb {
+        width: 72px; height: 72px;
+        border-radius: var(--radius);
+        overflow: hidden;
+        border: 0.5px solid var(--border);
+        cursor: pointer;
+        transition: border-color 0.12s;
+    }
+    .gallery-thumb:hover { border-color: var(--border-strong); }
+    .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Two-col */
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 14px;
+    }
+
+    .section-title {
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+    }
+
+    .price-display {
+        font-size: 26px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+    .price-sub {
+        font-size: 13px; color: var(--text-secondary);
+        margin-bottom: 16px;
+    }
+
+    .info-list { display: flex; flex-direction: column; }
+    .info-row {
+        display: flex; justify-content: space-between; gap: 12px;
+        font-size: 14px;
+        padding: 10px 0;
+        border-bottom: 0.5px solid var(--border-subtle);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: var(--text-secondary); font-size: 13px; }
+    .info-value {
+        color: var(--text-primary);
+        font-weight: 500;
+        text-align: right;
+        font-size: 14px;
+    }
+
+    .description {
+        color: var(--text-primary);
+        line-height: 1.65;
+        font-size: 14px;
+        white-space: pre-wrap;
+    }
+
+    .action-stack {
+        display: flex; flex-direction: column; gap: 8px;
+    }
+    .action-btn-full {
+        display: block; width: 100%;
+        text-align: center;
+    }
+
+    .card + .card { margin-top: 12px; }
+
+    @media (max-width: 860px) {
+        .detail-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<h1>{{ listing.title }}</h1>
-{% if user.consumer_profile %}
-    {% if is_favorite == True %}
-        <p style="color: yellow">FAVORITE</p>
-        <button><a href="{% url 'marketplace:unfavorite_in_detail' pk=listing.pk %}">Unfavorite?</a></button>
-    {% else %}
-        <p style="color: grey">Not Favorite</p>
-        <button><a href="{% url 'marketplace:set_favorite_in_detail' pk=listing.pk %}">Make favorite?</a></button>
-    {% endif %}
-{% endif %}
-<p>Viewed: {{ listing.view_count }}</p>
-<div>
-    <p>Category: {{ listing.category|upper }}</p>
-    <p>Pricing: {{ listing.min_price }} - {{ listing.max_price }}</p>
-    {% if listing.availability == True %}
-        <p>Listing Available For Inquiry</p>
-    {% else %}
-        <p>Listing Unavailable For Now</p>
-    {% endif %}
-    <p>Amount per Transaction: {{ listing.quantity }} {{ listing.unit }}</p>
-</div>
-{% if user.consumer_profile and listing.availability == True %}
-    <a href="{% url 'marketplace:pay_listing' pk=listing.pk %}">Attempt to purchase</a>
-{% endif %}
-<div>
-    <p>Delivery Option: {{ listing.delivery_option|upper }}</p>
-    <p>Delivery Areas: {{ listing.delivery_area }}</p>
-    <p>Delivery Time (in Days): {{ listing.delivery_time }}</p>
-</div>
-{% if listing.business.business_profile.rating > 0 %}
-    <p>Business Rating: {{ listing.business.business_profile.rating }}</p>
-{% else %}
-    <p>Unrated Business</p>
-{% endif %}
+<div class="page-wrap">
+    <a href="{% url 'marketplace:marketplace_listings' %}" class="back-link">← Back to listings</a>
 
-<p>Business Contact: {{ listing.business.business_profile.rep_contact }}</p>
-<p>Description:</p>
-<p>{{ listing.description }}</p>
-{% if listing.images.exists %}
-    {% for image in listing.images.all %}
-        <img src="{{ image.image.url }}" alt="Image {{ forloop.counter }}">
-    {% endfor %}
-{% endif %}
-<button><a href="{% url 'marketplace:download_toc' pk=listing.pk %}">⬇ Download Terms and Conditions</a></button>
-{% if listing.listing_transaction.exists %}
-    {% if user.business_profile %}
-        <h2>Existing Reviews:</h2>
-    {% elif user.consumer_profile %}
-        <h2>Your Transactions:</h2>
-    {% endif %}
-    {% for lt in listing.listing_transaction.all|dictsortreversed:"created_at" %}
-        {% if user.business_profile %}
-            {% if lt.review.exists %}    
-                <p>Review of {{ lt.consumer }} </p>
-                <p>Rating: {{ lt.review.all.0.rating }}</p>
-                <p>Comment: </p>
-                <p>{{ lt.review.all.0.text }}</p>
-                <br>
-            {% endif %}
-        {% elif user.consumer_profile %}
-            {% if lt.consumer == user %}
-                <p>{{ lt.created_at }}</p>
-                <p>{{ lt.price }}</p>
-                {% if lt.review.all.exists %}
-                    <p>You have reviewed this transaction</p>
-                    <p>Transaction Rated as: {{ lt.review.all.0.rating }} out of 10</p>
-                    <p>Comment of Review: {{ lt.review.all.0.text }}</p>
+    <div class="detail-header">
+        <div>
+            <div class="detail-title">{{ listing.title }}</div>
+            <div class="detail-subline">
+                <span class="pill">{{ listing.category }}</span>
+                {% if listing.availability == True %}
+                    <span class="pill">Available</span>
                 {% else %}
-                    <p><a href="{% url 'marketplace:create_review' pk=lt.pk %}">Make a Review?</a></p>
+                    <span class="pill pill-danger">Unavailable</span>
                 {% endif %}
-                <br>
+                <span class="view-count">{{ listing.view_count|intcomma }} view{{ listing.view_count|pluralize }}</span>
+            </div>
+        </div>
+
+        {% if user.consumer_profile %}
+            {% if is_favorite == True %}
+                <a href="{% url 'marketplace:unfavorite_in_detail' pk=listing.pk %}" class="btn btn-secondary btn-sm">★ Saved</a>
+            {% else %}
+                <a href="{% url 'marketplace:set_favorite_in_detail' pk=listing.pk %}" class="btn btn-secondary btn-sm">Save</a>
             {% endif %}
         {% endif %}
-    {% endfor %}
-{% endif %}
+    </div>
+
+    <div class="gallery">
+        <div class="gallery-main">
+            {% if listing.images.exists %}
+                {% for image in listing.images.all %}
+                    {% if forloop.counter == 1 %}
+                        <img src="{{ image.image.url }}" alt="{{ listing.title }}">
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <span class="gallery-empty">{{ listing.category|slice:":3" }}</span>
+            {% endif %}
+        </div>
+        {% if listing.images.exists and listing.images.count > 1 %}
+        <div class="gallery-thumbs">
+            {% for image in listing.images.all %}
+                {% if not forloop.first %}
+                <div class="gallery-thumb">
+                    <img src="{{ image.image.url }}" alt="Thumbnail {{ forloop.counter }}">
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="detail-grid">
+        <div>
+            <div class="card">
+                <div class="section-title">Description</div>
+                <div class="description">{{ listing.description }}</div>
+            </div>
+
+            <div class="card">
+                <div class="section-title">Delivery &amp; logistics</div>
+                <div class="info-list">
+                    <div class="info-row">
+                        <span class="info-label">Delivery option</span>
+                        <span class="info-value">{{ listing.delivery_option|capfirst }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Delivery area</span>
+                        <span class="info-value">{{ listing.delivery_area }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Delivery time</span>
+                        <span class="info-value">{{ listing.delivery_time }} day{{ listing.delivery_time|pluralize }}</span>
+                    </div>
+                    <div class="info-row">
+                        {% if listing.business.business_profile.rating > 0 %}
+                            <span class="info-label">Business Rating</span>
+                            <span class="info-value">{{ listing.business.business_profile.rating }}</span>
+                        {% else %}
+                            <span class="info-label">Unrated Business</span>
+                        {% endif%}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="card">
+                <div class="section-title">Price range</div>
+                <div class="price-display">₱{{ listing.min_price|floatformat:0|intcomma }} – ₱{{ listing.max_price|floatformat:0|intcomma }}</div>
+                <div class="price-sub">{{ listing.quantity }} {{ listing.unit }} per transaction</div>
+
+                <div class="action-stack">
+                    {% if user.consumer_profile and listing.availability == True %}
+                        <a href="{% url 'marketplace:pay_listing' pk=listing.pk %}" class="btn btn-primary action-btn-full">Buy now</a>
+                    {% endif %}
+                    <a href="{% url 'marketplace:download_toc' pk=listing.pk %}" class="btn btn-secondary action-btn-full">Download terms</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-title">Business</div>
+                <div class="info-list">
+                    <div class="info-row">
+                        <span class="info-label">Name</span>
+                        <span class="info-value">{{ listing.business.business_profile.business_name|default:listing.business.username }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Contact</span>
+                        <span class="info-value">{{ listing.business.business_profile.rep_contact|default:"—" }}</span>
+                    </div>
+                    {% if listing.business.business_profile.rating != 0 %}
+                    <div class="info-row">
+                        <span class="info-label">Rating</span>
+                        <span class="info-value">★ {{ listing.business.business_profile.rating }}</span>
+                    </div>
+                    {% else %}
+                    <div class="info-row">
+                        <span class="info-label">Unrated Business</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if listing.listing_transaction.exists %}
+            <div class="card">
+                <div class="section-title">
+                    {% if user.business_profile %}
+                        Existing Reviews:
+                    {% elif user.consumer_profile %}
+                        Recent Transactions:
+                    {% endif %}
+                </div>
+                    <div class="info-list">
+                        {% for lt in listing.listing_transaction.all|dictsortreversed:"created_at" %}
+                        <div class="info-list">
+                            {% if user.business_profile %}
+                                {% if lt.review.exists %}
+                                <div class="info-row">    
+                                    <span class="info-label">Review of {{ lt.consumer }} </span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Transaction Date</span>
+                                    <span class="info-value">{{ lt.created_at }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Rating</span>
+                                    <span class="info-value">{{ lt.review.all.0.rating }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Comment</span>
+                                    <span class="info-value">{{ lt.review.all.0.text }}</span>
+                                </div>
+                                {% endif %}
+                            {% elif user.consumer_profile %}
+                                {% if lt.consumer == user %}
+                                    <div class="info-row">
+                                        <span class="info-label">Your Transaction</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Transaction Date</span>
+                                        <span class="info-value">{{ lt.created_at }}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Amount Paid</span>
+                                        <span class="info-value">{{ lt.price }}</span>
+                                    </div>
+                                    {% if lt.review.all.exists %}
+                                        <div class="info-row">
+                                            <span class="info-label">You have reviewed this transaction</span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label">Your Rating</span>
+                                            <span class="info-value">{{ lt.review.all.0.rating }} out of 10</span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label">Your Comment</span>
+                                            <span class="info-value">{{ lt.review.all.0.text }}</span>
+                                        </div>
+                                    {% else %}
+                                        <div class="info-row">
+                                            <span class="info-label"><a href="{% url 'marketplace:create_review' pk=lt.pk %}">Make a Review?</a></span>
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    {% if lt.review.all.exists %}
+                                        <div class="info-row">
+                                            <span class="info-label">Another Consumer's Review</span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label">Transaction Date</span>
+                                            <span class="info-value">{{ lt.created_at }}</span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label">Their Rating</span>
+                                            <span class="info-value">{{ lt.review.all.0.rating }} out of 10</span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label">Their Comment</span>
+                                            <span class="info-value">{{ lt.review.all.0.text }}</span>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}

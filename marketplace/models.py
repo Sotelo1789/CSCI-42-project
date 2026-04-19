@@ -78,6 +78,12 @@ class ConsumerRequest(models.Model):
         ('custom', 'Custom'),
     ]
 
+    CONTACT_CHOICES = [
+        ('message', 'Message'),
+        ('email', 'Email'),
+        ('phone', "Phone")
+    ]
+
     consumer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -91,6 +97,7 @@ class ConsumerRequest(models.Model):
     max_price = models.DecimalField(max_digits=15, decimal_places=2, validators=[validate_nonnegative])
     delivery_area = models.CharField(max_length=100)
     needed_by = models.DateTimeField()
+    contact_pref = models.CharField(max_length=10, choices=CONTACT_CHOICES, blank=True, null=True)
     response_count = models.IntegerField(validators=[validate_nonnegative], default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -194,7 +201,7 @@ class Review(models.Model):
         blank=True,
         null=True
     )
-    
+
     text = models.TextField()
     rating = models.IntegerField(validators=[validate_rating])
 

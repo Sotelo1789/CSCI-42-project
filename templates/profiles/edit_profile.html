@@ -72,6 +72,60 @@
     .field textarea::placeholder { color: var(--muted); opacity: 0.6; }
     .field textarea { resize: vertical; min-height: 90px; }
     .field select option { background: #0f1a30; }
+    .field input[type="file"] {
+        padding: 0.5rem;
+        background: var(--bg-faint);
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        cursor: pointer;
+    }
+    .field input[type="file"]::file-selector-button {
+        margin-right: 0.8rem;
+        padding: 0.7rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--bg-surface);
+        color: var(--text-primary);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    }
+    .field input[type="file"]::file-selector-button:hover {
+        background: var(--accent-bg);
+        border-color: rgba(45, 95, 63, 0.25);
+        transform: translateY(-1px);
+    }
+    .profile-upload {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+    .profile-upload-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: var(--text-on-accent);
+        display: grid;
+        place-items: center;
+        font-size: 1.1rem;
+        font-weight: 700;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+    .profile-upload-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .field-help {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
 
     /* ── Actions ── */
     .form-actions {
@@ -106,13 +160,29 @@
     <a href="{% url 'profiles:my_profile' %}" class="back-link">← Back to Profile</a>
     <div class="page-title">Edit Profile</div>
 
-    <form method="post" novalidate>
+    <form method="post" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
 
         <!-- Account -->
         <div class="form-card">
             <div class="section-title">Account</div>
             <div class="field-grid">
+                <div class="field field-full">
+                    <label for="profile_image">Profile Picture</label>
+                    <div class="profile-upload">
+                        <div class="profile-upload-avatar">
+                            {% if user.profile_image %}
+                                <img src="{{ user.profile_image.url }}" alt="{{ user.username }} profile picture">
+                            {% else %}
+                                {{ user.username|first|upper }}
+                            {% endif %}
+                        </div>
+                        <div class="field" style="flex: 1;">
+                            <input type="file" id="profile_image" name="profile_image" accept="image/*">
+                            <div class="field-help">Upload a JPG, PNG, or other image file to personalize your account.</div>
+                        </div>
+                    </div>
+                </div>
                 <div class="field">
                     <label>Username</label>
                     <input type="text" value="{{ user.username }}" disabled>

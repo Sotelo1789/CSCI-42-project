@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Client, BusinessProfile, ConsumerProfile, OTP
+from .models import Client, BusinessProfile, ConsumerProfile
 
 
 @admin.register(Client)
@@ -25,9 +25,3 @@ class BusinessProfileAdmin(admin.ModelAdmin):
 @admin.register(ConsumerProfile)
 class ConsumerProfileAdmin(admin.ModelAdmin):
     list_display = ['full_name', 'client', 'created_at']
-
-
-@admin.register(OTP)
-class OTPAdmin(admin.ModelAdmin):
-    list_display = ['client', 'code', 'created_at', 'expires_at', 'is_used', 'attempts']
-    list_filter = ['is_used']
