@@ -6,6 +6,12 @@
 {% block extra_css %}
 <style>
     .page-wrap { max-width: 1000px; margin: 0 auto; }
+    .back-link {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-size: 0.85rem; color: var(--muted);
+        text-decoration: none; margin-bottom: 1rem;
+    }
+    .back-link:hover { color: var(--accent); }
 
     .filter-panel {
         background: var(--bg-surface);
@@ -124,6 +130,8 @@
 
 {% block content %}
 <div class="page-wrap">
+    <a href="{% url 'marketplace:business_marketplace' %}" class="back-link">← Back to marketplace</a>
+
     <div class="page-header">
         <div class="page-eyebrow">Marketplace</div>
         <div class="page-title">My transactions</div>
