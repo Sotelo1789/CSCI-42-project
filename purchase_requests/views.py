@@ -320,10 +320,15 @@ def my_requests_view(request):
             from POST creates a string, which is not as easily comparable to the datetime data 
             type of old_deadline)
             """
+            if new_deadline:
+                new_deadline = datetime.strptime(new_deadline, "%Y-%m-%dT%H:%M")
 
-            new_deadline = new_deadline[0:10] + " " + new_deadline[11:16] + old_deadline.strftime(":%S%z")
-            date_format = "%Y-%m-%d %H:%M:%S%z"
-            new_deadline = datetime.strptime(new_deadline, date_format)
+                if timezone.is_naive(new_deadline):
+                    new_deadline = timezone.make_aware(new_deadline, timezone.get_current_timezone())
+                
+                if new_deadline > old_deadline:
+                    pr.closing_deadline = new_deadline
+                    pr.save()
 
             #print(old_deadline)
             #print(new_deadline)
