@@ -97,10 +97,29 @@
             <div class="status-banner status-pending">Awaiting consumer's decision.</div>
         {% endif %}
     {% elif user.consumer_profile %}
+        {% if br.business.business_profile.rating > 0 %}
+            <div class="page-sub" style="margin-bottom:10px;">Business rating: {{ br.business.business_profile.rating }}/10</div>
+        {% endif %}
         {% if is_accepted == True %}
             <div class="status-banner status-accepted">You have accepted this offer.</div>
         {% else %}
-            <div class="status-banner status-pending">Pending — review and accept this offer.</div>
+            <div class="status-banner status-pending">
+                Pending —
+                <a href="{% url 'marketplace:pay_response' pk=br.pk %}" style="color:inherit;font-weight:600;text-decoration:underline;">accept this offer</a>
+            </div>
+        {% endif %}
+    {% endif %}
+
+    {% if user.consumer_profile and is_accepted == True %}
+        {% if is_reviewed == False %}
+            <div class="status-banner status-pending" style="margin-bottom:12px;">
+                No review yet — <a href="{% url 'marketplace:create_review' pk=br.consumer_request_transaction.all.0.pk %}" style="color:inherit;font-weight:600;text-decoration:underline;">leave a review</a>
+            </div>
+        {% else %}
+            <div class="status-banner status-accepted" style="flex-direction:column;align-items:flex-start;gap:4px;margin-bottom:12px;">
+                <span>You reviewed this offer · rated {{ br.consumer_request_transaction.all.0.review.all.0.rating }}/10</span>
+                <span style="font-size:13px;font-weight:400;">{{ br.consumer_request_transaction.all.0.review.all.0.text }}</span>
+            </div>
         {% endif %}
     {% endif %}
 

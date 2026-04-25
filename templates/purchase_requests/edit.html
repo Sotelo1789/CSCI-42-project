@@ -1,95 +1,138 @@
 {% extends "base.html" %}
+{% load humanize %}
 
-{% block title %}Edit Purchase Request{% endblock %}
+{% block title %}Edit request · PROC{% endblock %}
 
 {% block extra_css %}
 <style>
-    .page-wrap { max-width: 900px; margin: 0 auto; }
+    .page-wrap { max-width: 760px; margin: 0 auto; }
 
-    .page-header { margin-bottom: 1.75rem; }
-    .page-title {
-        font-family: 'Syne', sans-serif;
-        font-size: 1.75rem;
-        font-weight: 800;
-        margin-bottom: 0.25rem;
+    .form-fields {
+        display: flex; flex-direction: column;
+        gap: 16px;
     }
-    .page-sub { color: var(--muted); font-size: 0.9rem; }
-
-    .form-card {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        padding: 1.5rem;
+    .section-title {
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 14px;
     }
 
-    .form-group {
-        margin-bottom: 1rem;
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label {
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
     }
+    .field label .req { color: var(--accent); margin-left: 2px; }
 
-    label {
-        display: block;
-        margin-bottom: 0.35rem;
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: var(--muted);
-    }
-
-    input, select, textarea {
+    .field input[type="text"],
+    .field input[type="number"],
+    .field input[type="datetime-local"],
+    .field select,
+    .field textarea {
         width: 100%;
-        padding: 0.6rem 0.75rem;
-        border-radius: 10px;
-        border: 1px solid var(--border);
-        background: #0b1426;
-        color: var(--white);
-        font-size: 0.85rem;
-    }
-
-    input:focus, select:focus, textarea:focus {
+        padding: 9px 12px;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border-strong);
+        border-radius: var(--radius);
+        color: var(--text-primary);
+        font-family: var(--font);
+        font-size: 14px;
         outline: none;
-        border-color: var(--accent);
+        -webkit-appearance: none;
+        appearance: none;
     }
-
-    textarea {
+    .field textarea {
         resize: vertical;
         min-height: 120px;
+        line-height: 1.55;
     }
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(45, 95, 63, 0.12);
+    }
+    .field input::placeholder,
+    .field textarea::placeholder {
+        color: var(--text-secondary);
+        opacity: 0.7;
+    }
+
+    .field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .file-zone {
+        border: 0.5px dashed var(--border-strong);
+        border-radius: var(--radius);
+        padding: 28px 20px;
+        text-align: center;
+        cursor: pointer;
+        background: var(--bg-faint);
+        transition: border-color 0.12s, background 0.12s;
+        position: relative;
+    }
+    .file-zone:hover,
+    .file-zone.drag-over {
+        border-color: var(--accent);
+        background: var(--accent-bg);
+    }
+    .file-zone input[type="file"] {
+        position: absolute; inset: 0;
+        opacity: 0; cursor: pointer;
+        width: 100%; height: 100%;
+    }
+    .file-label {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+    .file-hint {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+    .file-name {
+        margin-top: 10px;
+        padding: 6px 12px;
+        background: var(--accent-bg);
+        border: 0.5px solid rgba(45, 95, 63, 0.25);
+        border-radius: var(--radius);
+        font-size: 13px;
+        color: var(--accent);
+        font-weight: 500;
+        word-break: break-all;
+    }
+    .file-name-new { display: none; }
+
+    .field-error,
+    .errorlist li {
+        font-size: 12px;
+        color: var(--danger);
+        margin-top: 2px;
+        list-style: none;
+    }
+    .errorlist { margin: 0; padding: 0; }
 
     .form-actions {
-        margin-top: 1.25rem;
         display: flex;
-        gap: 0.75rem;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 8px;
     }
 
-    .btn-primary {
-        padding: 0.65rem 1.3rem;
-        border-radius: 12px;
-        border: none;
-        background: linear-gradient(135deg, var(--blue), #2563eb);
-        color: #fff;
-        font-weight: 700;
-        cursor: pointer;
-        transition: 0.15s;
-    }
+    .card + .card { margin-top: 12px; }
 
-    .btn-primary:hover {
-        opacity: 0.9;
-        transform: translateY(-1px);
-    }
-
-    .btn-cancel {
-        padding: 0.6rem 1.2rem;
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        background: transparent;
-        color: var(--muted);
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-    }
-
-    .btn-cancel:hover {
-        background: rgba(255,255,255,0.07);
-        color: var(--white);
+    @media (max-width: 600px) {
+        .field-row { grid-template-columns: 1fr; }
     }
 </style>
 {% endblock %}
@@ -97,67 +140,149 @@
 {% block content %}
 <div class="page-wrap">
 
-    <!-- Header -->
     <div class="page-header">
-        <div class="page-title">Edit Purchase Request</div>
+        <div class="page-eyebrow">Buyer</div>
+        <div class="page-title">Edit purchase request</div>
         <div class="page-sub">Update the details of your request below.</div>
     </div>
 
-    <!-- Form Card -->
-    <div class="form-card">
-        <form method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
 
-            <!-- Title -->
-            <div class="form-group">
-                <label>Title</label>
-                {{ form.title }}
+        <div class="card">
+            <div class="section-title">Request details</div>
+            <div class="form-fields">
+
+                <div class="field">
+                    <label for="{{ form.title.id_for_label }}">Title <span class="req">*</span></label>
+                    <input type="text"
+                           id="{{ form.title.id_for_label }}"
+                           name="{{ form.title.html_name }}"
+                           value="{{ form.title.value|default:'' }}"
+                           placeholder="e.g. Office supplies Q3 2026">
+                    {% if form.title.errors %}<div class="field-error">{{ form.title.errors }}</div>{% endif %}
+                </div>
+
+                <div class="field">
+                    <label for="{{ form.description.id_for_label }}">Description <span class="req">*</span></label>
+                    <textarea id="{{ form.description.id_for_label }}"
+                              name="{{ form.description.html_name }}"
+                              placeholder="Describe what you need, specifications, quantity, etc.">{{ form.description.value|default:'' }}</textarea>
+                    {% if form.description.errors %}<div class="field-error">{{ form.description.errors }}</div>{% endif %}
+                </div>
+
+                <div class="field">
+                    <label for="{{ form.category.id_for_label }}">Category <span class="req">*</span></label>
+                    <select id="{{ form.category.id_for_label }}" name="{{ form.category.html_name }}">
+                        {% for val, label in form.category.field.choices %}
+                            <option value="{{ val }}" {% if form.category.value == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.category.errors %}<div class="field-error">{{ form.category.errors }}</div>{% endif %}
+                </div>
+
             </div>
+        </div>
 
-            <!-- Category -->
-            <div class="form-group">
-                <label>Category</label>
-                {{ form.category }}
+        <div class="card">
+            <div class="section-title">Logistics and budget</div>
+            <div class="form-fields">
+
+                <div class="field">
+                    <label for="{{ form.area_of_delivery.id_for_label }}">Area of delivery <span class="req">*</span></label>
+                    <input type="text"
+                           id="{{ form.area_of_delivery.id_for_label }}"
+                           name="{{ form.area_of_delivery.html_name }}"
+                           value="{{ form.area_of_delivery.value|default:'' }}"
+                           placeholder="e.g. Makati City, Metro Manila">
+                    {% if form.area_of_delivery.errors %}<div class="field-error">{{ form.area_of_delivery.errors }}</div>{% endif %}
+                </div>
+
+                <div class="field-row">
+                    <div class="field">
+                        <label for="{{ form.budget.id_for_label }}">Budget (₱) <span class="req">*</span></label>
+                        <input type="number"
+                               id="{{ form.budget.id_for_label }}"
+                               name="{{ form.budget.html_name }}"
+                               value="{{ form.budget.value|default:'' }}"
+                               min="0" step="0.01"
+                               placeholder="e.g. 50000">
+                        {% if form.budget.errors %}<div class="field-error">{{ form.budget.errors }}</div>{% endif %}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.closing_deadline.id_for_label }}">Closing deadline <span class="req">*</span></label>
+                        <input type="datetime-local"
+                               id="{{ form.closing_deadline.id_for_label }}"
+                               name="{{ form.closing_deadline.html_name }}"
+                               value="{{ form.closing_deadline.value|default:'' }}">
+                        {% if form.closing_deadline.errors %}<div class="field-error">{{ form.closing_deadline.errors }}</div>{% endif %}
+                    </div>
+                </div>
+
             </div>
+        </div>
 
-            <!-- Budget -->
-            <div class="form-group">
-                <label>Budget (₱)</label>
-                {{ form.budget }}
+        <div class="card">
+            <div class="section-title">RFQ document</div>
+            <div class="form-fields">
+
+                <div class="field">
+                    <label>Request for quotation file</label>
+
+                    {% if form.rfq_file.value %}
+                        <div class="file-name">
+                            Current file: {{ form.rfq_file.value }}
+                        </div>
+                    {% endif %}
+
+                    <div class="file-zone" id="rfqZone">
+                        <input type="file"
+                               id="{{ form.rfq_file.id_for_label }}"
+                               name="{{ form.rfq_file.html_name }}"
+                               accept="application/pdf">
+                        <div class="file-label">
+                            {% if form.rfq_file.value %}Replace file{% else %}Click or drop your RFQ file here{% endif %}
+                        </div>
+                        <div class="file-hint">PDF only · leave empty to keep existing file</div>
+                        <div class="file-name file-name-new" id="rfqFileName"></div>
+                    </div>
+                    {% if form.rfq_file.errors %}<div class="field-error">{{ form.rfq_file.errors }}</div>{% endif %}
+                </div>
+
             </div>
+        </div>
 
-            <!-- Area -->
-            <div class="form-group">
-                <label>Area of Delivery</label>
-                {{ form.area_of_delivery }}
-            </div>
+        <div class="form-actions">
+            <a href="{% url 'purchase_requests:my_requests' %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+        </div>
 
-            <!-- Deadline -->
-            <div class="form-group">
-                <label>Closing Deadline</label>
-                {{ form.closing_deadline }}
-            </div>
-
-            <!-- Description -->
-            <div class="form-group">
-                <label>Description</label>
-                {{ form.description }}
-            </div>
-
-            <!-- RFQ File -->
-            <div class="form-group">
-                <label>RFQ File (PDF)</label>
-                {{ form.rfq_file }}
-            </div>
-
-            <!-- Actions -->
-            <div class="form-actions">
-                <button type="submit" class="btn-primary">💾 Save Changes</button>
-                <a href="{% url 'purchase_requests:my_requests' %}" class="btn-cancel">Cancel</a>
-            </div>
-
-        </form>
-    </div>
-
+    </form>
 </div>
+
+<script>
+    const input = document.getElementById('{{ form.rfq_file.id_for_label }}');
+    const zone  = document.getElementById('rfqZone');
+    const fname = document.getElementById('rfqFileName');
+
+    input.addEventListener('change', () => {
+        if (input.files.length) {
+            fname.textContent = input.files[0].name;
+            fname.style.display = 'inline-block';
+        }
+    });
+
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        if (e.dataTransfer.files.length) {
+            input.files = e.dataTransfer.files;
+            fname.textContent = e.dataTransfer.files[0].name;
+            fname.style.display = 'inline-block';
+        }
+    });
+</script>
 {% endblock %}

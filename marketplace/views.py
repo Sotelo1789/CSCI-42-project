@@ -5,8 +5,8 @@ from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from .forms import CreateListing, CreateConsumerRequest, RespondToRequest, RespondToRequest, ListingSearchFilterForm, RequestSearchFilterForm, AmountInPage, CreateListingTransaction, ChooseTransactionKind
-from .models import Listing, ListingImage, ConsumerRequest, ConsumerRequestImage, BusinessResponse, FavoriteListing, ListingTransaction, ConsumerRequestTransaction
+from .forms import CreateListing, CreateConsumerRequest, RespondToRequest, RespondToRequest, ListingSearchFilterForm, RequestSearchFilterForm, AmountInPage, CreateListingTransaction, ChooseTransactionKind, ReviewForm
+from .models import Listing, ListingImage, ConsumerRequest, ConsumerRequestImage, BusinessResponse, FavoriteListing, Transaction, ListingTransaction, ConsumerRequestTransaction, Review
 from authentication.models import BusinessProfile
 
 @login_required
@@ -26,7 +26,7 @@ def marketplace_listings_view(request):
     if dictate_form.is_valid():
         page_item_count = dictate_form.cleaned_data['dictate'] or 15
 
-    listings = Listing.objects.filter(business__business_profile__status='approved')
+    listings = Listing.objects.filter(business__business_profile__status='approved').order_by('-updated_at')
     businesses = BusinessProfile.objects.all()
 
     for business in businesses:
@@ -116,7 +116,7 @@ def marketplace_consumer_requests_view(request):
     if dictate_form.is_valid():
         page_item_count = dictate_form.cleaned_data['dictate'] or 15
 
-    crs = ConsumerRequest.objects.filter(status='open')
+    crs = ConsumerRequest.objects.filter(status='open').order_by('-updated_at')
 
     filter_form = RequestSearchFilterForm(request.GET or None)
     if filter_form.is_valid():
@@ -248,6 +248,14 @@ def respond_to_request_view(request, pk):
             br = form.save(commit=False)
             br.business = request.user
             br.consumer_request = cr
+            
+            min_price = cr.min_price
+            max_price = cr.max_price
+
+            if(min_price > br.price or max_price < br.price):
+                messages.error(request, 'Price is not within given range')
+                return redirect('marketplace:respond_to_request', pk=pk)
+            
             br.save()
 
             cr.response_count = cr.response_count + 1
@@ -273,13 +281,15 @@ def business_response_view(request, pk):
             return redirect('dashboard:dashboard')
 
     is_accepted = ConsumerRequestTransaction.objects.filter(consumer_request=br.consumer_request, business_response=br).exists()
+    is_reviewed = Review.objects.filter(transaction__consumerrequesttransaction__business_response=br).exists()
+    
     ctx = {
         'br': br,
-        'is_accepted': is_accepted
+        'is_accepted': is_accepted,
+        'is_reviewed': is_reviewed
     }
 
     return render(request, 'marketplace/business_response_detail.html', ctx)
-
 
 @login_required
 def create_consumer_request_view(request):
@@ -444,6 +454,15 @@ def pay_listing_view(request, pk):
             lt = pay_form.save(commit=False)
             lt.consumer = request.user
             lt.listing = listing
+            lt.transaction_type = "L"
+
+            min_price = listing.min_price
+            max_price = listing.max_price
+
+            if(min_price > lt.price or max_price < lt.price):
+                messages.error(request, 'Price is not within given range')
+                return redirect('marketplace:pay_listing', pk=pk)
+            
             lt.save()
 
             messages.success(request, 'You have successfully bought something. For smoother proceedings, have the decided amount ready to give to the business')
@@ -472,6 +491,7 @@ def pay_response(request, pk):
         business_response=business_response,
         consumer_request=business_response.consumer_request,
         price=business_response.price,
+        transaction_type="C"
     )
 
     consumer_request = business_response.consumer_request
@@ -485,10 +505,15 @@ def pay_response(request, pk):
 def my_transactions_view(request):
     if hasattr(request.user,"consumer_profile"):
         tk = "listing"
-        transactions = ListingTransaction.objects.filter(consumer=request.user)
+        transactions = ListingTransaction.objects.filter(consumer=request.user).order_by("-created_at")
     elif hasattr(request.user,"business_profile"):
         tk = "consumer_request"
-        transactions = ConsumerRequestTransaction.objects.filter(business_response__business=request.user)
+        transactions = ConsumerRequestTransaction.objects.filter(business_response__business=request.user).order_by("-created_at")
+
+    page_item_count = 15
+    dictate_form = AmountInPage(request.GET or None)
+    if dictate_form.is_valid():
+        page_item_count = dictate_form.cleaned_data['dictate'] or 15
 
     filter_form = ChooseTransactionKind(request.GET or None)
     if filter_form.is_valid():
@@ -537,10 +562,65 @@ def my_transactions_view(request):
         if ldate is not None:
             transactions = transactions.filter(created_at__lte=ldate)
 
+    paginator = Paginator(transactions, page_item_count)
+    page_number = request.GET.get("page")
+    page_transactions = paginator.get_page(page_number)
+    is_one_per_page = (page_item_count == 1)
+
     ctx = {
         'transactions': transactions,
+        'page_transactions': page_transactions,
         'tk': tk,
+        'dictate_form': dictate_form,
         'filter_form': filter_form,
+        'page_item_count': page_item_count,
+        'is_one_per_page': is_one_per_page,
+        "request_get": "&".join(f"{k}={v}" for k, v in request.GET.items() if k != "page")
     }
     # TODO Transactions view for both profiles
     return render(request, 'marketplace/marketplace_transactions.html', ctx)
+
+@login_required
+def create_review_view(request, pk):
+    if not hasattr(request.user,"consumer_profile"):
+        return redirect('dashboard:dashboard')
+
+    transaction = get_object_or_404(Transaction, pk=pk)
+    if transaction.transaction_type == "C":
+        transaction = transaction.consumerrequesttransaction
+        if transaction.consumer_request.consumer != request.user:
+            return redirect('dashboard:dashboard')
+    else:
+        transaction = transaction.listingtransaction
+        if transaction.consumer != request.user:
+            return redirect('dashboard:dashboard')
+
+    if request.method == "POST":
+        form = ReviewForm(request.POST)
+
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.transaction = transaction
+            review.save()
+
+            if transaction.transaction_type == "C":
+                business = transaction.business_response.business.business_profile
+            elif transaction.transaction_type == "L":
+                business = transaction.listing.business.business_profile
+            business.update_rate()
+
+            messages.success(request, 'Review created')
+            if transaction.transaction_type == "C":
+                return redirect('marketplace:consumer_request_detail', pk=transaction.consumer_request.pk)
+            elif transaction.transaction_type == "L":
+                return redirect('marketplace:listing_detail', pk=transaction.listing.pk)
+
+    else:
+        form = ReviewForm()
+
+    ctx = {
+        'transaction': transaction,
+        'form': form
+    }
+
+    return render(request, "marketplace/make_review.html", ctx)

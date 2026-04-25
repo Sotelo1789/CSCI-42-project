@@ -196,13 +196,3 @@ def register_consumer_view(request):
             })
 
     return render(request, 'authentication/register_consumer.html')
-
-
-def reset_password_view(request):
-
-    return render(request, 'authentication/reset_password.html')
-
-
-def verify_otp_view(request):
-
-    return render(request, 'authentication/verify_otp.html')

@@ -45,5 +45,5 @@ class FavoriteListingAdmin(admin.ModelAdmin):
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
-    list_display = ['listing_transaction__listing__title','consumer_request_transaction__consumer_request__title','rating']
-    search_fields = ['listing_transaction__listing__title','consumer_request_transaction__consumer_request__title']
+    list_display = ['transaction','rating']
+    search_fields = ['transaction']

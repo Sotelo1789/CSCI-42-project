@@ -116,7 +116,7 @@ class BusinessProfile(models.Model):
         final_rating = 0
         for ltransaction in listing_transactions:
             try:
-                review = Review.objects.get(listing_transaction=ltransaction)
+                review = Review.objects.get(transaction__listingtransaction=ltransaction)
             except Review.DoesNotExist:
                 review = None
             if review is not None:
@@ -124,7 +124,7 @@ class BusinessProfile(models.Model):
                 total_reviewed_transactions += 1
         for crtransaction in consumer_request_transactions:
             try:
-                review = Review.objects.get(consumer_request_transaction=crtransaction)
+                review = Review.objects.get(transaction__consumerrequesttransaction=crtransaction)
             except Review.DoesNotExist:
                 review = None
             if review is not None:
@@ -152,29 +152,3 @@ class ConsumerProfile(models.Model):
 
     def __str__(self):
         return self.full_name
-
-
-class OTP(models.Model):
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='otps')
-    code = models.CharField(max_length=6)
-    created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField()
-    is_used = models.BooleanField(default=False)
-    attempts = models.IntegerField(default=0)
-
-    class Meta:
-        db_table = 'otp'
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f'OTP for {self.client.email}'
-
-    @property
-    def is_expired(self):
-        return timezone.now() > self.expires_at
-
-    @property
-    def is_valid(self):
-        from django.conf import settings
-        max_attempts = getattr(settings, 'OTP_MAX_ATTEMPTS', 5)
-        return not self.is_used and not self.is_expired and self.attempts < max_attempts
