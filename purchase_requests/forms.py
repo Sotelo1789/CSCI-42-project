@@ -76,13 +76,29 @@ class UpdatePurchaseRequestDeadline(forms.ModelForm):
     # Activity Things
     closing_deadline = forms.DateTimeField(
         widget=forms.DateTimeInput(
-            attrs={"type": "datetime-local"}
+            attrs={"type": "datetime-local"},
+            format="%Y-%m-%dT%H:%M"
         )
     )
 
     class Meta:
         model = PurchaseRequest
         fields = ["closing_deadline"]
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if self.instance and self.instance.closing_deadline:
+            local_dt = timezone.localtime(self.instance.closing_deadline)
+            self.initial["closing_deadline"] = local_dt.strftime("%Y-%m-%dT%H:%M")
+
+    def clean_closing_deadline(self):
+        dt = self.cleaned_data["closing_deadline"]
+
+        if timezone.is_naive(dt):
+            dt = timezone.make_aware(dt, timezone.get_current_timezone())
+
+        return dt
 
 
 class SearchFilterForm(forms.Form):

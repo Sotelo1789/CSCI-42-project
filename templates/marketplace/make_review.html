@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Leave a review · PROC{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-wrap { max-width: 600px; margin: 0 auto; }
+
+    .section-title {
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 14px;
+    }
+
+    .form-fields { display: flex; flex-direction: column; gap: 16px; }
+    .form-fields p { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+    .form-fields p label,
+    .form-fields label {
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+    }
+    .form-fields input,
+    .form-fields textarea,
+    .form-fields select,
+    .form-fields p input,
+    .form-fields p textarea,
+    .form-fields p select {
+        width: 100%;
+        padding: 9px 12px;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border-strong);
+        border-radius: var(--radius);
+        color: var(--text-primary);
+        font-family: var(--font);
+        font-size: 14px;
+        outline: none;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    .form-fields textarea,
+    .form-fields p textarea {
+        resize: vertical;
+        min-height: 110px;
+        line-height: 1.55;
+    }
+    .form-fields input:focus,
+    .form-fields textarea:focus,
+    .form-fields select:focus,
+    .form-fields p input:focus,
+    .form-fields p textarea:focus,
+    .form-fields p select:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(45, 95, 63, 0.12);
+    }
+    .form-fields ul.errorlist {
+        list-style: none; padding: 0; margin: 4px 0 0;
+        color: var(--danger); font-size: 12px;
+    }
+
+    .rating-note {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-top: -8px;
+    }
+
+    .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if transaction %}
+<div class="page-wrap">
+
+    <div class="page-header">
+        <div class="page-eyebrow">Marketplace</div>
+        <div class="page-title">Leave a review</div>
+        <div class="page-sub">
+            {% if transaction.transaction_type == "C" %}
+                Reviewing {{ transaction.business_response.business.business_profile.business_name }} on your request "{{ transaction.consumer_request.title }}"
+            {% elif transaction.transaction_type == "L" %}
+                Reviewing the listing "{{ transaction.listing.title }}" by {{ transaction.listing.business.business_profile.business_name }}
+            {% endif %}
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <div class="card">
+            <div class="section-title">Your review</div>
+            <div class="form-fields">
+                {{ form.as_p }}
+            </div>
+            <p class="rating-note" style="margin-top:12px;">Rating is on a scale of 1 to 10.</p>
+        </div>
+
+        <div class="form-actions">
+            <a href="{% url 'marketplace:consumer_marketplace' %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Submit review</button>
+        </div>
+    </form>
+
+</div>
+{% endif %}
+{% endblock %}

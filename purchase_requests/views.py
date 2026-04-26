@@ -12,6 +12,15 @@ from .forms import CreatePurchaseRequest, SubmitOffer, AmountInPage, UpdatePurch
 from datetime import datetime
 
 
+"""
+Checks if user is a consumer. If yes, redirect to dashboard
+(they should not be able to access pages with this function)
+"""
+def isBusiness(request):
+    if hasattr(request.user,"consumer_profile"):
+        return redirect("dashboard")
+
+
 @login_required
 def search_browse_view(request):
     return redirect('purchase_requests:available_list')
@@ -29,14 +38,14 @@ def available_list_view(request):
     if dictate_form.is_valid():
         page_item_count = dictate_form.cleaned_data['dictate'] or 15
 
-    # Close any overdue requests first (Justin's existing logic)
+    # Close any overdue requests first
     prlist = PurchaseRequest.objects.exclude(buyer=request.user).filter(status="open", buyer__business_profile__status="approved")
     for pr in prlist:
         if pr.closing_deadline <= timezone.now():
             pr.status = "closed"
             pr.save()
 
-    # Start with Justin's base queryset
+    # Start with base queryset (only approved business buyers)
     prlist = PurchaseRequest.objects.exclude(buyer=request.user).filter(status="open", buyer__business_profile__status="approved").order_by("pk")
 
     # Apply your filters on top
@@ -80,7 +89,6 @@ def available_list_view(request):
         "request_get": "&".join(f"{k}={v}" for k, v in request.GET.items() if k != "page"),
     }
     return render(request, 'purchase_requests/available_list.html', ctx)
-
 
 @login_required
 def purchase_request_detail_view(request, pk):
@@ -312,10 +320,15 @@ def my_requests_view(request):
             from POST creates a string, which is not as easily comparable to the datetime data 
             type of old_deadline)
             """
+            if new_deadline:
+                new_deadline = datetime.strptime(new_deadline, "%Y-%m-%dT%H:%M")
 
-            new_deadline = new_deadline[0:10] + " " + new_deadline[11:16] + old_deadline.strftime(":%S%z")
-            date_format = "%Y-%m-%d %H:%M:%S%z"
-            new_deadline = datetime.strptime(new_deadline, date_format)
+                if timezone.is_naive(new_deadline):
+                    new_deadline = timezone.make_aware(new_deadline, timezone.get_current_timezone())
+                
+                if new_deadline > old_deadline:
+                    pr.closing_deadline = new_deadline
+                    pr.save()
 
             #print(old_deadline)
             #print(new_deadline)
@@ -411,6 +424,7 @@ def edit_purchase_request_view(request, pk):
         return redirect('dashboard:dashboard')
         
     pr = get_object_or_404(PurchaseRequest, pk=pk, buyer=request.user)
+
     
     # Auto-close if deadline already passed
     if pr.status == "open" and pr.closing_deadline <= timezone.now():

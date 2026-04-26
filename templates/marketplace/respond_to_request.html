@@ -1,13 +1,142 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}Create Response to {{ cr.title }}{% endblock %}
+{% block title %}Respond to {{ cr.title }} · PROC{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-wrap { max-width: 760px; margin: 0 auto; }
+
+    .back-link {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-size: 0.85rem; color: var(--muted);
+        text-decoration: none; margin-bottom: 1rem;
+    }
+    .back-link:hover { color: var(--accent); }
+
+    .form-fields { display: flex; flex-direction: column; gap: 16px; }
+    .section-title {
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 14px;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label {
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+    }
+    .field label .req { color: var(--accent); margin-left: 2px; }
+    .field p { margin: 0; }
+    .field p label {
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+    }
+    .field p input,
+    .field p select,
+    .field p textarea,
+    .field input,
+    .field select,
+    .field textarea {
+        width: 100%;
+        padding: 9px 12px;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border-strong);
+        border-radius: var(--radius);
+        color: var(--text-primary);
+        font-family: var(--font);
+        font-size: 14px;
+        outline: none;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    .field textarea,
+    .field p textarea { resize: vertical; min-height: 110px; line-height: 1.55; }
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus,
+    .field p input:focus,
+    .field p select:focus,
+    .field p textarea:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(45, 95, 63, 0.12);
+    }
+    .field ul.errorlist {
+        list-style: none; padding: 0; margin: 4px 0 0;
+        color: var(--danger); font-size: 12px;
+    }
+
+    .info-row {
+        display: flex; justify-content: space-between; gap: 12px;
+        font-size: 14px; padding: 10px 0;
+        border-bottom: 0.5px solid var(--border-subtle);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: var(--text-secondary); font-size: 13px; }
+    .info-value { color: var(--text-primary); font-weight: 500; }
+
+    .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+    .card + .card { margin-top: 12px; }
+</style>
+{% endblock %}
 
 {% block content %}
-<h1>Responding to {{ cr.title }}</h1>
-<form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Create Response</button>
-</form>
+<div class="page-wrap">
+    {% if cr %}
+        <a href="{% url 'marketplace:consumer_request_detail' pk=cr.pk %}" class="back-link">← Back to request</a>
+    {% else %}
+        <a href="{% url 'marketplace:business_marketplace' %}" class="back-link">← Back to marketplace</a>
+    {% endif %}
+
+    <div class="page-header">
+        <div class="page-eyebrow">Marketplace</div>
+        <div class="page-title">Submit a response</div>
+        <div class="page-sub">Responding to "{{ cr.title }}"</div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px;">
+        <div class="section-title">Request details</div>
+        <div class="info-row">
+            <span class="info-label">Budget range</span>
+            <span class="info-value">₱{{ cr.min_price|floatformat:2|intcomma }} – ₱{{ cr.max_price|floatformat:2|intcomma }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Category</span>
+            <span class="info-value">{{ cr.category }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Delivery area</span>
+            <span class="info-value">{{ cr.delivery_area|default:"—" }}</span>
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <div class="card">
+            <div class="section-title">Your quotation</div>
+            <div class="form-fields">
+                {{ form.as_p }}
+            </div>
+        </div>
+
+        <div class="form-actions">
+            {% if cr %}
+                <a href="{% url 'marketplace:consumer_request_detail' pk=cr.pk %}" class="btn btn-secondary">Cancel</a>
+            {% else %}
+                <a href="{% url 'marketplace:business_marketplace' %}" class="btn btn-secondary">Cancel</a>
+            {% endif %}
+            <button type="submit" class="btn btn-primary">Submit response</button>
+        </div>
+    </form>
+</div>
 {% endblock %}

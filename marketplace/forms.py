@@ -1,13 +1,18 @@
 from django import forms
 from django.utils import timezone
-from .models import Listing, ConsumerRequest, BusinessResponse
+from .models import Listing, ConsumerRequest, BusinessResponse, ListingTransaction, Review
+from django.utils.translation import gettext_lazy as _
 
 
 class CreateListing(forms.ModelForm):
     class Meta:
         model = Listing
         exclude = ['business', 'created_at', 'updated_at', 'availability', 'view_count']
-    
+        labels = {
+            'delivery_time': _("Delivery Time (in Days)")
+            }
+
+
     def clean_toc(self):
         toc = self.cleaned_data.get('terms_conditions')
 
@@ -42,6 +47,24 @@ class CreateListing(forms.ModelForm):
 
         return cleaned_data
 
+class CreateListingTransaction(forms.ModelForm):
+    class Meta:
+        model = ListingTransaction
+        exclude = ['listing', 'consumer', 'created_at', 'transaction_type']
+
+class ChooseTransactionKind(forms.Form):
+    TRANSACTION_KIND = [('listing','From Listings'),('consumer_request','From Consumer Request')]
+    CATEGORY_CHOICES = [('','All Categories'),('goods', 'Goods'),('services', 'Services'),('custom', 'Custom')]
+
+    keyword       = forms.CharField(required=False, label='Search')
+    category      = forms.ChoiceField(required=False, choices=CATEGORY_CHOICES, label='Category')
+    person        = forms.CharField(required=False)
+    min_price     = forms.DecimalField(required=False, label='Min Price', min_value=0)
+    max_price     = forms.DecimalField(required=False, label='Max Price', min_value=0)
+    earliest_date = forms.DateTimeField(required=False, widget=forms.DateTimeInput(attrs={'type':'datetime-local'}))
+    latest_date   = forms.DateTimeField(required=False, widget=forms.DateTimeInput(attrs={'type':'datetime-local'}))
+    transaction   = forms.ChoiceField(required=False, choices=TRANSACTION_KIND, label='Kind of Transaction')
+
 class CreateConsumerRequest(forms.ModelForm):
     class Meta:
         model = ConsumerRequest
@@ -54,13 +77,13 @@ class CreateConsumerRequest(forms.ModelForm):
 
     def clean_needed_by(self):
         needed_by = self.cleaned_data.get('needed_by')
-        
+
         if needed_by <= timezone.now():
             raise forms.ValidationError(
                 'The needed date and time must be in the future.'
             )
         return needed_by
-    
+
     def clean(self):
         cleaned_data = super().clean()
         min_price = cleaned_data.get('min_price')
@@ -88,8 +111,8 @@ class RespondToRequest(forms.ModelForm):
         }
 
     def clean_earliest_delivery(self):
-        earliest_delivery = self.cleaned_data.get('earliest_delivery')  
-        
+        earliest_delivery = self.cleaned_data.get('earliest_delivery')
+
         if earliest_delivery <= timezone.now():
             raise forms.ValidationError(
                 'The needed date and time must be in the future.'
@@ -99,7 +122,7 @@ class RespondToRequest(forms.ModelForm):
 
     def clean_latest_delivery(self):
         latest_delivery = self.cleaned_data.get('latest_delivery')
-        
+
         if latest_delivery <= timezone.now():
             raise forms.ValidationError(
                 'The needed date and time must be in the future.'
@@ -117,7 +140,7 @@ class RespondToRequest(forms.ModelForm):
                 raise forms.ValidationError(
                     'Rearrange the dates and times'
                 )
-        
+
         return cleaned_data
 
     def clean_quotation(self):
@@ -140,6 +163,11 @@ class RespondToRequest(forms.ModelForm):
             raise forms.ValidationError('Your uploaded quotation file must be a PDF.')
 
         return quotation
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        exclude = ['transaction','created_at','updated_at']
 
 class ListingSearchFilterForm(forms.Form):
     CATEGORY_CHOICES = [('', 'All Categories')] + Listing.CATEGORY_CHOICES

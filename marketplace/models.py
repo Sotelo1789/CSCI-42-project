@@ -6,9 +6,11 @@ def validate_nonnegative(value):
     if not value>=0:
         raise ValidationError("Value can't be below 0")
 
+
 def validate_rating(value):
     if not (value>=1 and value<=10):
         raise ValidationError("Scale of 1-10 only")
+
 
 class Listing(models.Model):
     CATEGORY_CHOICES = [
@@ -37,7 +39,7 @@ class Listing(models.Model):
     unit = models.CharField(max_length=10)
     delivery_option = models.CharField(max_length=10, choices=DELIVERY_CHOICES)
     delivery_area = models.CharField(max_length=100)
-    delivery_time = models.IntegerField() # assumes delivery time is in number of days
+    delivery_time = models.IntegerField(validators=[validate_nonnegative]) # assumes delivery time is in number of days
     terms_conditions = models.FileField(upload_to='uploads/listings/termsconditions', null=False, blank=False)
     availability = models.BooleanField(default=True)
     view_count = models.IntegerField(validators=[validate_nonnegative], default=0)
@@ -50,6 +52,7 @@ class Listing(models.Model):
 
     def __str__(self):
         return self.title
+
 
 class ListingImage(models.Model):
     listing = models.ForeignKey(
@@ -75,6 +78,12 @@ class ConsumerRequest(models.Model):
         ('custom', 'Custom'),
     ]
 
+    CONTACT_CHOICES = [
+        ('message', 'Message'),
+        ('email', 'Email'),
+        ('phone', "Phone")
+    ]
+
     consumer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -88,6 +97,7 @@ class ConsumerRequest(models.Model):
     max_price = models.DecimalField(max_digits=15, decimal_places=2, validators=[validate_nonnegative])
     delivery_area = models.CharField(max_length=100)
     needed_by = models.DateTimeField()
+    contact_pref = models.CharField(max_length=10, choices=CONTACT_CHOICES, blank=True, null=True)
     response_count = models.IntegerField(validators=[validate_nonnegative], default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -127,6 +137,7 @@ class BusinessResponse(models.Model):
     def __str__(self):
         return f'Response of {self.business.username} to {self.consumer_request.title}'
 
+
 class ConsumerRequestImage(models.Model):
     consumer_request = models.ForeignKey(
         ConsumerRequest,
@@ -135,7 +146,14 @@ class ConsumerRequestImage(models.Model):
     )
     image = models.ImageField(upload_to='uploads/consumer_requests/images/')
 
-class ListingTransaction(models.Model):
+
+class Transaction(models.Model):
+    price = models.DecimalField(max_digits=15, decimal_places=2, validators=[validate_nonnegative])
+    created_at = models.DateTimeField(auto_now_add=True)
+    transaction_type = models.CharField(max_length=1)
+
+
+class ListingTransaction(Transaction):
     listing = models.ForeignKey(
         Listing,
         on_delete=models.CASCADE,
@@ -146,10 +164,9 @@ class ListingTransaction(models.Model):
         on_delete=models.CASCADE,
         related_name='listing_transaction'
     )
-    price = models.DecimalField(max_digits=15, decimal_places=2, validators=[validate_nonnegative])
-    created_at = models.DateTimeField(auto_now_add=True)
 
-class ConsumerRequestTransaction(models.Model):
+
+class ConsumerRequestTransaction(Transaction):
     consumer_request = models.ForeignKey(
         ConsumerRequest,
         on_delete=models.CASCADE,
@@ -160,8 +177,7 @@ class ConsumerRequestTransaction(models.Model):
         on_delete=models.CASCADE,
         related_name='consumer_request_transaction'
     )
-    price = models.DecimalField(max_digits=15, decimal_places=2, validators=[validate_nonnegative])
-    created_at = models.DateTimeField(auto_now_add=True)
+
 
 class FavoriteListing(models.Model):
     listing = models.ForeignKey(
@@ -176,22 +192,16 @@ class FavoriteListing(models.Model):
     )
     added_favorite_date = models.DateTimeField(auto_now_add=True)
 
+
 class Review(models.Model):
-    listing_transaction = models.ForeignKey(
-        ListingTransaction,
+    transaction = models.ForeignKey(
+        Transaction,
         on_delete=models.CASCADE,
         related_name='review',
         blank=True,
         null=True
     )
-    consumer_request_transaction = models.ForeignKey(
-        ConsumerRequestTransaction,
-        on_delete=models.CASCADE,
-        related_name='review',
-        blank=True,
-        null=True
-    )
-    
+
     text = models.TextField()
     rating = models.IntegerField(validators=[validate_rating])
 

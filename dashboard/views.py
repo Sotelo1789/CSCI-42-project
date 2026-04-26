@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required
 
 @login_required
 def dashboard_view(request):
+    recent_activity_limit = 2
+
     context = {
         'user': request.user,
         'account_type': request.user.account_type,
@@ -13,15 +15,15 @@ def dashboard_view(request):
         try:
             from purchase_requests.models import PurchaseRequest, Participation, Offer
             created_requests = PurchaseRequest.objects.filter(buyer=request.user)
-            participations   = Participation.objects.filter(seller=request.user)
-            submitted_offers = Offer.objects.filter(seller=request.user)
+            participations = Participation.objects.filter(seller=request.user).order_by('-joined_at')
+            submitted_offers = Offer.objects.filter(seller=request.user).order_by('-submitted_at')
 
             context.update({
                 'open_requests_count':     created_requests.filter(status='open').count(),
                 'participations_count':    participations.count(),
                 'submitted_offers_count':  submitted_offers.filter(status='submitted').count(),
-                'recent_participations':   participations.select_related('purchase_request')[:5],
-                'recent_offers':           submitted_offers.select_related('purchase_request')[:5],
+                'recent_participations':   participations.select_related('purchase_request')[:recent_activity_limit],
+                'recent_offers':           submitted_offers.select_related('purchase_request')[:recent_activity_limit],
             })
         except Exception:
             pass

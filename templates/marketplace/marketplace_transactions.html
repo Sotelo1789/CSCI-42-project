@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}My transactions · PROC{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-wrap { max-width: 1000px; margin: 0 auto; }
+    .back-link {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-size: 0.85rem; color: var(--muted);
+        text-decoration: none; margin-bottom: 1rem;
+    }
+    .back-link:hover { color: var(--accent); }
+
+    .filter-panel {
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px 20px;
+        margin-bottom: 16px;
+    }
+    .filter-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+        gap: 10px;
+        align-items: end;
+        margin-bottom: 10px;
+    }
+    .filter-row-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: 10px;
+        align-items: end;
+    }
+    .filter-field { display: flex; flex-direction: column; gap: 6px; }
+    .filter-label {
+        font-size: 11px; font-weight: 500;
+        letter-spacing: 0.08em; text-transform: uppercase;
+        color: var(--text-secondary);
+    }
+    .filter-panel input,
+    .filter-panel select {
+        width: 100%;
+        height: 36px;
+        padding: 8px 12px;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border-strong);
+        border-radius: var(--radius);
+        color: var(--text-primary);
+        font-family: var(--font);
+        font-size: 14px;
+        outline: none;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    .filter-panel input:focus,
+    .filter-panel select:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(45, 95, 63, 0.12);
+    }
+    .filter-actions {
+        display: flex; gap: 8px;
+        align-items: center; justify-content: flex-end;
+    }
+
+    /* Results bar */
+    .results-bar {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 12px; padding: 0 4px;
+    }
+    .results-count { font-size: 13px; color: var(--text-secondary); }
+    .results-count strong { color: var(--text-primary); font-weight: 500; }
+
+    .per-page-form { display: flex; align-items: center; gap: 8px; }
+    .per-page-form label { font-size: 12px; color: var(--text-secondary); }
+    .per-page-form input {
+        width: 56px; height: 30px;
+        padding: 4px 8px;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border-strong);
+        border-radius: var(--radius);
+        color: var(--text-primary); font-size: 13px;
+        text-align: center; outline: none;
+        font-family: var(--font); font-weight: 500;
+        -moz-appearance: textfield;
+    }
+    .per-page-form input::-webkit-inner-spin-button,
+    .per-page-form input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+    /* Kind tabs */
+    .kind-tabs {
+        display: inline-flex;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 3px;
+        margin-bottom: 14px;
+    }
+    .kind-tab {
+        padding: 7px 14px;
+        border-radius: var(--radius-sm);
+        font-size: 13px; font-weight: 500;
+        color: var(--text-secondary); cursor: pointer;
+        transition: background 0.12s, color 0.12s;
+        border: none; background: transparent;
+        font-family: var(--font);
+    }
+    .kind-tab:hover { color: var(--text-primary); }
+    .kind-tab.active {
+        background: var(--accent-bg);
+        color: var(--accent);
+    }
+
+    /* Transaction cards */
+    .tx-list { display: flex; flex-direction: column; gap: 8px; }
+    .tx-card {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 16px;
+        align-items: center;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px 20px;
+        transition: border-color 0.12s;
+    }
+    .tx-card:hover { border-color: var(--border-strong); }
+    .tx-body { min-width: 0; }
+    .tx-title {
+        font-size: 15px; font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+        letter-spacing: -0.005em;
+    }
+    .tx-title a { color: inherit; text-decoration: none; }
+    .tx-title a:hover { color: var(--accent); text-decoration: none; }
+    .tx-date {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+    .tx-amount {
+        font-size: 16px; font-weight: 500;
+        color: var(--text-primary);
+        letter-spacing: -0.005em;
+        white-space: nowrap;
+    }
+
+    @media (max-width: 760px) {
+        .filter-row, .filter-row-2 { grid-template-columns: 1fr 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+    {% if user.business_profile %}
+        <a href="{% url 'marketplace:business_marketplace' %}" class="back-link">← Back to marketplace</a>
+    {% elif user.consumer_profile %}
+        <a href="{% url 'marketplace:consumer_marketplace' %}" class="back-link">← Back to marketplace</a>
+    {% endif %}
+
+    <div class="page-header">
+        <div class="page-eyebrow">Marketplace</div>
+        <div class="page-title">My transactions</div>
+        <div class="page-sub">Every deal you have completed in the marketplace.</div>
+    </div>
+
+    <form method="get" id="kindForm">
+        <div class="kind-tabs">
+            <button type="submit" name="transaction" value="listing" class="kind-tab {% if tk == 'listing' %}active{% endif %}">From listings</button>
+            <button type="submit" name="transaction" value="consumer_request" class="kind-tab {% if tk == 'consumer_request' %}active{% endif %}">From requests</button>
+        </div>
+    </form>
+
+    <div class="filter-panel">
+        <form method="get" class="form">
+            <input type="hidden" name="transaction" value="{{ tk }}">
+            <div class="filter-row">
+                <div class="filter-field">
+                    <label class="filter-label">Keyword</label>
+                    {{ filter_form.keyword }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">Category</label>
+                    {{ filter_form.category }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">{% if user.business_profile %}Consumer{% else %}Business{% endif %}</label>
+                    {{ filter_form.person }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">Min price</label>
+                    {{ filter_form.min_price }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">Max price</label>
+                    {{ filter_form.max_price }}
+                </div>
+            </div>
+            <div class="filter-row-2">
+                <div class="filter-field">
+                    <label class="filter-label">From</label>
+                    {{ filter_form.earliest_date }}
+                </div>
+                <div class="filter-field">
+                    <label class="filter-label">To</label>
+                    {{ filter_form.latest_date }}
+                </div>
+                <div></div>
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary btn-sm">Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% if transactions %}
+    <div class="results-bar">
+        <div class="results-count">
+            Showing <strong>{{ page_transactions.start_index }}–{{ page_transactions.end_index }}</strong>
+            of <strong>{{ transactions|length|intcomma }}</strong> transaction{{ transactions|length|pluralize }}
+        </div>
+        <form method="get" class="per-page-form">
+            {% for k, v in request.GET.items %}{% if k != 'dictate' and k != 'page' %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}{% endfor %}
+            <label>Per page</label>
+            <input type="number" name="dictate" min="1" max="100" value="{{ page_item_count }}">
+            <button type="submit" class="btn btn-secondary btn-sm">Apply</button>
+        </form>
+    </div>
+    <div class="tx-list">
+        {% for transaction in page_transactions %}
+        <div class="tx-card">
+            <div class="tx-body">
+                <div class="tx-title">
+                    {% if tk == 'listing' %}
+                        <a href="{% url 'marketplace:listing_detail' pk=transaction.listing.pk %}">{{ transaction.listing.title }}</a>
+                    {% elif tk == 'consumer_request' %}
+                        <a href="{% url 'marketplace:business_response_detail' pk=transaction.business_response.pk %}">Response on {{ transaction.consumer_request.title }}</a>
+                    {% endif %}
+                </div>
+                <div class="tx-date">{{ transaction.created_at|date:"M d, Y" }} · {{ transaction.created_at|time:"h:i A" }}</div>
+                {% if user.consumer_profile %}
+                    {% if not transaction.review.exists %}
+                        <a href="{% url 'marketplace:create_review' pk=transaction.pk %}" class="btn btn-secondary btn-sm" style="margin-top:6px;display:inline-flex;">Leave a review</a>
+                    {% else %}
+                        <span class="pill" style="margin-top:6px;display:inline-flex;">Reviewed · {{ transaction.review.all.0.rating }}/10</span>
+                    {% endif %}
+                {% elif user.business_profile %}
+                    {% if transaction.review.exists %}
+                        <span class="pill" style="margin-top:6px;display:inline-flex;">Rated {{ transaction.review.all.0.rating }}/10</span>
+                    {% else %}
+                        <span class="pill pill-neutral" style="margin-top:6px;display:inline-flex;">No review yet</span>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="tx-amount">₱{{ transaction.price|floatformat:2|intcomma }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if page_transactions.paginator.num_pages > 1 %}
+    <div class="pagination" style="margin-top:16px;">
+        <div class="page-links">
+            {% if page_transactions.has_previous %}
+                <a class="page-link" href="?page=1&{{ request_get }}">First</a>
+                <a class="page-link" href="?page={{ page_transactions.previous_page_number }}&{{ request_get }}">Prev</a>
+            {% endif %}
+            <span class="page-current">Page {{ page_transactions.number }} of {{ page_transactions.paginator.num_pages }}</span>
+            {% if page_transactions.has_next %}
+                <a class="page-link" href="?page={{ page_transactions.next_page_number }}&{{ request_get }}">Next</a>
+                <a class="page-link" href="?page={{ page_transactions.paginator.num_pages }}&{{ request_get }}">Last</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty">
+        <div class="empty-title">No transactions yet</div>
+        <div class="empty-sub">
+            {% if user.consumer_profile %}
+                You haven't bought anything yet. Browse the marketplace to find what you need.
+            {% elif user.business_profile %}
+                Nobody has bought from you yet. Make sure your listings are active and well-priced.
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
