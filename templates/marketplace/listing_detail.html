@@ -141,7 +141,11 @@
 
 {% block content %}
 <div class="page-wrap">
-    <a href="{% url 'marketplace:marketplace_listings' %}" class="back-link">← Back to listings</a>
+    {% if user.consumer_profile %}
+        <a href="{% url 'marketplace:marketplace_listings' %}" class="back-link">← Back to listings</a>
+    {% else %}
+        <a href="{% url 'marketplace:business_marketplace' %}" class="back-link">← Back to marketplace</a>
+    {% endif %}
 
     <div class="detail-header">
         <div>
@@ -220,7 +224,7 @@
         <div>
             <div class="card">
                 <div class="section-title">Price range</div>
-                <div class="price-display">₱{{ listing.min_price|floatformat:0|intcomma }} – ₱{{ listing.max_price|floatformat:0|intcomma }}</div>
+                <div class="price-display">₱{{ listing.min_price|floatformat:2|intcomma }} – ₱{{ listing.max_price|floatformat:2|intcomma }}</div>
                 <div class="price-sub">{{ listing.quantity }} {{ listing.unit }} per transaction</div>
 
                 <div class="action-stack">
@@ -243,13 +247,102 @@
                         <span class="info-value">{{ listing.business.business_profile.rep_contact|default:"—" }}</span>
                     </div>
                     {% if listing.business.business_profile.rating != 0 %}
-                    <div class="info-row">
-                        <span class="info-label">Rating</span>
-                        <span class="info-value">★ {{ listing.business.business_profile.rating }}</span>
-                    </div>
+                        <div class="info-row">
+                            <span class="info-label">Rating</span>
+                            <span class="info-value">★ {{ listing.business.business_profile.rating }}</span>
+                        </div>
+                    {% else %}
+                        <div class="info-row">
+                            <span class="info-label">Unrated Business</span>
+                        </div>
                     {% endif %}
                 </div>
             </div>
+            {% if listing.listing_transaction.exists %}
+            <div class="card">
+                <div class="section-title">
+                    {% if user.business_profile %}
+                        Existing Reviews:
+                    {% elif user.consumer_profile %}
+                        Recent Transactions:
+                    {% endif %}
+                </div>
+                    <div class="info-list">
+                        {% for lt in listing.listing_transaction.all|dictsortreversed:"created_at" %}
+                        <div class="info-list">
+                            {% if user.business_profile %}
+                                {% if lt.review.exists %}
+                                <div class="info-row">    
+                                    <span class="info-label">Review of {{ lt.consumer }} </span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Transaction Date</span>
+                                    <span class="info-value">{{ lt.created_at }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Rating</span>
+                                    <span class="info-value">{{ lt.review.all.0.rating }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Comment</span>
+                                    <span class="info-value">{{ lt.review.all.0.text }}</span>
+                                </div>
+                                {% endif %}
+                            {% elif user.consumer_profile %}
+                                {% if lt.consumer == user %}
+                                    <div class="info-row">
+                                        <span class="info-label">Your Transaction</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Transaction Date</span>
+                                        <span class="info-value">{{ lt.created_at }}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Amount Paid</span>
+                                        <span class="info-value">{{ lt.price }}</span>
+                                    </div>
+                                    {% if lt.review.all.exists %}
+                                        <div class="info-row">
+                                            <span class="info-label">You have reviewed this transaction</span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label">Your Rating</span>
+                                            <span class="info-value">{{ lt.review.all.0.rating }} out of 10</span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label">Your Comment</span>
+                                            <span class="info-value">{{ lt.review.all.0.text }}</span>
+                                        </div>
+                                    {% else %}
+                                        <div class="info-row">
+                                            <span class="info-label"><a href="{% url 'marketplace:create_review' pk=lt.pk %}">Make a Review?</a></span>
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    {% if lt.review.all.exists %}
+                                        <div class="info-row">
+                                            <span class="info-label">Another Consumer's Review</span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label">Transaction Date</span>
+                                            <span class="info-value">{{ lt.created_at }}</span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label">Their Rating</span>
+                                            <span class="info-value">{{ lt.review.all.0.rating }} out of 10</span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label">Their Comment</span>
+                                            <span class="info-value">{{ lt.review.all.0.text }}</span>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>

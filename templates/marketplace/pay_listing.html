@@ -170,7 +170,7 @@
                         <span class="listing-thumb-empty">🖼️</span>
                     {% endif %}
                 </div>
-                <div class="price-display">₱{{ listing.min_price|floatformat:0|intcomma }} – ₱{{ listing.max_price|floatformat:0|intcomma }}</div>
+                <div class="price-display">₱{{ listing.min_price|floatformat:2|intcomma }} – ₱{{ listing.max_price|floatformat:2|intcomma }}</div>
                 <div class="price-sub">{{ listing.quantity }} {{ listing.unit }} per transaction</div>
 
                 <div class="info-row">

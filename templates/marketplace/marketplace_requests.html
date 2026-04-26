@@ -66,6 +66,22 @@
     .results-count { font-size: 13px; color: var(--text-secondary); }
     .results-count strong { color: var(--text-primary); font-weight: 500; }
 
+    .per-page-form { display: flex; align-items: center; gap: 8px; }
+    .per-page-form label { font-size: 12px; color: var(--text-secondary); }
+    .per-page-form input {
+        width: 56px; height: 30px;
+        padding: 4px 8px;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border-strong);
+        border-radius: var(--radius);
+        color: var(--text-primary); font-size: 13px;
+        text-align: center; outline: none;
+        font-family: var(--font); font-weight: 500;
+        -moz-appearance: textfield;
+    }
+    .per-page-form input::-webkit-inner-spin-button,
+    .per-page-form input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
     .req-list { display: flex; flex-direction: column; gap: 10px; }
     .req-card {
         background: var(--bg-surface);
@@ -177,8 +193,14 @@
     <div class="results-bar">
         <div class="results-count">
             Showing <strong>{{ page_consumer_requests.start_index }}–{{ page_consumer_requests.end_index }}</strong>
-            of <strong>{{ crs|length|intcomma }}</strong> request{{ crs|length|pluralize }}
+            of <strong>{{ crs|length|intcomma }}</strong> consumer requests{{ crs|length|pluralize }}
         </div>
+        <form method="get" class="per-page-form">
+            {% for k, v in request.GET.items %}{% if k != 'dictate' and k != 'page' %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}{% endfor %}
+            <label>Per page</label>
+            <input type="number" name="dictate" min="1" max="100" value="{{ page_item_count }}">
+            <button type="submit" class="btn btn-secondary btn-sm">Apply</button>
+        </form>
     </div>
 
     <div class="req-list">
@@ -199,7 +221,7 @@
                 <a href="{% url 'marketplace:consumer_request_detail' pk=cr.pk %}" class="req-title">{{ cr.title }}</a>
                 <div class="req-meta-row">
                     <span class="pill">{{ cr.category }}</span>
-                    <span class="req-price">₱{{ cr.min_price|floatformat:0|intcomma }} – ₱{{ cr.max_price|floatformat:0|intcomma }}</span>
+                    <span class="req-price">₱{{ cr.min_price|floatformat:2|intcomma }} – ₱{{ cr.max_price|floatformat:2|intcomma }}</span>
                     <span>{{ cr.consumer.consumer_profile.full_name|default:cr.consumer.username }}</span>
                 </div>
             </div>

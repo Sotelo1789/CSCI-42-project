@@ -64,6 +64,30 @@
         align-items: center; justify-content: flex-end;
     }
 
+    /* Results bar */
+    .results-bar {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 12px; padding: 0 4px;
+    }
+    .results-count { font-size: 13px; color: var(--text-secondary); }
+    .results-count strong { color: var(--text-primary); font-weight: 500; }
+
+    .per-page-form { display: flex; align-items: center; gap: 8px; }
+    .per-page-form label { font-size: 12px; color: var(--text-secondary); }
+    .per-page-form input {
+        width: 56px; height: 30px;
+        padding: 4px 8px;
+        background: var(--bg-surface);
+        border: 0.5px solid var(--border-strong);
+        border-radius: var(--radius);
+        color: var(--text-primary); font-size: 13px;
+        text-align: center; outline: none;
+        font-family: var(--font); font-weight: 500;
+        -moz-appearance: textfield;
+    }
+    .per-page-form input::-webkit-inner-spin-button,
+    .per-page-form input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
     /* Kind tabs */
     .kind-tabs {
         display: inline-flex;
@@ -130,7 +154,11 @@
 
 {% block content %}
 <div class="page-wrap">
-    <a href="{% url 'marketplace:business_marketplace' %}" class="back-link">← Back to marketplace</a>
+    {% if user.business_profile %}
+        <a href="{% url 'marketplace:business_marketplace' %}" class="back-link">← Back to marketplace</a>
+    {% elif user.consumer_profile %}
+        <a href="{% url 'marketplace:consumer_marketplace' %}" class="back-link">← Back to marketplace</a>
+    {% endif %}
 
     <div class="page-header">
         <div class="page-eyebrow">Marketplace</div>
@@ -188,6 +216,18 @@
     </div>
 
     {% if transactions %}
+    <div class="results-bar">
+        <div class="results-count">
+            Showing <strong>{{ page_transactions.start_index }}–{{ page_transactions.end_index }}</strong>
+            of <strong>{{ transactions|length|intcomma }}</strong> transaction{{ transactions|length|pluralize }}
+        </div>
+        <form method="get" class="per-page-form">
+            {% for k, v in request.GET.items %}{% if k != 'dictate' and k != 'page' %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}{% endfor %}
+            <label>Per page</label>
+            <input type="number" name="dictate" min="1" max="100" value="{{ page_item_count }}">
+            <button type="submit" class="btn btn-secondary btn-sm">Apply</button>
+        </form>
+    </div>
     <div class="tx-list">
         {% for transaction in page_transactions %}
         <div class="tx-card">
@@ -214,7 +254,7 @@
                     {% endif %}
                 {% endif %}
             </div>
-            <div class="tx-amount">₱{{ transaction.price|floatformat:0|intcomma }}</div>
+            <div class="tx-amount">₱{{ transaction.price|floatformat:2|intcomma }}</div>
         </div>
         {% endfor %}
     </div>

@@ -6,6 +6,12 @@
 {% block extra_css %}
 <style>
     .page-wrap { max-width: 1200px; margin: 0 auto; }
+    .back-link {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-size: 0.85rem; color: var(--muted);
+        text-decoration: none; margin-bottom: 1rem;
+    }
+    .back-link:hover { color: var(--accent); }
 
     /* Filter panel */
     .filter-panel {
@@ -160,6 +166,8 @@
 {% endblock %}
 
 {% block content %}
+    <a href="{% url 'marketplace:consumer_marketplace' %}" class="back-link">← Back to marketplace</a>
+
 <div class="page-wrap">
     <div class="page-header">
         <div class="page-eyebrow">Marketplace</div>
@@ -253,7 +261,7 @@
                         <span class="pill pill-neutral">Unrated</span>
                     {% endif %}
                 </div>
-                <div class="listing-price">₱{{ listing.min_price|floatformat:0|intcomma }} – ₱{{ listing.max_price|floatformat:0|intcomma }}</div>
+                <div class="listing-price">₱{{ listing.min_price|floatformat:2|intcomma }} – ₱{{ listing.max_price|floatformat:2|intcomma }}</div>
                 <div class="listing-meta">
                     <span>{{ listing.delivery_area|truncatechars:30 }}</span>
                 </div>

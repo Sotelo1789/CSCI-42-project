@@ -99,6 +99,8 @@
     {% elif user.consumer_profile %}
         {% if br.business.business_profile.rating > 0 %}
             <div class="page-sub" style="margin-bottom:10px;">Business rating: {{ br.business.business_profile.rating }}/10</div>
+        {% else %}
+            <div class="page-sub" style="margin-bottom:10px;">Unrated Business</div>
         {% endif %}
         {% if is_accepted == True %}
             <div class="status-banner status-accepted">You have accepted this offer.</div>
@@ -117,6 +119,7 @@
             </div>
         {% else %}
             <div class="status-banner status-accepted" style="flex-direction:column;align-items:flex-start;gap:4px;margin-bottom:12px;">
+                <span>On {{ br.consumer_request_transaction.all.0.review.all.0.created_at }}</span>
                 <span>You reviewed this offer · rated {{ br.consumer_request_transaction.all.0.review.all.0.rating }}/10</span>
                 <span style="font-size:13px;font-weight:400;">{{ br.consumer_request_transaction.all.0.review.all.0.text }}</span>
             </div>
@@ -125,7 +128,7 @@
 
     <div class="card">
         <div class="section-title">Quotation</div>
-        <div class="price-display">₱{{ br.price|floatformat:0|intcomma }}</div>
+        <div class="price-display">₱{{ br.price|floatformat:2|intcomma }}</div>
 
         <div class="info-row">
             <span class="info-label">Earliest delivery</span>

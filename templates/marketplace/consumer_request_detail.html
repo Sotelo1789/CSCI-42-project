@@ -28,6 +28,12 @@
         font-size: 13px; color: var(--text-secondary);
     }
 
+    .gallery {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
     .gallery-main {
         width: 100%; aspect-ratio: 16/9;
         border-radius: var(--radius);
@@ -35,7 +41,6 @@
         background: var(--accent-bg);
         border: 0.5px solid var(--border);
         display: flex; align-items: center; justify-content: center;
-        margin-bottom: 20px;
     }
     .gallery-main img { width: 100%; height: 100%; object-fit: cover; }
     .gallery-empty {
@@ -44,6 +49,19 @@
         letter-spacing: 0.08em;
         text-transform: uppercase;
     }
+    .gallery-thumbs {
+        display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .gallery-thumb {
+        width: 72px; height: 72px;
+        border-radius: var(--radius);
+        overflow: hidden;
+        border: 0.5px solid var(--border);
+        cursor: pointer;
+        transition: border-color 0.12s;
+    }
+    .gallery-thumb:hover { border-color: var(--border-strong); }
+    .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
     .detail-grid {
         display: grid;
@@ -143,15 +161,28 @@
         </div>
     </div>
 
-    <div class="gallery-main">
-        {% if cr.images.exists %}
-            {% for image in cr.images.all %}
-                {% if forloop.counter == 1 %}
-                    <img src="{{ image.image.url }}" alt="{{ cr.title }}">
-                {% endif %}
-            {% endfor %}
-        {% else %}
-            <span class="gallery-empty">{{ cr.category|slice:":3" }}</span>
+    <div class="gallery">
+        <div class="gallery-main">
+            {% if cr.images.exists %}
+                {% for image in cr.images.all %}
+                    {% if forloop.counter == 1 %}
+                        <img src="{{ image.image.url }}" alt="{{ cr.title }}">
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <span class="gallery-empty">{{ cr.category|slice:":3" }}</span>
+            {% endif %}
+        </div>
+        {% if cr.images.exists and cr.images.count > 1 %}
+            <div class="gallery-thumbs">
+                {% for image in cr.images.all %}
+                    {% if not forloop.first %}
+                    <div class="gallery-thumb">
+                        <img src="{{ image.image.url }}" alt="Thumbnail {{ forloop.counter }}">
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
         {% endif %}
     </div>
 
@@ -168,10 +199,12 @@
                     <div class="section-title">Responses ({{ cr.responses.count|intcomma }})</div>
                     <div class="response-list">
                         {% for response in cr.responses.all|dictsortreversed:"updated_at" %}
-                        <div class="response-row">
-                            <div class="response-from">{{ response.business.business_profile.business_name|default:response.business.username }}</div>
-                            <a href="{% url 'marketplace:business_response_detail' pk=response.pk %}" class="response-link">View</a>
-                        </div>
+                            {% if response.business.business_profile.status == "approved" %}
+                            <div class="response-row">
+                                <div class="response-from">{{ response.business.business_profile.business_name|default:response.business.username }}</div>
+                                <a href="{% url 'marketplace:business_response_detail' pk=response.pk %}" class="response-link">View</a>
+                            </div>
+                            {% endif %}
                         {% endfor %}
                     </div>
                 </div>
@@ -202,7 +235,7 @@
         <div>
             <div class="card">
                 <div class="section-title">Budget</div>
-                <div class="price-display">₱{{ cr.min_price|floatformat:0|intcomma }} – ₱{{ cr.max_price|floatformat:0|intcomma }}</div>
+                <div class="price-display">₱{{ cr.min_price|floatformat:2|intcomma }} – ₱{{ cr.max_price|floatformat:2|intcomma }}</div>
 
                 <div class="action-stack">
                     {% if user.business_profile %}

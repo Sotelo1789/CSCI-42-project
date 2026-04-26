@@ -179,7 +179,7 @@
                         <span class="activity-marker"></span>
                         <div class="activity-text">
                             <div class="activity-title">{{ p.purchase_request.title }}</div>
-                            <div class="activity-sub">{{ p.purchase_request.get_category_display }} · ₱{{ p.purchase_request.budget|floatformat:0|intcomma }}</div>
+                            <div class="activity-sub">{{ p.purchase_request.get_category_display }} · ₱{{ p.purchase_request.budget|floatformat:2|intcomma }}</div>
                         </div>
                         <div class="activity-date">{{ p.joined_at|date:"M d" }}</div>
                     </div>
@@ -223,6 +223,26 @@
 </div>
 
 <div class="dash-section">
+    <div class="metric-grid">
+        <div class="metric">
+            <div class="metric-label">Marketplace Listings</div>
+            <div class="metric-value">{{ user.listings.all.count }}</div>
+            <div class="metric-delta">Listings Created</div>
+        </div>
+        <div class="metric">
+            <div class="metric-label">Business Responses</div>
+            <div class="metric-value">{{ user.responses.all.count }}</div>
+            <div class="metric-delta">Offered to Consumers</div>
+        </div>
+        <div class="metric">
+            <div class="metric-label">Business Rating to Consumers</div>
+            <div class="metric-value">{{ user.business_profile.rating }} ★</div>
+            <div class="metric-delta">Out of 10 ★</div>
+        </div>
+    </div>
+</div>
+
+<div class="dash-section">
     <div class="dash-section-head">
         <div class="dash-section-title">Quick actions</div>
     </div>
@@ -243,6 +263,10 @@
             <div class="action-title">New request</div>
             <div class="action-desc">Post a purchase request</div>
         </a>
+        <a href="{% url 'marketplace:business_marketplace' %}" class="action-card">
+            <div class="action-title">Marketplace</div>
+            <div class="action-desc">Browse requests and post listings, and see made transactions and their reviews</div>
+        </a>
     </div>
 </div>
 
@@ -251,9 +275,14 @@
 <div class="dash-section">
     <div class="metric-grid">
         <div class="metric">
-            <div class="metric-label">Marketplace listings</div>
-            <div class="metric-value">0</div>
-            <div class="metric-delta">From verified businesses</div>
+            <div class="metric-label">Marketplace Listings</div>
+            <div class="metric-value">{{ user.listing_transaction.all.count }}</div>
+            <div class="metric-delta">Made Transactions</div>
+        </div>
+        <div class="metric">
+            <div class="metric-label">Marketplace Requests</div>
+            <div class="metric-value">{{ user.marketplace_request.all.count }}</div>
+            <div class="metric-delta">Requests Created</div>
         </div>
     </div>
 </div>
@@ -263,13 +292,9 @@
         <div class="dash-section-title">Quick actions</div>
     </div>
     <div class="actions-grid" style="grid-template-columns: 1fr 1fr;">
-        {% if user.business_profile %}
-        <a href="{% url 'marketplace:business_marketplace' %}" class="action-card">
-        {% else %}
         <a href="{% url 'marketplace:consumer_marketplace' %}" class="action-card">
-        {% endif %}
             <div class="action-title">Marketplace</div>
-            <div class="action-desc">Browse and post listings</div>
+            <div class="action-desc">Browse listings and post requests, and make reviews of your transactions</div>
         </a>
         <a href="{% url 'profiles:my_profile' %}" class="action-card">
             <div class="action-title">My profile</div>

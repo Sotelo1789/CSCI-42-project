@@ -63,14 +63,10 @@ def marketplace_listings_view(request):
             elif avail == 'false':
                 listings = listings.filter(availability=False)
 
-    print(listings)
-
     paginatorl = Paginator(listings, page_item_count)
     page_number = request.GET.get("page")
     page_listings = paginatorl.get_page(page_number)
     is_one_per_page = (page_item_count == 1)
-
-    print(page_listings.object_list.count())
 
     page_favedlistings = [False]*page_listings.object_list.count()
 
@@ -83,8 +79,6 @@ def marketplace_listings_view(request):
                 is_favorite = True
         page_favedlistings[list_order] = (is_favorite,listing.pk)
         list_order += 1
-
-    print(page_favedlistings)
 
     ctx = {
         "listings": listings,
@@ -103,7 +97,6 @@ def marketplace_listings_view(request):
 def business_marketplace_view(request):
     if not hasattr(request.user,"business_profile"):
         return redirect('dashboard:dashboard')
-    # TODO: Implement marketplace
     return render(request, 'marketplace/business_marketplace.html')
 
 @login_required
@@ -156,8 +149,6 @@ def marketplace_consumer_requests_view(request):
                 has_responded = True
         page_respondedrequests[request_order] = (has_responded,consumer_request.pk)
         request_order += 1
-
-    print(page_respondedrequests)
 
     ctx = {
         "crs": crs,
@@ -266,7 +257,6 @@ def respond_to_request_view(request, pk):
     else:
         form = RespondToRequest()
 
-    # TODO: implement business response creation
     return render(request, 'marketplace/respond_to_request.html', {'form': form, 'cr': cr})
 
 @login_required
@@ -317,12 +307,11 @@ def create_consumer_request_view(request):
                     image=image,
                 )
 
-            messages.success(request, 'You have successfully created a consumer_request.')
+            messages.success(request, 'You have successfully created a consumer request.')
             return redirect('marketplace:consumer_request_detail', pk=cr.pk)
     else:
         form = CreateConsumerRequest()
 
-    # TODO: implement consumer request creation
     return render(request, 'marketplace/create_consumer_request.html', {'form': form})
 
 @login_required
@@ -517,7 +506,6 @@ def my_transactions_view(request):
 
     filter_form = ChooseTransactionKind(request.GET or None)
     if filter_form.is_valid():
-        print(filter_form.cleaned_data.get('transaction'))
         tk = filter_form.cleaned_data.get('transaction') or tk
         if hasattr(request.user,"consumer_profile"):
             if tk == 'listing':
@@ -577,7 +565,6 @@ def my_transactions_view(request):
         'is_one_per_page': is_one_per_page,
         "request_get": "&".join(f"{k}={v}" for k, v in request.GET.items() if k != "page")
     }
-    # TODO Transactions view for both profiles
     return render(request, 'marketplace/marketplace_transactions.html', ctx)
 
 @login_required
