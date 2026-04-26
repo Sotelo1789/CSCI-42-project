@@ -425,6 +425,7 @@ def edit_purchase_request_view(request, pk):
         
     pr = get_object_or_404(PurchaseRequest, pk=pk, buyer=request.user)
 
+    
     # Auto-close if deadline already passed
     if pr.status == "open" and pr.closing_deadline <= timezone.now():
         pr.status = "closed"
