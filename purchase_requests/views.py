@@ -20,12 +20,9 @@ def isBusiness(request):
     if hasattr(request.user,"consumer_profile"):
         return redirect("dashboard")
 
-
-@login_required
-def search_browse_view(request):
-    return redirect('purchase_requests:available_list')
-
-
+"""
+Shows all available purchase requests
+"""
 @login_required
 def available_list_view(request):
     if not hasattr(request.user,"business_profile"):
@@ -90,6 +87,9 @@ def available_list_view(request):
     }
     return render(request, 'purchase_requests/available_list.html', ctx)
 
+"""
+Shows details of a purchase request
+"""
 @login_required
 def purchase_request_detail_view(request, pk):
     if not hasattr(request.user,"business_profile"):
@@ -113,7 +113,9 @@ def purchase_request_detail_view(request, pk):
         "is_closed":is_closed,
         })
 
-
+"""
+Allows user to join purchase request
+"""
 @login_required
 def join_purchase_request(request, pk):
     if not hasattr(request.user,"business_profile"):
@@ -129,7 +131,9 @@ def join_purchase_request(request, pk):
 
     return redirect("purchase_requests:detail", pk=pk)
 
-
+"""
+Shows purchase requests up to review by user
+"""
 @login_required
 def review_list_view(request):
     """Verify that user is business"""
@@ -155,7 +159,9 @@ def review_list_view(request):
 
     return render(request, 'purchase_requests/review_list.html', ctx)
 
-
+"""
+Allows user to participate in giving offers to a purchase request
+"""
 @login_required
 def participate_view(request, pk):
     """Verify that user is business"""
@@ -172,7 +178,9 @@ def participate_view(request, pk):
 
     return redirect('purchase_requests:review_list')
 
-
+"""
+Allows user to remove a purchase request from being reviewed by user
+"""
 @login_required
 def remove_from_review_view(request, pk):
     """Verify that user is business"""
@@ -190,7 +198,9 @@ def remove_from_review_view(request, pk):
 
     return redirect('purchase_requests:review_list')
 
-
+"""
+Allows downloading of RFQ File
+"""
 @login_required
 def download_rfq_view(request, pk):
     if not hasattr(request.user,"business_profile"):
@@ -199,7 +209,9 @@ def download_rfq_view(request, pk):
     pr = get_object_or_404(PurchaseRequest, pk=pk)
     return FileResponse(pr.rfq_file.open('rb'), as_attachment=True)
 
-
+"""
+Allows submimssion of offer to purchase request
+"""
 @login_required
 def submit_offer_view(request, pk):
     if not hasattr(request.user,"business_profile"):
@@ -252,7 +264,9 @@ def submit_offer_view(request, pk):
         'existing_offer': existing_offer,
     })
 
-
+"""
+Allows viewing all offers made by user
+"""
 @login_required
 def my_offers_view(request):
     if not hasattr(request.user,"business_profile"):
@@ -260,7 +274,9 @@ def my_offers_view(request):
     offers = Offer.objects.filter(seller=request.user).select_related('purchase_request').order_by('-submitted_at')
     return render(request, 'purchase_requests/my_offers.html', {'offers': offers})
 
-
+"""
+Allows user offer deletion
+"""
 @login_required
 def delete_offer_view(request, offer_pk):
     if not hasattr(request.user,"business_profile"):
@@ -272,7 +288,9 @@ def delete_offer_view(request, offer_pk):
         messages.success(request, 'Offer deleted.')
     return redirect('purchase_requests:my_offers')
 
-
+"""
+Allows user to see their own purchase requests
+"""
 @login_required
 def my_requests_view(request):
     """Verify that user is business"""
@@ -330,11 +348,7 @@ def my_requests_view(request):
                     pr.closing_deadline = new_deadline
                     pr.save()
 
-            #print(old_deadline)
-            #print(new_deadline)
-            #print(old_deadline < new_deadline)
-            #print(old_deadline >= new_deadline)
-
+            
             """
             If the new_deadline is later than the old_deadline and that this purchase request
             is still available at this time when changes will happen, the closing deadline of
@@ -344,10 +358,6 @@ def my_requests_view(request):
             if old_deadline < new_deadline and pr.status == "open":
                 pr.closing_deadline = new_deadline
                 pr.save()
-                # print("Change")
-                # print(pr.closing_deadline)
-            # else:
-                # print("Don\'t change")
         elif action == "cancelRequest":
             """
             If the status is still open at the time of changing, set the
@@ -357,7 +367,6 @@ def my_requests_view(request):
             if pr.status == "open":
                 pr.status = "cancelled"
                 pr.save()
-                # print("Purchase Request Cancelled")
 
     """
     Line below is important for gathering datetime data for changing
@@ -398,7 +407,9 @@ def my_requests_view(request):
 
     return render(request, 'purchase_requests/my_requests.html', ctx)
 
-
+"""
+Allows creation of purchase request
+"""
 @login_required
 def create_purchase_request_view(request):
     if not hasattr(request.user,"business_profile"):
@@ -417,7 +428,9 @@ def create_purchase_request_view(request):
             form = CreatePurchaseRequest()
     return render(request, 'purchase_requests/create.html', {'form':form})
 
-
+"""
+Allows editing of purchase request
+"""
 @login_required
 def edit_purchase_request_view(request, pk):
     if not hasattr(request.user,"business_profile"):
@@ -451,7 +464,9 @@ def edit_purchase_request_view(request, pk):
         'pr': pr,
     })
 
-
+"""
+Allows viewing of offers made for a purchase request of user
+"""
 @login_required
 def view_offers_view(request, pk):
     if not hasattr(request.user,"business_profile"):
@@ -461,7 +476,9 @@ def view_offers_view(request, pk):
     deadline_passed = timezone.now() >= pr.closing_deadline
     return render(request, 'purchase_requests/view_offers.html', {'pr': pr, 'offers': offers, 'deadline_passed':deadline_passed,})
 
-
+"""
+Allows accepting of offer to purchase request from business
+"""
 @login_required
 def accept_offer_view(request, pk, offer_pk):
     if not hasattr(request.user,"business_profile"):
@@ -476,7 +493,9 @@ def accept_offer_view(request, pk, offer_pk):
     messages.success(request, f"You accepted {offer.seller.username}'s offer. The request is now marked as completed.")
     return redirect('purchase_requests:view_offers', pk=pk)
 
-
+"""
+Allows rejection of offer to purchase request from business
+"""
 @login_required
 def reject_offer_view(request, pk, offer_pk):
     if not hasattr(request.user,"business_profile"):

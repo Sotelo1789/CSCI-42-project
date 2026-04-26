@@ -4,7 +4,9 @@ from django.contrib import messages
 from django.db import transaction
 from .models import Client, BusinessProfile, ConsumerProfile
 
-
+"""
+Login for users
+"""
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard:dashboard')
@@ -29,17 +31,23 @@ def login_view(request):
 
     return render(request, 'authentication/login.html')
 
-
+"""
+Logout for users
+"""
 def logout_view(request):
     logout(request)
     return redirect('authentication:login')
 
-
+"""
+Sends to registration hub
+"""
 def register_view(request):
     """Step 1: Choose account type."""
     return render(request, 'authentication/register.html')
 
-
+"""
+Allows creation of business user
+"""
 def register_business_view(request):
     """Step 2a: Business registration form."""
     if request.method == 'POST':
@@ -135,7 +143,9 @@ def register_business_view(request):
             })
     return render(request, 'authentication/register_business.html')
 
-
+"""
+Allows creation of consumer user
+"""
 def register_consumer_view(request):
     """Step 2b: Consumer registration form."""
     if request.method == 'POST':

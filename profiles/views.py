@@ -3,7 +3,9 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
-
+"""
+Shows profile info here
+"""
 @login_required
 def my_profile_view(request):
     profile = None
@@ -13,7 +15,9 @@ def my_profile_view(request):
         profile = getattr(request.user, 'consumer_profile', None)
     return render(request, 'profiles/my_profile.html', {'profile': profile})
 
-
+"""
+Allows editing of profile info here
+"""
 @login_required
 def edit_profile_view(request):
     user = request.user

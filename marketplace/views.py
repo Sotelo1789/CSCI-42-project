@@ -9,6 +9,9 @@ from .forms import CreateListing, CreateConsumerRequest, RespondToRequest, Respo
 from .models import Listing, ListingImage, ConsumerRequest, ConsumerRequestImage, BusinessResponse, FavoriteListing, Transaction, ListingTransaction, ConsumerRequestTransaction, Review
 from authentication.models import BusinessProfile
 
+"""
+Shows consumer marketplace
+"""
 @login_required
 def consumer_marketplace_view(request):
     if not hasattr(request.user,"consumer_profile"):
@@ -16,6 +19,9 @@ def consumer_marketplace_view(request):
 
     return render(request, 'marketplace/consumer_marketplace.html')
 
+"""
+Shows all available marketplace listings
+"""
 @login_required
 def marketplace_listings_view(request):
     if not hasattr(request.user,"consumer_profile"):
@@ -93,12 +99,18 @@ def marketplace_listings_view(request):
 
     return render(request, 'marketplace/marketplace_listings.html', ctx)
 
+"""
+Shows business marketplace
+"""
 @login_required
 def business_marketplace_view(request):
     if not hasattr(request.user,"business_profile"):
         return redirect('dashboard:dashboard')
     return render(request, 'marketplace/business_marketplace.html')
 
+"""
+Shows all available marketplace consumer requests
+"""
 @login_required
 def marketplace_consumer_requests_view(request):
     if not hasattr(request.user,"business_profile"):
@@ -163,6 +175,9 @@ def marketplace_consumer_requests_view(request):
 
     return render(request, 'marketplace/marketplace_requests.html', ctx)
 
+"""
+Allows marketplace listing creation
+"""
 @login_required
 def create_listing_view(request):
     if not hasattr(request.user,"business_profile"):
@@ -200,6 +215,9 @@ def create_listing_view(request):
 
     return render(request, 'marketplace/create_listing.html', {'form': form})
 
+"""
+Shows details of marketplace listing
+"""
 @login_required
 def listing_detail_view(request, pk):
     listing = get_object_or_404(Listing, pk=pk)
@@ -221,6 +239,9 @@ def listing_detail_view(request, pk):
 
     return render(request, 'marketplace/listing_detail.html', ctx)
 
+"""
+Allows business response creation for marketplace consumer request
+"""
 @login_required
 def respond_to_request_view(request, pk):
     if not hasattr(request.user,"business_profile"):
@@ -259,6 +280,9 @@ def respond_to_request_view(request, pk):
 
     return render(request, 'marketplace/respond_to_request.html', {'form': form, 'cr': cr})
 
+"""
+Shows business response for a marketplace consumer request
+"""
 @login_required
 def business_response_view(request, pk):
     br = get_object_or_404(BusinessResponse, pk=pk)
@@ -281,6 +305,9 @@ def business_response_view(request, pk):
 
     return render(request, 'marketplace/business_response_detail.html', ctx)
 
+"""
+Allows creation of marketplace consumer request
+"""
 @login_required
 def create_consumer_request_view(request):
     if not hasattr(request.user,"consumer_profile"):
@@ -314,6 +341,9 @@ def create_consumer_request_view(request):
 
     return render(request, 'marketplace/create_consumer_request.html', {'form': form})
 
+"""
+Shows details of marketplace consumer request
+"""
 @login_required
 def consumer_request_detail_view(request, pk):
     cr = get_object_or_404(ConsumerRequest, pk=pk)
@@ -354,6 +384,9 @@ def consumer_request_detail_view(request, pk):
 
     return render(request, 'marketplace/consumer_request_detail.html', ctx)
 
+"""
+Allows downloading of terms and conditions file
+"""
 @login_required
 def download_toc(request, pk):
     if not hasattr(request.user,"consumer_profile"):
@@ -362,12 +395,18 @@ def download_toc(request, pk):
     listing = get_object_or_404(Listing, pk=pk)
     return FileResponse(listing.terms_conditions.open('rb'), as_attachment=True)
 
+"""
+Allows downloading of quotation file
+"""
 @login_required
 def download_quotation(request, pk):
     """Get the business response, and then download the quotation file of that business response"""
     br = get_object_or_404(BusinessResponse, pk=pk)
     return FileResponse(br.quotation.open('rb'), as_attachment=True)
 
+"""
+Allows setting of listing as favorite
+"""
 @login_required
 def set_favorite(request, pk):
     if not hasattr(request.user,"consumer_profile"):
@@ -384,6 +423,9 @@ def set_favorite(request, pk):
 
     return redirect('marketplace:marketplace_listings')
 
+"""
+Allows setting of listing as not favorite
+"""
 @login_required
 def unfavorite(request, pk):
     if not hasattr(request.user,"consumer_profile"):
@@ -397,6 +439,9 @@ def unfavorite(request, pk):
 
     return redirect('marketplace:marketplace_listings')
 
+"""
+Allows setting of listing as favorite in listing detail view
+"""
 @login_required
 def set_favorite_in_detail(request, pk):
     if not hasattr(request.user,"consumer_profile"):
@@ -413,6 +458,9 @@ def set_favorite_in_detail(request, pk):
 
     return redirect('marketplace:listing_detail',pk=pk)
 
+"""
+Allows setting of listing as not favorite in listing detail view
+"""
 @login_required
 def unfavorite_in_detail(request, pk):
     if not hasattr(request.user,"consumer_profile"):
@@ -426,6 +474,9 @@ def unfavorite_in_detail(request, pk):
 
     return redirect('marketplace:listing_detail',pk=pk)
 
+"""
+Allows paying over a listing
+"""
 @login_required
 def pay_listing_view(request, pk):
     if not hasattr(request.user,"consumer_profile"):
@@ -466,6 +517,9 @@ def pay_listing_view(request, pk):
 
     return render(request, 'marketplace/pay_listing.html', ctx)
 
+"""
+Allows paying over a consumer request
+"""
 @login_required
 def pay_response(request, pk):
     if not hasattr(request.user,"consumer_profile"):
@@ -490,6 +544,9 @@ def pay_response(request, pk):
     messages.success(request, 'You have successfully bought something. For smoother proceedings, have the decided amount ready to give to the business')
     return redirect('marketplace:business_response_detail', pk=pk)
 
+"""
+Shows all available transactions of user
+"""
 @login_required
 def my_transactions_view(request):
     if hasattr(request.user,"consumer_profile"):
@@ -567,6 +624,9 @@ def my_transactions_view(request):
     }
     return render(request, 'marketplace/marketplace_transactions.html', ctx)
 
+"""
+Allows creation of review over a transaction
+"""
 @login_required
 def create_review_view(request, pk):
     if not hasattr(request.user,"consumer_profile"):

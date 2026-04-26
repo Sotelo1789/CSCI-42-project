@@ -1,7 +1,9 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 
-
+"""
+Dashboard for users
+"""
 @login_required
 def dashboard_view(request):
     recent_activity_limit = 2
