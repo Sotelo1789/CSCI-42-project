@@ -221,7 +221,7 @@
                 <a href="{% url 'marketplace:consumer_request_detail' pk=cr.pk %}" class="req-title">{{ cr.title }}</a>
                 <div class="req-meta-row">
                     <span class="pill">{{ cr.category }}</span>
-                    <span class="req-price">₱{{ cr.min_price|floatformat:0|intcomma }} – ₱{{ cr.max_price|floatformat:0|intcomma }}</span>
+                    <span class="req-price">₱{{ cr.min_price|floatformat:2|intcomma }} – ₱{{ cr.max_price|floatformat:2|intcomma }}</span>
                     <span>{{ cr.consumer.consumer_profile.full_name|default:cr.consumer.username }}</span>
                 </div>
             </div>

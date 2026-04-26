@@ -179,7 +179,7 @@
                         <span class="activity-marker"></span>
                         <div class="activity-text">
                             <div class="activity-title">{{ p.purchase_request.title }}</div>
-                            <div class="activity-sub">{{ p.purchase_request.get_category_display }} · ₱{{ p.purchase_request.budget|floatformat:0|intcomma }}</div>
+                            <div class="activity-sub">{{ p.purchase_request.get_category_display }} · ₱{{ p.purchase_request.budget|floatformat:2|intcomma }}</div>
                         </div>
                         <div class="activity-date">{{ p.joined_at|date:"M d" }}</div>
                     </div>

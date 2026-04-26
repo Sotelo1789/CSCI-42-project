@@ -224,7 +224,7 @@
         <div>
             <div class="card">
                 <div class="section-title">Price range</div>
-                <div class="price-display">₱{{ listing.min_price|floatformat:0|intcomma }} – ₱{{ listing.max_price|floatformat:0|intcomma }}</div>
+                <div class="price-display">₱{{ listing.min_price|floatformat:2|intcomma }} – ₱{{ listing.max_price|floatformat:2|intcomma }}</div>
                 <div class="price-sub">{{ listing.quantity }} {{ listing.unit }} per transaction</div>
 
                 <div class="action-stack">
