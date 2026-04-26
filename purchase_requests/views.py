@@ -319,13 +319,11 @@ def my_requests_view(request):
     """
 
     if request.method == "POST":
-        # print("Post")
         """
         Get which purchase request is being affected, and how it is being changed
         """
         pr = get_object_or_404(PurchaseRequest, pk=request.POST.get("purchase_request"))
         action = request.POST.get("action")
-        # print(action)
         if action == "changeDeadline":
             """
             Obtain the old and \'new\' closing deadline for that purchase request
