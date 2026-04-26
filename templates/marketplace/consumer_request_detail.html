@@ -168,10 +168,12 @@
                     <div class="section-title">Responses ({{ cr.responses.count|intcomma }})</div>
                     <div class="response-list">
                         {% for response in cr.responses.all|dictsortreversed:"updated_at" %}
-                        <div class="response-row">
-                            <div class="response-from">{{ response.business.business_profile.business_name|default:response.business.username }}</div>
-                            <a href="{% url 'marketplace:business_response_detail' pk=response.pk %}" class="response-link">View</a>
-                        </div>
+                            {% if response.business.business_profile.status == "approved" %}
+                            <div class="response-row">
+                                <div class="response-from">{{ response.business.business_profile.business_name|default:response.business.username }}</div>
+                                <a href="{% url 'marketplace:business_response_detail' pk=response.pk %}" class="response-link">View</a>
+                            </div>
+                            {% endif %}
                         {% endfor %}
                     </div>
                 </div>
@@ -182,12 +184,17 @@
                         <div class="response-row">
                             <div class="response-from">{{ crt.0.business_response.business.business_profile.business_name|default:crt.0.business_response.business.username }}</div>
                             <a href="{% url 'marketplace:business_response_detail' pk=crt.0.business_response.pk %}" class="response-link">See details</a>
-                            {% if crt.0.review.exists %}
-                                <p>You have rated them with a score of {{ cr.consumer_request_transaction.all.0.review.all.0.rating }} out of 10</p>
-                            {% else %}
-                                <a href="{% url 'marketplace:create_review' pk=crt.0.pk %}">Make a Review?</a>
-                            {% endif %}
                         </div>
+                        {% if crt.0.review.exists %}
+                        <div class="response-row" style="margin-top:8px;">
+                            <span class="info-label">Your review</span>
+                            <span class="pill">{{ crt.0.review.all.0.rating }}/10</span>
+                        </div>
+                        {% else %}
+                        <div style="margin-top:12px;">
+                            <a href="{% url 'marketplace:create_review' pk=crt.0.pk %}" class="btn btn-secondary btn-sm">Leave a review</a>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
                 {% endif %}
@@ -197,7 +204,7 @@
         <div>
             <div class="card">
                 <div class="section-title">Budget</div>
-                <div class="price-display">₱{{ cr.min_price|floatformat:0|intcomma }} – ₱{{ cr.max_price|floatformat:0|intcomma }}</div>
+                <div class="price-display">₱{{ cr.min_price|floatformat:2|intcomma }} – ₱{{ cr.max_price|floatformat:2|intcomma }}</div>
 
                 <div class="action-stack">
                     {% if user.business_profile %}
@@ -212,9 +219,6 @@
                         {% if has_chosen_you == True and cr.status != "open" %}
                             <div class="status-banner warn">Customer chose you</div>
                             <a href="{% url 'marketplace:business_response_detail' pk=crt.0.business_response.pk %}" class="btn btn-secondary action-btn-full">See deal details</a>
-                            {% if crt.0.review.exists %}
-                                <p>You have been rated with a score of {{ cr.consumer_request_transaction.all.0.review.all.0.rating }} out of 10</p>
-                            {% endif %}
                         {% endif %}
                     {% endif %}
                 </div>
@@ -227,7 +231,7 @@
                     <span class="info-value">{{ cr.consumer.consumer_profile.full_name|default:cr.consumer.username }}</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">E-mail</span>
+                    <span class="info-label">Email</span>
                     <span class="info-value">{{ cr.consumer.email }}</span>
                 </div>
             </div>

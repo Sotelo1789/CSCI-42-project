@@ -64,7 +64,7 @@
         align-items: center; justify-content: flex-end;
     }
 
-        /* Results bar */
+    /* Results bar */
     .results-bar {
         display: flex; align-items: center; justify-content: space-between;
         margin-bottom: 12px; padding: 0 4px;
@@ -154,7 +154,11 @@
 
 {% block content %}
 <div class="page-wrap">
-    <a href="{% url 'marketplace:business_marketplace' %}" class="back-link">← Back to marketplace</a>
+    {% if user.business_profile %}
+        <a href="{% url 'marketplace:business_marketplace' %}" class="back-link">← Back to marketplace</a>
+    {% elif user.consumer_profile %}
+        <a href="{% url 'marketplace:consumer_marketplace' %}" class="back-link">← Back to marketplace</a>
+    {% endif %}
 
     <div class="page-header">
         <div class="page-eyebrow">Marketplace</div>
@@ -224,7 +228,6 @@
             <button type="submit" class="btn btn-secondary btn-sm">Apply</button>
         </form>
     </div>
-
     <div class="tx-list">
         {% for transaction in page_transactions %}
         <div class="tx-card">
@@ -237,40 +240,37 @@
                     {% endif %}
                 </div>
                 <div class="tx-date">{{ transaction.created_at|date:"M d, Y" }} · {{ transaction.created_at|time:"h:i A" }}</div>
+                {% if user.consumer_profile %}
+                    {% if not transaction.review.exists %}
+                        <a href="{% url 'marketplace:create_review' pk=transaction.pk %}" class="btn btn-secondary btn-sm" style="margin-top:6px;display:inline-flex;">Leave a review</a>
+                    {% else %}
+                        <span class="pill" style="margin-top:6px;display:inline-flex;">Reviewed · {{ transaction.review.all.0.rating }}/10</span>
+                    {% endif %}
+                {% elif user.business_profile %}
+                    {% if transaction.review.exists %}
+                        <span class="pill" style="margin-top:6px;display:inline-flex;">Rated {{ transaction.review.all.0.rating }}/10</span>
+                    {% else %}
+                        <span class="pill pill-neutral" style="margin-top:6px;display:inline-flex;">No review yet</span>
+                    {% endif %}
+                {% endif %}
             </div>
-            <div class="tx-amount">₱{{ transaction.price|floatformat:0|intcomma }}</div>
-            {% if user.consumer_profile %}
-                {% if not transaction.review.exists %}
-                    <a href="{% url 'marketplace:create_review' pk=transaction.pk %}">Make a Review</a>
-                {% else %}
-                    <p>A review was already made over this transaction ( {{ transaction.review.all.0.rating }} out of 10 )</p>
-                {% endif %}
-            {% elif user.business_profile %}
-                {% if not transaction.review.exists %}
-                    <p>No review yet</p>
-                {% else %}
-                    Rated {{ transaction.review.all.0.rating }} out of 10
-                {% endif %}
-            {% endif %}
+            <div class="tx-amount">₱{{ transaction.price|floatformat:2|intcomma }}</div>
         </div>
         {% endfor %}
     </div>
 
     {% if page_transactions.paginator.num_pages > 1 %}
-    <div class="pagination">
+    <div class="pagination" style="margin-top:16px;">
         <div class="page-links">
             {% if page_transactions.has_previous %}
                 <a class="page-link" href="?page=1&{{ request_get }}">First</a>
                 <a class="page-link" href="?page={{ page_transactions.previous_page_number }}&{{ request_get }}">Prev</a>
             {% endif %}
-            <span class="page-link current">{{ page_transactions.number }}</span>
+            <span class="page-current">Page {{ page_transactions.number }} of {{ page_transactions.paginator.num_pages }}</span>
             {% if page_transactions.has_next %}
                 <a class="page-link" href="?page={{ page_transactions.next_page_number }}&{{ request_get }}">Next</a>
                 <a class="page-link" href="?page={{ page_transactions.paginator.num_pages }}&{{ request_get }}">Last</a>
             {% endif %}
-        </div>
-        <div class="page-info">
-            Page {{ page_transactions.number }} of {{ page_transactions.paginator.num_pages }}
         </div>
     </div>
     {% endif %}

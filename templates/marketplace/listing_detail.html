@@ -141,7 +141,11 @@
 
 {% block content %}
 <div class="page-wrap">
-    <a href="{% url 'marketplace:marketplace_listings' %}" class="back-link">← Back to listings</a>
+    {% if user.consumer_profile %}
+        <a href="{% url 'marketplace:marketplace_listings' %}" class="back-link">← Back to listings</a>
+    {% else %}
+        <a href="{% url 'marketplace:business_marketplace' %}" class="back-link">← Back to marketplace</a>
+    {% endif %}
 
     <div class="detail-header">
         <div>
@@ -213,14 +217,6 @@
                         <span class="info-label">Delivery time</span>
                         <span class="info-value">{{ listing.delivery_time }} day{{ listing.delivery_time|pluralize }}</span>
                     </div>
-                    <div class="info-row">
-                        {% if listing.business.business_profile.rating > 0 %}
-                            <span class="info-label">Business Rating</span>
-                            <span class="info-value">{{ listing.business.business_profile.rating }}</span>
-                        {% else %}
-                            <span class="info-label">Unrated Business</span>
-                        {% endif%}
-                    </div>
                 </div>
             </div>
         </div>
@@ -251,18 +247,17 @@
                         <span class="info-value">{{ listing.business.business_profile.rep_contact|default:"—" }}</span>
                     </div>
                     {% if listing.business.business_profile.rating != 0 %}
-                    <div class="info-row">
-                        <span class="info-label">Rating</span>
-                        <span class="info-value">★ {{ listing.business.business_profile.rating }}</span>
-                    </div>
+                        <div class="info-row">
+                            <span class="info-label">Rating</span>
+                            <span class="info-value">★ {{ listing.business.business_profile.rating }}</span>
+                        </div>
                     {% else %}
-                    <div class="info-row">
-                        <span class="info-label">Unrated Business</span>
-                    </div>
+                        <div class="info-row">
+                            <span class="info-label">Unrated Business</span>
+                        </div>
                     {% endif %}
                 </div>
             </div>
-
             {% if listing.listing_transaction.exists %}
             <div class="card">
                 <div class="section-title">
