@@ -61,19 +61,9 @@ class ChooseTransactionKind(forms.Form):
     person        = forms.CharField(required=False)
     min_price     = forms.DecimalField(required=False, label='Min Price', min_value=0)
     max_price     = forms.DecimalField(required=False, label='Max Price', min_value=0)
-    earliest_date = forms.DateTimeField(required=False)
-    latest_date   = forms.DateTimeField(required=False)
+    earliest_date = forms.DateTimeField(required=False, widget=forms.DateTimeInput(attrs={'type':'datetime-local'}))
+    latest_date   = forms.DateTimeField(required=False, widget=forms.DateTimeInput(attrs={'type':'datetime-local'}))
     transaction   = forms.ChoiceField(required=False, choices=TRANSACTION_KIND, label='Kind of Transaction')
-
-    class Meta:
-        widgets = {
-            'earliest_date': forms.DateTimeInput(
-                attrs={'type':'datetime-local'}
-            ),
-            'latest_date': forms.DateTimeInput(
-                attrs={'type':'datetime-local'}
-            )
-        }
 
 class CreateConsumerRequest(forms.ModelForm):
     class Meta:

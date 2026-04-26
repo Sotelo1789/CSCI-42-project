@@ -39,7 +39,7 @@ class Listing(models.Model):
     unit = models.CharField(max_length=10)
     delivery_option = models.CharField(max_length=10, choices=DELIVERY_CHOICES)
     delivery_area = models.CharField(max_length=100)
-    delivery_time = models.IntegerField() # assumes delivery time is in number of days
+    delivery_time = models.IntegerField(validators=[validate_nonnegative]) # assumes delivery time is in number of days
     terms_conditions = models.FileField(upload_to='uploads/listings/termsconditions', null=False, blank=False)
     availability = models.BooleanField(default=True)
     view_count = models.IntegerField(validators=[validate_nonnegative], default=0)
